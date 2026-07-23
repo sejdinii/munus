@@ -99,6 +99,14 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 - 2026-07-23 (wave1 checkpoint): unlayered element CSS silently defeats
   Tailwind utilities — all future base styles MUST live in @layer base
   (bug shipped in foundation, caught at integration).
+- 2026-07-23 (wave1 critic): design-critic verdict was FIX-FIRST with 15
+  findings (3 demo-breaking honesty violations). 13 fixed and browser-
+  verified same session. Deferred: discover placeholder has no error branch
+  (screen is rebuilt wholesale in W2 — real deck must ship ALL states);
+  favorites "›" job-detail navigation returns when job detail exists (W2),
+  overflow menu stays as "⋯". Lesson recorded: implementers reproduce
+  prototype copy faithfully even when it fabricates state — every wave spec
+  must name the honest-copy variant explicitly.
 - 2026-07-23 (bootstrap): **Alert delivery is unshipped.** Onboarding asks alert
   cadence (§1.1) but no phase builds any notification channel. Decide: email
   digest in W6, or label "coming soon" and stop asking the question.
