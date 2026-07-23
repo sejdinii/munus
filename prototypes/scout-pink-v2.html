@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f6f3">
+  <title>Scout — pink job discovery prototype v2</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --rose: #6957f5;
+      --rose-ink: #4b38cc;
+      --rose-soft: #efecff;
+      --lime: #d6ff63;
+      --lime-ink: #344300;
+      --sky: #78d9ff;
+      --tangerine: #ff8b5c;
+      --butter: #ffe36e;
+      --ink: #18181b;
+      --muted: #6f6f75;
+      --paper: #fffefc;
+      --canvas: #ebe9e4;
+      --phone: #f7f6f3;
+      --line: #e4e1da;
+      --quiet: #efeeea;
+      --green: #16794b;
+      --amber: #a35b00;
+      --red: #c42c43;
+      --shadow: 0 30px 90px rgba(32, 32, 38, .18);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    :focus-visible { outline: 2.5px solid var(--rose); outline-offset: 2px; }
+
+    .prototype-shell {
+      display: grid;
+      grid-template-columns: 270px minmax(430px, 1fr);
+      gap: 32px;
+      min-height: 100vh;
+      padding: 28px;
+    }
+    .review-panel {
+      align-self: start;
+      position: sticky;
+      top: 28px;
+      max-height: calc(100vh - 56px);
+      overflow: auto;
+      padding: 25px;
+      border: 1px solid rgba(24, 20, 22, .08);
+      border-radius: 26px;
+      background: rgba(255, 254, 252, .8);
+      backdrop-filter: blur(24px);
+    }
+    .review-kicker, .overline {
+      margin: 0 0 8px;
+      color: var(--rose-ink);
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .review-panel h1 { margin: 0; font-size: 27px; letter-spacing: -.045em; }
+    .review-panel > p { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.48; }
+    .review-group { margin-top: 23px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .review-group h2 { margin: 0 0 9px; font-size: 12px; letter-spacing: .02em; }
+    .review-actions { display: grid; gap: 3px; }
+    .review-actions button {
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      padding: 9px 10px;
+      text-align: left;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .review-actions button:hover { background: var(--quiet); }
+    .review-actions button[aria-current="true"] { background: var(--rose-soft); color: var(--rose-ink); font-weight: 700; }
+    .review-note { display: grid; grid-template-columns: 9px 1fr; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .note-dot { width: 7px; height: 7px; margin-top: 4px; border-radius: 50%; background: var(--rose); }
+    .theme-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .theme-choice { min-height: 58px; display: grid; align-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 13px; background: transparent; padding: 9px; text-align: left; font-size: 11px; font-weight: 720; cursor: pointer; }
+    .theme-choice[aria-pressed="true"] { border-color: var(--rose); background: var(--rose-soft); color: var(--rose-ink); }
+    .swatches { display: flex; gap: 4px; }
+    .swatches i { width: 14px; height: 14px; border: 1px solid rgba(24,24,27,.16); border-radius: 50%; }
+
+    .stage { display: grid; place-items: center; min-width: 0; }
+    .phone {
+      position: relative;
+      width: 393px;
+      height: 852px;
+      overflow: hidden;
+      border: 9px solid #171416;
+      border-radius: 52px;
+      background: var(--phone);
+      box-shadow: var(--shadow);
+    }
+    .dynamic-island {
+      position: absolute;
+      z-index: 50;
+      top: 10px;
+      left: 50%;
+      width: 118px;
+      height: 33px;
+      transform: translateX(-50%);
+      border-radius: 22px;
+      background: #050505;
+      pointer-events: none;
+    }
+    .status-bar {
+      position: absolute;
+      z-index: 45;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 51px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 23px;
+      font-size: 12px;
+      font-weight: 750;
+      pointer-events: none;
+    }
+    .status-icons { letter-spacing: 1.3px; }
+    #app { height: 100%; padding-top: 51px; }
+
+    .screen { position: relative; display: flex; flex-direction: column; height: 100%; background: var(--phone); animation: screenIn .24s ease; }
+    @keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .screen-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 20px 116px; scrollbar-width: none; }
+    .screen-scroll::-webkit-scrollbar { display: none; }
+    .topbar { min-height: 58px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; padding: 0 12px; }
+    .topbar h1 { margin: 0; overflow: hidden; text-align: center; font-size: 16px; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
+    .icon-button {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+    }
+    .icon-button:hover { background: var(--quiet); }
+    .icon-button svg, .nav-item svg, .round-action svg, .inline-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .btn {
+      min-height: 52px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--paper);
+      padding: 0 18px;
+      font-weight: 710;
+      cursor: pointer;
+    }
+    .btn svg { width: 18px; height: 18px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { border-color: var(--rose); background: var(--rose); color: white; }
+    .btn-dark { border-color: var(--ink); background: var(--ink); color: white; }
+    .btn-plain { border-color: transparent; background: transparent; }
+    .btn-small { min-height: 40px; border-radius: 12px; padding: 0 14px; font-size: 13px; }
+    .button-stack { display: grid; gap: 9px; }
+
+    .welcome { justify-content: space-between; overflow: hidden; padding: 46px 27px 30px; background: var(--paper); }
+    .wordmark { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 790; letter-spacing: -.02em; }
+    .mark { position: relative; width: 20px; height: 20px; transform: rotate(-12deg); }
+    .mark::before, .mark::after { content: ""; position: absolute; border-radius: 50% 50% 50% 7px; background: var(--rose); }
+    .mark::before { inset: 0 5px 5px 0; }
+    .mark::after { inset: 6px 0 0 7px; background: var(--lime); opacity: 1; }
+    .welcome-orbit { position: absolute; top: 112px; left: 28px; right: 28px; height: 170px; pointer-events: none; }
+    .orbit-card { position: absolute; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid var(--ink); box-shadow: 5px 6px 0 var(--ink); font-weight: 850; letter-spacing: -.04em; }
+    .orbit-card small { font-size: 9px; font-weight: 750; letter-spacing: .02em; text-transform: uppercase; }
+    .orbit-one { left: 3px; top: 16px; width: 115px; height: 82px; border-radius: 22px; background: var(--rose); color: white; padding: 14px; transform: rotate(-7deg); }
+    .orbit-one strong { font-size: 29px; line-height: .8; }
+    .orbit-two { right: 0; top: 43px; width: 121px; height: 79px; border-radius: 19px; background: var(--lime); padding: 13px; transform: rotate(7deg); }
+    .orbit-two strong { font-size: 27px; line-height: .85; }
+    .orbit-pop { position: absolute; left: 50%; top: 5px; display: grid; place-items: center; width: 47px; height: 47px; border: 2px solid var(--ink); border-radius: 50%; background: var(--tangerine); box-shadow: 3px 4px 0 var(--ink); font-size: 22px; font-weight: 900; transform: translateX(-50%) rotate(9deg); }
+    .welcome-copy { margin-top: auto; margin-bottom: 50px; }
+    .welcome h1 { max-width: 315px; margin: 0; font-size: 49px; line-height: .98; letter-spacing: -.065em; }
+    .welcome h1 em { color: var(--rose); font-style: normal; }
+    .welcome .lead { max-width: 303px; margin: 20px 0 0; color: var(--muted); font-size: 16px; line-height: 1.45; }
+    .trust-line { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+    .trust-line span:first-child { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 7px; background: var(--rose-soft); color: var(--rose-ink); }
+
+    .onboarding { padding: 8px 24px 28px; background: var(--paper); }
+    .onboard-head { display: grid; grid-template-columns: 42px 1fr 42px; align-items: center; margin: 0 -8px; }
+    .progress { height: 3px; overflow: hidden; border-radius: 4px; background: var(--quiet); }
+    .progress span { display: block; height: 100%; border-radius: inherit; background: var(--rose); transition: width .25s ease; }
+    .question { flex: 1; padding-top: 46px; }
+    .question h1 { margin: 0; font-size: 35px; line-height: 1.04; letter-spacing: -.05em; }
+    .question .lead { margin: 12px 0 28px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .choices { display: grid; gap: 9px; }
+    .choice {
+      min-height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      padding: 0 16px;
+      text-align: left;
+      font-weight: 620;
+      cursor: pointer;
+    }
+    .choice::after { content: ""; width: 19px; height: 19px; border: 1.5px solid #c8c0c4; border-radius: 50%; }
+    .choice.selected { border-color: var(--rose); background: var(--rose-soft); color: var(--rose-ink); }
+    .choice.selected::after { border: 6px solid var(--rose); }
+    .field-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; }
+    .text-field { width: 100%; height: 55px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); padding: 0 15px; color: var(--ink); outline: none; }
+    .text-field:focus { border-color: var(--rose); box-shadow: 0 0 0 3px var(--rose-soft); }
+    .upload-box { border: 1px dashed #bdb4b8; border-radius: 18px; padding: 24px 20px; text-align: center; }
+    .upload-box .upload-icon { display: grid; place-items: center; width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 15px; background: var(--rose-soft); color: var(--rose-ink); }
+    .upload-box h3 { margin: 0; font-size: 16px; }
+    .upload-box p { margin: 7px 0 15px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .uploaded { border-style: solid; border-color: #b8d9c9; background: #f5fbf8; }
+    .onboard-footer { display: grid; gap: 10px; }
+    .privacy { margin: 0; color: var(--muted); text-align: center; font-size: 10px; line-height: 1.35; }
+
+    .ready { justify-content: space-between; padding: 42px 24px 28px; background: var(--paper); }
+    .ready-art { position: relative; height: 230px; margin-top: 34px; }
+    .ready-card { position: absolute; left: 50%; width: 230px; height: 165px; border: 1px solid var(--line); border-radius: 25px; background: var(--paper); box-shadow: 0 16px 40px rgba(32, 32, 38, .1); transform-origin: bottom center; }
+    .ready-card:nth-child(1) { top: 30px; transform: translateX(-50%) rotate(-10deg); background: var(--lime); }
+    .ready-card:nth-child(2) { top: 18px; transform: translateX(-50%) rotate(8deg); background: var(--sky); }
+    .ready-card:nth-child(3) { top: 5px; display: grid; place-items: center; transform: translateX(-50%); }
+    .ready-card:nth-child(3) strong { font-size: 50px; letter-spacing: -.06em; }
+    .ready h1 { margin: 0; font-size: 38px; line-height: 1.02; letter-spacing: -.055em; }
+    .ready .lead { color: var(--muted); line-height: 1.45; }
+
+    .discover { background: linear-gradient(180deg, var(--deck-tint, #efecff) 0, var(--phone) 47%); transition: background .28s ease; }
+    .discover-head { min-height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 5px 18px 4px 20px; }
+    .discover-head h1 { margin: 0; font-size: 24px; letter-spacing: -.04em; }
+    .discover-head p { margin: 2px 0 0; color: var(--muted); font-size: 11px; }
+    .batch-dots { display: flex; gap: 4px; padding: 0 20px 8px; }
+    .batch-dots i { width: 14px; height: 3px; border-radius: 2px; background: var(--line); }
+    .batch-dots i.done { background: var(--rose); }
+    .learning-banner { display: grid; grid-template-columns: 26px 1fr auto; gap: 9px; align-items: center; margin: 0 14px 9px; border: 1px solid var(--line); border-radius: 15px; background: var(--paper); padding: 10px 12px; font-size: 11px; line-height: 1.35; }
+    .learning-banner .lb-ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; background: var(--rose-soft); color: var(--rose-ink); font-size: 13px; }
+    .learning-banner button { border: 0; background: transparent; color: var(--muted); font-size: 15px; cursor: pointer; padding: 2px 5px; }
+    .deck { position: relative; flex: 1; min-height: 0; margin: 0 14px; }
+    .behind-card { position: absolute; inset: 12px 8px 6px; border: 1px solid var(--line); border-radius: 27px; background: #e5e3dd; transform: scale(.965) translateY(11px); }
+    .swipe-card {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(24, 20, 22, .08);
+      border-radius: 28px;
+      background: var(--paper);
+      box-shadow: 0 13px 34px rgba(31, 32, 38, .09);
+      touch-action: none;
+      user-select: none;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    .swipe-card.dragging { transition: none; }
+    .swipe-card.promote { animation: cardIn .26s ease; }
+    @keyframes cardIn { from { transform: scale(.96) translateY(10px); opacity: .8; } to { transform: none; opacity: 1; } }
+    .swipe-card.behind { transform: scale(.955) translateY(12px); pointer-events: none; box-shadow: 0 8px 22px rgba(31, 32, 38, .06); }
+    .card-top { position: relative; min-height: 165px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 19px; background: var(--company-color, #ded7ef); }
+    .card-top::after { content: ""; position: absolute; right: -24px; bottom: -40px; width: 128px; height: 128px; border: 20px solid var(--deck-pop, var(--lime)); border-radius: 42% 58% 46% 54%; transform: rotate(24deg); opacity: .88; }
+    .source-row { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .source-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(24,20,22,.12); border-radius: 20px; background: rgba(255,255,255,.65); padding: 6px 9px; font-size: 10px; font-weight: 700; backdrop-filter: blur(8px); }
+    .source-pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .freshness { font-size: 10px; font-weight: 650; }
+    .company-monogram { position: relative; z-index: 2; font-size: 65px; font-weight: 850; letter-spacing: -.08em; line-height: .8; opacity: .92; }
+    .card-body { display: flex; flex: 1; flex-direction: column; min-height: 0; padding: 20px 19px 17px; }
+    .job-company { margin: 0 0 5px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .job-title { margin: 0; font-size: 29px; line-height: 1.04; letter-spacing: -.05em; }
+    .job-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .meta-chip { border-radius: 8px; background: var(--quiet); padding: 6px 8px; font-size: 10px; font-weight: 650; }
+    .fit-block { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .fit-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .fit-head strong { font-size: 12px; }
+    .fit-score { color: var(--green); font-size: 12px; font-weight: 800; }
+    .fit-reason { display: grid; grid-template-columns: 18px 1fr; gap: 7px; margin-top: 7px; font-size: 11px; line-height: 1.3; }
+    .fit-reason b { color: var(--green); }
+    .concern { margin-top: auto; display: grid; grid-template-columns: 18px 1fr; gap: 7px; border-radius: 10px; background: #fff7ec; padding: 10px; color: #70471a; font-size: 10px; line-height: 1.35; }
+    .card-detail-link { width: 100%; margin-top: 11px; border: 0; background: transparent; color: var(--ink); padding: 4px; font-size: 11px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .decision-stamp { position: absolute; z-index: 4; top: 31px; border: 3px solid; border-radius: 8px; padding: 7px 10px; font-size: 22px; font-weight: 900; letter-spacing: .05em; opacity: 0; }
+    .decision-stamp.save { left: 22px; background: var(--lime); color: var(--lime-ink); transform: rotate(-8deg); }
+    .decision-stamp.pass { right: 22px; color: var(--ink); transform: rotate(8deg); }
+    .decision-stamp.back { left: 50%; top: 60px; color: var(--amber); border-color: var(--amber); background: #fff7ec; transform: translateX(-50%) rotate(-6deg); }
+    .swipe-card.restored .decision-stamp.back { animation: stampFlash 1.1s ease; }
+    @keyframes stampFlash { 0% { opacity: 0; } 18% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+    .deck-actions { display: grid; grid-template-columns: 46px 56px 46px 56px 46px; justify-content: center; align-items: center; gap: 10px; padding: 14px 10px 8px; }
+    .round-action { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper); box-shadow: 0 5px 13px rgba(31,32,38,.07); cursor: pointer; }
+    .round-action.large { width: 56px; height: 56px; }
+    .round-action.save { background: var(--lime); border: 2px solid var(--ink); color: var(--ink); box-shadow: 3px 4px 0 var(--ink); }
+    .round-action.star { color: var(--rose-ink); }
+    .round-action:disabled { opacity: .32; cursor: default; }
+    .swipe-hint { margin: 0 0 4px; color: var(--muted); text-align: center; font-size: 9px; }
+
+    .coach-overlay { position: absolute; inset: 0; z-index: 8; display: grid; place-items: center; border-radius: 28px; background: rgba(24, 20, 22, .45); backdrop-filter: blur(3px); }
+    .coach-card { width: 84%; border: 1px solid var(--line); border-radius: 22px; background: var(--paper); padding: 22px 20px; box-shadow: 0 18px 50px rgba(24,20,22,.25); }
+    .coach-card h3 { margin: 0 0 14px; font-size: 17px; letter-spacing: -.03em; }
+    .coach-row { display: grid; grid-template-columns: 34px 1fr; gap: 11px; align-items: center; margin-bottom: 11px; font-size: 12px; line-height: 1.35; }
+    .coach-row span:first-child { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: var(--rose-soft); color: var(--rose-ink); font-size: 15px; font-weight: 800; }
+
+    .tabbar {
+      min-height: 80px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      align-items: start;
+      border-top: 1px solid var(--line);
+      background: rgba(255,254,252,.94);
+      padding: 8px 6px 18px;
+      backdrop-filter: blur(18px);
+    }
+    .nav-item { display: grid; justify-items: center; gap: 3px; border: 0; background: transparent; color: #8c8488; padding: 2px; font-size: 9px; font-weight: 620; cursor: pointer; }
+    .nav-item svg { width: 21px; height: 21px; }
+    .nav-item.active { color: var(--rose); }
+    .nav-item .nav-badge { position: relative; }
+    .nav-item .nav-badge::after { content: attr(data-count); position: absolute; top: -4px; right: -10px; min-width: 14px; height: 14px; display: grid; place-items: center; border-radius: 8px; background: var(--rose); color: white; font-size: 8px; font-weight: 800; padding: 0 3px; }
+
+    .detail-hero { margin: 3px 0 23px; }
+    .company-tile { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 21px; background: var(--company-color); font-size: 31px; font-weight: 850; letter-spacing: -.06em; }
+    .detail-hero h2 { margin: 18px 0 5px; font-size: 34px; line-height: 1.02; letter-spacing: -.055em; }
+    .detail-hero p { margin: 0; color: var(--muted); font-size: 13px; }
+    .section { padding: 20px 0; border-top: 1px solid var(--line); }
+    .section h3 { margin: 0 0 13px; font-size: 13px; }
+    .section p { margin: 0; color: #4f494c; font-size: 13px; line-height: 1.55; }
+    .reason-row { display: grid; grid-template-columns: 24px 1fr; gap: 10px; margin-top: 12px; font-size: 12px; line-height: 1.38; }
+    .reason-row span:first-child { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #eaf7f0; color: var(--green); font-size: 11px; font-weight: 800; }
+    .detail-actions { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 52px 1fr; gap: 10px; border-top: 1px solid var(--line); background: rgba(255,254,252,.96); padding: 12px 18px 20px; backdrop-filter: blur(18px); }
+
+    .page-title { padding: 10px 20px 18px; }
+    .page-title h1 { margin: 0; font-size: 34px; letter-spacing: -.055em; }
+    .page-title p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .saved-list { display: grid; gap: 0; }
+    .saved-job { display: grid; grid-template-columns: 58px 1fr auto; gap: 13px; align-items: center; padding: 16px 0; border-top: 1px solid var(--line); }
+    .saved-job:first-child { border-top: 0; }
+    .saved-logo { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 17px; background: var(--company-color); font-size: 22px; font-weight: 850; letter-spacing: -.06em; }
+    .saved-job h3 { margin: 0 0 4px; font-size: 15px; letter-spacing: -.025em; }
+    .saved-job p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .saved-arrow { width: 28px; height: 28px; border: 0; background: transparent; font-size: 21px; cursor: pointer; }
+    .saved-cta { grid-column: 2 / 4; display: flex; align-items: center; justify-content: space-between; margin-top: -3px; }
+    .saved-cta span { color: var(--green); font-size: 10px; font-weight: 750; }
+    .ready-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; background: var(--quiet); color: var(--muted); padding: 4px 7px; font-size: 9px; font-weight: 750; }
+    .ready-chip.ok { background: #eaf7f0; color: var(--green); }
+    .ready-chip.top { background: var(--rose-soft); color: var(--rose-ink); }
+    .empty-state { display: grid; place-items: center; flex: 1; padding: 35px; text-align: center; }
+    .empty-symbol { display: grid; place-items: center; width: 68px; height: 68px; margin: 0 auto 18px; border-radius: 22px; background: var(--rose-soft); color: var(--rose); font-size: 27px; }
+    .empty-state h2 { margin: 0; font-size: 26px; letter-spacing: -.045em; }
+    .empty-state p { color: var(--muted); font-size: 13px; line-height: 1.45; }
+
+    .studio-head { padding: 4px 20px 16px; }
+    .studio-head .overline { margin-bottom: 5px; }
+    .studio-head h2 { margin: 0; font-size: 27px; line-height: 1.05; letter-spacing: -.045em; }
+    .readiness { margin-top: 16px; }
+    .readiness-row { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 11px; }
+    .readiness-row strong { color: var(--green); }
+    .readiness-bar { height: 6px; overflow: hidden; border-radius: 6px; background: var(--quiet); }
+    .readiness-bar span { display: block; height: 100%; border-radius: inherit; background: var(--green); transition: width .3s ease; }
+    .segmented { display: grid; grid-template-columns: 1fr 1fr; margin: 0 20px 13px; border-radius: 11px; background: var(--quiet); padding: 3px; }
+    .segmented button { height: 34px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .segmented button.active { background: var(--paper); color: var(--ink); box-shadow: 0 2px 7px rgba(31,32,38,.08); }
+    .studio-scroll { padding-top: 3px; }
+    .grounding-note { display: grid; grid-template-columns: 22px 1fr; gap: 9px; margin-bottom: 18px; border-radius: 14px; background: #eef8f3; padding: 12px; color: #22563d; font-size: 10px; line-height: 1.4; }
+    .doc-preview { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
+    .doc-toolbar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding: 11px 13px; }
+    .doc-toolbar strong { font-size: 12px; }
+    .doc-page { min-height: 280px; padding: 21px 19px; }
+    .doc-page h3 { margin: 0 0 3px; font-size: 18px; }
+    .doc-page .doc-sub { color: var(--muted); font-size: 9px; }
+    .doc-line { height: 5px; margin-top: 9px; border-radius: 5px; background: #ded8da; }
+    .doc-line.short { width: 62%; }
+    .suggestion { margin-top: 16px; border-left: 3px solid var(--rose); background: var(--rose-soft); padding: 11px; }
+    .suggestion-label { color: var(--rose-ink); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .suggestion p { margin: 6px 0; color: #443a3f; font-size: 11px; line-height: 1.4; }
+    .evidence { display: inline-flex; gap: 4px; border-radius: 6px; background: white; padding: 4px 6px; color: var(--green); font-size: 8px; font-weight: 750; }
+    .change-actions { display: flex; gap: 7px; margin-top: 10px; }
+    .change-actions button { height: 30px; border: 1px solid var(--line); border-radius: 8px; background: white; padding: 0 10px; font-size: 9px; font-weight: 750; cursor: pointer; }
+    .change-actions button.accepted { border-color: var(--green); background: #eaf7f0; color: var(--green); }
+    .studio-footer { display: grid; gap: 8px; border-top: 1px solid var(--line); background: rgba(255,254,252,.96); padding: 11px 18px 20px; backdrop-filter: blur(18px); }
+    .generating { display: grid; place-items: center; min-height: 350px; text-align: center; }
+    .spinner { width: 30px; height: 30px; margin: 0 auto 14px; border: 3px solid var(--quiet); border-top-color: var(--rose); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .guide-sheet { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; }
+    .guide-scrim { position: absolute; inset: 0; background: rgba(24,20,22,.35); }
+    .guide-card { position: relative; width: 100%; border-radius: 26px 26px 0 0; background: var(--paper); padding: 14px 20px 26px; box-shadow: 0 -12px 40px rgba(24,20,22,.18); animation: sheetUp .28s ease; }
+    @keyframes sheetUp { from { transform: translateY(45%); } to { transform: none; } }
+    .guide-grabber { width: 38px; height: 4px; margin: 0 auto 14px; border-radius: 3px; background: var(--line); }
+    .guide-card h3 { margin: 0 0 4px; font-size: 17px; letter-spacing: -.03em; }
+    .guide-card > p { margin: 0 0 14px; color: var(--muted); font-size: 11px; }
+    .guide-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .guide-chip { border: 1px solid var(--line); border-radius: 18px; background: var(--paper); padding: 9px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .guide-chip.selected { border-color: var(--rose); background: var(--rose-soft); color: var(--rose-ink); }
+
+    .review-summary { padding: 0 20px 105px; overflow-y: auto; scrollbar-width: none; }
+    .review-summary h2 { margin: 4px 0 6px; font-size: 33px; letter-spacing: -.055em; }
+    .review-summary > p { margin: 0 0 20px; color: var(--muted); font-size: 12px; }
+    .review-block { padding: 17px 0; border-top: 1px solid var(--line); }
+    .review-block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .review-block-head h3 { margin: 0; font-size: 13px; }
+    .text-link { border: 0; background: transparent; color: var(--rose-ink); padding: 0; font-size: 11px; font-weight: 750; cursor: pointer; }
+    .review-value { margin-top: 7px; color: #4f484c; font-size: 11px; line-height: 1.4; }
+    .file-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 9px; align-items: center; margin-top: 9px; }
+    .file-icon { display: grid; place-items: center; width: 36px; height: 42px; border-radius: 8px; background: var(--quiet); font-size: 9px; font-weight: 800; }
+    .file-row strong { display: block; font-size: 11px; }
+    .file-row span { color: var(--muted); font-size: 9px; }
+    .verified-row { display: grid; grid-template-columns: 22px 1fr; gap: 9px; border-radius: 13px; background: #eef8f3; padding: 12px; color: #22563d; font-size: 10px; line-height: 1.4; }
+    .apply-footer { position: absolute; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); background: rgba(255,254,252,.97); padding: 11px 18px 20px; backdrop-filter: blur(18px); }
+    .apply-footer p { margin: 0 0 8px; color: var(--muted); text-align: center; font-size: 9px; }
+
+    .activity-row { width: 100%; display: grid; grid-template-columns: 42px 1fr auto; gap: 11px; align-items: center; padding: 16px 0; border-top: 1px solid var(--line); border-left: 0; border-right: 0; border-bottom: 0; background: transparent; text-align: left; cursor: pointer; }
+    .activity-row:first-child { border-top: 0; }
+    .activity-dot { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: #eaf7f0; color: var(--green); font-weight: 800; }
+    .activity-row h3 { margin: 0 0 3px; font-size: 13px; }
+    .activity-row p { margin: 0; color: var(--muted); font-size: 10px; }
+    .status { border-radius: 7px; background: var(--quiet); padding: 5px 7px; font-size: 8px; font-weight: 750; }
+    .status.viewed { background: var(--rose-soft); color: var(--rose-ink); }
+
+    .app-timeline { margin: 6px 0 2px; }
+    .tl-step { display: grid; grid-template-columns: 24px 1fr; gap: 11px; position: relative; padding-bottom: 18px; }
+    .tl-step:last-child { padding-bottom: 0; }
+    .tl-step::before { content: ""; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--quiet); }
+    .tl-step:last-child::before { display: none; }
+    .tl-dot { z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--quiet); color: var(--muted); font-size: 10px; font-weight: 800; }
+    .tl-step.done .tl-dot { background: #eaf7f0; color: var(--green); }
+    .tl-step.done::before { background: #cdebdc; }
+    .tl-step.now .tl-dot { background: var(--rose); color: white; }
+    .tl-step h4 { margin: 2px 0 2px; font-size: 12px; }
+    .tl-step p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .tl-step.pending h4 { color: var(--muted); }
+
+    .plans { padding-bottom: 96px; }
+    .plan-card { border: 1px solid var(--line); border-radius: 20px; background: var(--paper); padding: 18px; margin-bottom: 12px; }
+    .plan-card.featured { border: 2px solid var(--rose); box-shadow: 0 14px 34px rgba(242, 12, 120, .1); position: relative; }
+    .plan-flag { position: absolute; top: -10px; left: 18px; border-radius: 8px; background: var(--rose); color: white; font-size: 9px; font-weight: 800; letter-spacing: .05em; padding: 4px 9px; text-transform: uppercase; }
+    .plan-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+    .plan-head h3 { margin: 0; font-size: 17px; letter-spacing: -.03em; }
+    .plan-price { font-size: 17px; font-weight: 850; letter-spacing: -.03em; }
+    .plan-price small { color: var(--muted); font-size: 10px; font-weight: 650; }
+    .plan-sub { margin: 0 0 12px; color: var(--muted); font-size: 11px; }
+    .plan-feats { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+    .plan-feats li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; font-size: 11px; line-height: 1.35; color: #4f494c; }
+    .plan-feats li b { color: var(--green); font-weight: 800; }
+    .plan-feats li.na { color: #b1abae; }
+    .plan-feats li.na b { color: #c8c2c5; }
+    .plan-card .btn { width: 100%; margin-top: 14px; }
+
+    .profile-card { margin-top: 7px; border-bottom: 1px solid var(--line); padding: 4px 0 22px; }
+    .profile-avatar { display: grid; place-items: center; width: 68px; height: 68px; border-radius: 23px; background: #251e21; color: white; font-size: 21px; font-weight: 800; }
+    .profile-card h2 { margin: 14px 0 3px; font-size: 25px; letter-spacing: -.04em; }
+    .profile-card p { margin: 0; color: var(--muted); font-size: 11px; }
+    .setting-row { width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; min-height: 58px; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 0; text-align: left; font-size: 13px; cursor: pointer; }
+    .setting-row small { color: var(--muted); font-size: 10px; }
+    .setting-row.hired span:first-child { color: var(--green); font-weight: 720; }
+    .toast { position: absolute; z-index: 60; left: 50%; top: 63px; width: max-content; max-width: calc(100% - 32px); transform: translate(-50%, -14px); border-radius: 22px; background: #1f1a1c; color: white; padding: 10px 15px; font-size: 11px; font-weight: 650; opacity: 0; transition: .22s ease; pointer-events: none; display: flex; gap: 12px; align-items: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+    .toast button { border: 0; background: transparent; color: var(--butter); font-size: 11px; font-weight: 800; cursor: pointer; padding: 0; }
+
+    body[data-theme="pink"] {
+      --rose: #f20c78;
+      --rose-ink: #b90056;
+      --rose-soft: #fff0f6;
+      --lime: #f20c78;
+      --lime-ink: #fff;
+      --paper: #fffdfd;
+      --canvas: #ebe7e8;
+      --phone: #f8f6f6;
+      --line: #e6e0e2;
+      --quiet: #f0ecee;
+    }
+    body[data-theme="pink"] .welcome-orbit { display: none; }
+    body[data-theme="pink"] .mark::after { background: var(--rose); opacity: .42; }
+    body[data-theme="pink"] .discover { background: #f4f0f1; }
+    body[data-theme="pink"] .card-top::after { display: none; }
+    body[data-theme="pink"] .round-action.save { border: 1px solid var(--rose); background: var(--rose); color: white; box-shadow: 0 5px 13px rgba(34,22,28,.07); }
+    body[data-theme="pink"] .decision-stamp.save { background: transparent; color: var(--rose); border-color: var(--rose); }
+
+    @media (max-width: 760px) {
+      body { background: var(--phone); }
+      .prototype-shell { display: block; min-height: 100dvh; padding: 0; }
+      .review-panel { display: none; }
+      .stage { display: block; }
+      .phone { width: 100%; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+    }
+    @media (max-height: 880px) and (min-width: 761px) {
+      .phone { transform: scale(.91); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body data-theme="pink">
+  <main class="prototype-shell">
+    <aside class="review-panel" aria-label="Prototype navigator">
+      <p class="review-kicker">Concept 02 · v2</p>
+      <h1>Swipe with intent</h1>
+      <p>A mobile-native MVP for discovering, shortlisting, tailoring, and reviewing job applications. Enhanced with Tinder-grade deck mechanics and the Scout pricing model.</p>
+
+      <section class="review-group">
+        <h2>Core journey</h2>
+        <div class="review-actions">
+          <button data-jump="welcome">01 · Value proposition</button>
+          <button data-jump="onboarding">02 · Career onboarding</button>
+          <button data-jump="discover">03 · Swipe discovery</button>
+          <button data-jump="detail">04 · Job profile</button>
+          <button data-jump="favorites">05 · Favorites</button>
+          <button data-jump="studio">06 · AI application studio</button>
+          <button data-jump="preflight">07 · Submission review</button>
+          <button data-jump="applications">08 · Applications</button>
+          <button data-jump="appdetail">09 · Application receipt</button>
+          <button data-jump="plans">10 · Plans &amp; paywall</button>
+        </div>
+      </section>
+
+      <section class="review-group">
+        <h2>Required states</h2>
+        <div class="review-actions">
+          <button data-jump="empty">No fresh roles</button>
+          <button data-jump="offline">Offline</button>
+          <button data-jump="unsupported">Unsupported application</button>
+          <button data-jump="limit">Out of free swipes</button>
+        </div>
+      </section>
+
+      <section class="review-group">
+        <h2>Theme</h2>
+        <div class="theme-picker">
+          <button class="theme-choice" data-theme-choice="pink" aria-pressed="true"><span class="swatches"><i style="background:#f20c78"></i><i style="background:#fff0f6"></i></span>Pink</button>
+          <button class="theme-choice" data-theme-choice="indigo" aria-pressed="false"><span class="swatches"><i style="background:#6957f5"></i><i style="background:#d6ff63"></i></span>Indigo</button>
+        </div>
+      </section>
+
+      <section class="review-group">
+        <h2>Design rules</h2>
+        <div class="review-note"><span class="note-dot"></span><span>Pink marks forward movement and saving. It is never decorative filler.</span></div>
+        <div class="review-note"><span class="note-dot"></span><span>Swipe is optional. Buttons, details, and undo remain available.</span></div>
+        <div class="review-note"><span class="note-dot"></span><span>AI may reframe verified experience, but it may not invent experience.</span></div>
+        <div class="review-note"><span class="note-dot"></span><span>Free is metered by swipes and polish tries, never by honesty: the first tailored kit on a saved job is always free.</span></div>
+      </section>
+    </aside>
+
+    <section class="stage" aria-label="Interactive iPhone prototype">
+      <div class="phone">
+        <div class="dynamic-island" aria-hidden="true"></div>
+        <div class="status-bar"><span>9:41</span><span class="status-icons">▮▮▮ ᯤ ▰</span></div>
+        <div id="toast" class="toast" role="status"></div>
+        <div id="app"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var jobs = [
+        { id: "northstar", company: "Northstar", monogram: "N", color: "#dcd6ff", deck: "#efecff", pop: "#d6ff63",
+          title: "Senior Product Designer", location: "Remote · Europe", salary: "€72–88k", type: "Full-time",
+          source: "Company careers", fresh: "18 min ago", match: 92,
+          reasons: ["Your 6 years in SaaS exceeds the 5-year requirement", "Figma, discovery, and design systems match"],
+          concern: "Portfolio must show one 0→1 product case study.",
+          about: "Own end-to-end product design for a workflow platform used by distributed operations teams. You will partner with product and engineering from discovery through shipped outcomes.",
+          supported: true },
+        { id: "loomery", company: "Loomery", monogram: "L", color: "#bfe9ff", deck: "#e9f7ff", pop: "#ff8b5c",
+          title: "Product Designer, Growth", location: "Berlin · Hybrid", salary: "€65–78k", type: "Full-time",
+          source: "Welcome to the Jungle", fresh: "44 min ago", match: 87,
+          reasons: ["Strong overlap with your activation and onboarding work", "English-first team and Berlin hybrid preference match"],
+          concern: "Role asks for experimentation analytics; your profile has limited evidence.",
+          about: "Design experiments across acquisition, activation, and retention. Work in a small cross-functional group with direct access to customers and product data.",
+          supported: true },
+        { id: "fieldnote", company: "Fieldnote", monogram: "F", color: "#d8f3b5", deck: "#eff8e6", pop: "#6957f5",
+          title: "Founding Product Designer", location: "Remote · EMEA", salary: "€70–95k", type: "Full-time",
+          source: "Otta", fresh: "2 hr ago", match: 81,
+          reasons: ["Your early-stage product work fits the ownership level", "Remote EMEA and salary preferences match"],
+          concern: "The role includes light brand work outside your stated focus.",
+          about: "Set the design direction for a young B2B platform, build its first durable design system, and work directly with the founders on product strategy.",
+          supported: false },
+        { id: "arc", company: "Arc Health", monogram: "A", color: "#ffdbbb", deck: "#fff1e5", pop: "#78d9ff",
+          title: "Product Design Lead", location: "London · Hybrid", salary: "£82–96k", type: "Full-time",
+          source: "Company careers", fresh: "Today", match: 74,
+          reasons: ["Design leadership and complex workflow experience align", "Healthcare experience is preferred, not required"],
+          concern: "Requires two office days; your preference is remote-first.",
+          about: "Lead a small product design team simplifying clinical administration. Balance hands-on product work with coaching and design operations.",
+          supported: true },
+        { id: "mono", company: "Mono", monogram: "M", color: "#ffd9e6", deck: "#fff0f5", pop: "#d6ff63",
+          title: "Staff Product Designer, Platform", location: "Remote · Europe", salary: "€85–102k", type: "Full-time",
+          source: "Company careers", fresh: "31 min ago", match: 89,
+          reasons: ["Platform and design-system depth match the staff scope", "Remote Europe and salary band both clear your floor"],
+          concern: "Expects occasional travel to Copenhagen (quarterly).",
+          about: "Shape the design platform powering every Mono product surface: tokens, primitives, and the tooling other designers build with.",
+          supported: true },
+        { id: "brightline", company: "Brightline", monogram: "B", color: "#d6ecff", deck: "#ecf6ff", pop: "#ffe36e",
+          title: "Senior UX Designer, Payments", location: "Amsterdam · Hybrid", salary: "€70–84k", type: "Full-time",
+          source: "Otta", fresh: "1 hr ago", match: 78,
+          reasons: ["Complex-flow experience maps to payments onboarding", "English-first team; relocation support offered"],
+          concern: "Domain is regulated fintech; compliance review adds process.",
+          about: "Design the merchant onboarding and payout flows for a European payments platform, working tightly with risk and compliance.",
+          supported: true },
+        { id: "cargo", company: "Cargo", monogram: "C", color: "#e3ddff", deck: "#f1eeff", pop: "#ff8b5c",
+          title: "Product Designer, Logistics", location: "Remote · EMEA", salary: "€64–76k", type: "Full-time",
+          source: "Welcome to the Jungle", fresh: "3 hr ago", match: 72,
+          reasons: ["Operational-tool background fits dispatch workflows", "Remote EMEA matches your preference"],
+          concern: "Salary top end sits below your stated midpoint.",
+          about: "Redesign dispatch and tracking tools used by freight teams in 14 countries. Heavy tables, live data, edge cases everywhere.",
+          supported: true },
+        { id: "halide", company: "Halide", monogram: "H", color: "#d9f2ea", deck: "#ecf9f4", pop: "#f20c78",
+          title: "Design Lead, Mobile", location: "Remote · Europe", salary: "€88–105k", type: "Full-time",
+          source: "Company careers", fresh: "Today", match: 84,
+          reasons: ["Mobile-first shipping record matches the charter", "Lead level aligns with your two-level preference"],
+          concern: "Team is 11 hours of overlap with PST twice a week.",
+          about: "Lead mobile design across a photography toolset loved by professionals. Small senior team, high craft bar, direct user community access.",
+          supported: false }
+      ];
+
+      var onboardingSteps = [
+        { title: "What work should we look for?", help: "Choose the closest role. You can add adjacent titles later.", options: ["Product designer", "UX/UI designer", "Design lead", "Product manager"] },
+        { title: "Where do you want to work?", help: "We use this to rank roles, not to exclude good exceptions.", options: ["Remote in Europe", "Berlin · hybrid", "London · hybrid", "Relocation possible"] },
+        { title: "What level fits you now?", help: "This helps avoid junior roles and unrealistic stretches.", options: ["Mid-level", "Senior", "Lead", "Open to two levels"] },
+        { title: "Set your salary floor", help: "You will not see this number shared with employers.", field: true },
+        { title: "Give AI your real career history", help: "Your CV becomes the evidence source for matching and tailoring. Nothing is sent to employers yet.", upload: true },
+        { title: "How quickly should we alert you?", help: "Fresh company listings often have the smallest applicant pools.", options: ["Immediately", "Morning and evening", "Daily digest", "No notifications"] }
+      ];
+
+      var FREE_SWIPES = 20;
+
+      var state = {
+        screen: "welcome",
+        onboardingStep: 0,
+        answers: {0: "Product designer", 1: "Remote in Europe", 2: "Senior", 5: "Immediately"},
+        uploaded: false,
+        favorites: ["northstar"],
+        dismissed: [],
+        history: [],
+        selectedJobId: "northstar",
+        selectedAppId: null,
+        studioTab: "cv",
+        studio: {},            // per-job: { generated, generating, accepted: [], tone }
+        applied: [],           // { jobId, at }
+        swipesUsed: 3,
+        decisions: 0,
+        coached: false,
+        learningDismissed: false,
+        restoredId: null,
+        guideOpen: false,
+        guideTone: null
+      };
+
+      var app = document.getElementById("app");
+      var toast = document.getElementById("toast");
+
+      function icon(name) {
+        var icons = {
+          back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+          filter: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 5v4M6 15v4"/></svg>',
+          undo: '<svg viewBox="0 0 24 24"><path d="M9 8H5v-4"/><path d="M5.5 8.5A8 8 0 1 1 4 15"/></svg>',
+          x: '<svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>',
+          heart: '<svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.7-7.5a5.5 5.5 0 0 0 1.1-8.9Z"/></svg>',
+          star: '<svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.2l5.9-.8L12 3Z"/></svg>',
+          info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+          discover: '<svg viewBox="0 0 24 24"><path d="m14.5 9.5-3 1.5-1.5 3 3-1.5 1.5-3Z"/><circle cx="12" cy="12" r="9"/></svg>',
+          saved: '<svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4V4Z"/></svg>',
+          activity: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 9h8M8 13h5"/></svg>',
+          profile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>',
+          upload: '<svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>',
+          spark: '<svg viewBox="0 0 24 24"><path d="m12 2 1.5 5.5L19 9l-5.5 1.5L12 16l-1.5-5.5L5 9l5.5-1.5L12 2Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"/></svg>'
+        };
+        return icons[name] || "";
+      }
+
+      function jobById(id) { return jobs.find(function (j) { return j.id === id; }); }
+      function selectedJob() { return jobById(state.selectedJobId) || jobs[0]; }
+      function studioFor(id) {
+        if (!state.studio[id]) state.studio[id] = { generated: false, generating: false, accepted: [], tone: null };
+        return state.studio[id];
+      }
+      function deckList() {
+        return jobs.filter(function (j) {
+          return state.dismissed.indexOf(j.id) === -1 &&
+                 state.favorites.indexOf(j.id) === -1 &&
+                 !state.history.some(function (h) { return h.id === j.id; });
+        });
+      }
+      function currentJob() { return deckList()[0] || null; }
+      function nextJob() { return deckList()[1] || null; }
+      function swipesLeft() { return Math.max(0, FREE_SWIPES - state.swipesUsed); }
+      function isApplied(id) { return state.applied.some(function (a) { return a.jobId === id; }); }
+      function appStage(a) {
+        var s = (Date.now() - a.at) / 1000;
+        if (s < 8) return 0;
+        if (s < 40) return 1;
+        return 2;
+      }
+
+      function showToast(message, actionLabel, actionName) {
+        toast.innerHTML = "<span>" + message + "</span>" + (actionLabel ? '<button data-action="' + actionName + '">' + actionLabel + "</button>" : "");
+        toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(function () { toast.classList.remove("show"); }, 2200);
+      }
+      function setScreen(screen) { state.screen = screen; render(); }
+      function topbar(title, back) {
+        return '<header class="topbar"><button class="icon-button" data-screen="' + (back || "discover") + '" aria-label="Back">' + icon("back") + '</button><h1>' + title + '</h1><span></span></header>';
+      }
+      function nav(active) {
+        var favBadge = state.favorites.filter(function (id) { return !isApplied(id); }).length;
+        var items = [["discover","discover","Discover",0],["favorites","saved","Favorites",favBadge],["applications","activity","Applications",0],["profile","profile","Profile",0]];
+        return '<nav class="tabbar" aria-label="Main navigation">' + items.map(function (item) {
+          var iconWrap = item[3] > 0 ? '<span class="nav-badge" data-count="' + item[3] + '">' + icon(item[1]) + '</span>' : icon(item[1]);
+          return '<button class="nav-item ' + (active === item[0] ? "active" : "") + '" data-screen="' + item[0] + '" aria-current="' + (active === item[0] ? "page" : "false") + '">' + iconWrap + '<span>' + item[2] + '</span></button>';
+        }).join("") + '</nav>';
+      }
+
+      function renderWelcome() {
+        return '<section class="screen welcome"><div class="wordmark"><span class="mark"></span>Scout</div><div class="welcome-orbit" aria-hidden="true"><span class="orbit-card orbit-one"><small>your fit</small><strong>92%</strong></span><span class="orbit-pop">↗</span><span class="orbit-card orbit-two"><small>fresh today</small><strong>24</strong></span></div>' +
+          '<div class="welcome-copy"><p class="overline">Your job search, focused</p><h1>Find the roles worth <em>your time.</em></h1><p class="lead">Fresh jobs from company sites and overlooked boards, ranked around the work you actually want.</p></div>' +
+          '<div><p class="trust-line"><span>✓</span><span>You review every application before it is sent</span></p><div class="button-stack"><button class="btn btn-primary" data-action="start-onboarding">Build my job profile</button><button class="btn btn-plain" data-screen="discover">Preview with sample data</button></div></div></section>';
+      }
+
+      function renderOnboarding() {
+        var step = onboardingSteps[state.onboardingStep];
+        var input = "";
+        if (step.options) {
+          input = '<div class="choices">' + step.options.map(function (option) {
+            return '<button class="choice ' + (state.answers[state.onboardingStep] === option ? "selected" : "") + '" data-choice="' + option + '">' + option + '</button>';
+          }).join("") + '</div>';
+        } else if (step.field) {
+          input = '<label class="field-label" for="salary">Minimum annual salary</label><input id="salary" class="text-field" value="€65,000" inputmode="numeric" aria-label="Minimum annual salary"><p class="privacy" style="text-align:left;margin-top:9px">We still show exceptional roles slightly below this, clearly labeled.</p>';
+        } else if (step.upload) {
+          input = '<div class="upload-box ' + (state.uploaded ? "uploaded" : "") + '"><div class="upload-icon">' + (state.uploaded ? "✓" : icon("upload")) + '</div><h3>' + (state.uploaded ? "CV added" : "Add your current CV") + '</h3><p>' + (state.uploaded ? "Product_Designer_CV.pdf · 182 KB" : "PDF or DOCX · Your source of truth for AI tailoring") + '</p><button class="btn btn-small ' + (state.uploaded ? "" : "btn-dark") + '" data-action="upload-cv">' + (state.uploaded ? "Replace file" : "Choose a file") + '</button></div>';
+        }
+        return '<section class="screen onboarding"><div class="onboard-head"><button class="icon-button" data-action="onboard-back" aria-label="Previous question">' + icon("back") + '</button><div class="progress"><span style="width:' + (((state.onboardingStep + 1) / onboardingSteps.length) * 100) + '%"></span></div><span></span></div>' +
+          '<div class="question"><p class="overline">Question ' + (state.onboardingStep + 1) + ' of ' + onboardingSteps.length + '</p><h1>' + step.title + '</h1><p class="lead">' + step.help + '</p>' + input + '</div>' +
+          '<footer class="onboard-footer"><button class="btn btn-primary" data-action="onboard-next">' + (state.onboardingStep === onboardingSteps.length - 1 ? "Build my matches" : "Continue") + '</button><p class="privacy">Your answers stay private and can be changed from Profile.</p></footer></section>';
+      }
+
+      function renderReady() {
+        return '<section class="screen ready"><div><div class="wordmark"><span class="mark"></span>Scout</div><div class="ready-art"><div class="ready-card"></div><div class="ready-card"></div><div class="ready-card"><strong>92</strong><span style="font-size:10px;color:var(--muted)">top match</span></div></div></div><div><p class="overline">Profile ready</p><h1>We found 24 roles worth reviewing.</h1><p class="lead">The first eight were posted today. Swipe to shortlist; open any role for the evidence behind its score.</p><button class="btn btn-primary" style="width:100%" data-screen="discover">Review fresh roles</button></div></section>';
+      }
+
+      function jobCardHTML(job, behind) {
+        return '<article class="swipe-card ' + (behind ? "behind" : "promote") + '" ' + (behind ? "" : "data-swipe-card") + ' style="--company-color:' + job.color + '"><span class="decision-stamp save">SAVE</span><span class="decision-stamp pass">PASS</span><span class="decision-stamp back">BACK</span>' +
+          '<div class="card-top"><div class="source-row"><span class="source-pill"><i></i>' + job.source + '</span><span class="freshness">' + job.fresh + '</span></div><span class="company-monogram">' + job.monogram + '</span></div>' +
+          '<div class="card-body"><p class="job-company">' + job.company + '</p><h2 class="job-title">' + job.title + '</h2><div class="job-meta"><span class="meta-chip">' + job.location + '</span><span class="meta-chip">' + job.salary + '</span></div>' +
+          '<div class="fit-block"><div class="fit-head"><strong>Why it fits</strong><span class="fit-score">' + job.match + '% match</span></div>' + job.reasons.slice(0,2).map(function (r) { return '<div class="fit-reason"><b>✓</b><span>' + r + '</span></div>'; }).join("") + '</div>' +
+          '<div class="concern"><b>!</b><span>' + job.concern + '</span></div><button class="card-detail-link" data-action="open-detail" data-id="' + job.id + '">Read full job profile</button></div></article>';
+      }
+
+      function renderDiscover() {
+        if (swipesLeft() <= 0) return renderLimit();
+        var job = currentJob();
+        if (!job) return renderEmpty();
+        var behind = nextJob();
+        var coach = !state.coached
+          ? '<div class="coach-overlay"><div class="coach-card"><h3>Three ways to decide</h3><div class="coach-row"><span>→</span><span><strong>Swipe right</strong> to save a role to Favorites.</span></div><div class="coach-row"><span>←</span><span><strong>Swipe left</strong> to pass. Undo is always one tap away.</span></div><div class="coach-row"><span>★</span><span><strong>Star</strong> a role to save it and jump straight into tailoring.</span></div><button class="btn btn-primary" style="width:100%;margin-top:6px" data-action="dismiss-coach">Got it</button></div></div>' : "";
+        return '<section class="screen discover" style="--deck-tint:' + job.deck + ';--deck-pop:' + job.pop + '">' +
+          '<div class="deck" style="margin-top:14px">' + (behind ? jobCardHTML(behind, true) : '<div class="behind-card"></div>') + jobCardHTML(job, false) + coach + '</div>' +
+          '<div class="deck-actions"><button class="round-action" data-action="undo" aria-label="Undo last decision" ' + (state.history.length ? "" : "disabled") + '>' + icon("undo") + '</button><button class="round-action large" data-action="pass" aria-label="Pass on this job">' + icon("x") + '</button><button class="round-action star" data-action="fast-track" aria-label="Star: save and tailor now">' + icon("star") + '</button><button class="round-action large save" data-action="save" aria-label="Save this job">' + icon("heart") + '</button><button class="round-action" data-action="open-detail" data-id="' + job.id + '" aria-label="View job details">' + icon("info") + '</button></div>' + nav("discover") + '</section>';
+      }
+
+      function renderDetail() {
+        var job = selectedJob();
+        return '<section class="screen">' + topbar(job.company, "discover") + '<div class="screen-scroll"><div class="detail-hero" style="--company-color:' + job.color + '"><div class="company-tile">' + job.monogram + '</div><h2>' + job.title + '</h2><p>' + job.company + ' · ' + job.location + '</p><div class="job-meta"><span class="meta-chip">' + job.salary + '</span><span class="meta-chip">' + job.type + '</span><span class="meta-chip">' + job.fresh + '</span></div></div>' +
+          '<section class="section"><div class="fit-head"><h3>Why Scout ranked it highly</h3><span class="fit-score">' + job.match + '%</span></div>' + job.reasons.map(function (r) { return '<div class="reason-row"><span>✓</span><div>' + r + '</div></div>'; }).join("") + '<div class="reason-row"><span style="background:#fff3e4;color:var(--amber)">!</span><div>' + job.concern + '</div></div></section>' +
+          '<section class="section"><h3>About the role</h3><p>' + job.about + '</p></section><section class="section"><h3>Source and freshness</h3><p>Found on ' + job.source + '. Scout last verified the listing ' + job.fresh.toLowerCase() + '. You will always review application materials before anything is sent.</p></section></div>' +
+          '<footer class="detail-actions"><button class="round-action" data-action="pass-from-detail" aria-label="Pass">' + icon("x") + '</button><button class="btn btn-primary" data-action="save-from-detail">' + (state.favorites.indexOf(job.id) !== -1 ? "Open in favorites" : "Save to favorites") + '</button></footer></section>';
+      }
+
+      function renderFavorites() {
+        var saved = jobs.filter(function (j) { return state.favorites.indexOf(j.id) !== -1 && !isApplied(j.id); });
+        if (!saved.length) return '<section class="screen"><div class="page-title"><h1>Favorites</h1><p>Your serious shortlist, not another inbox.</p></div><div class="empty-state"><div><div class="empty-symbol">♡</div><h2>No favorites yet</h2><p>Save roles from Discover. We will keep checking whether they are still open.</p><button class="btn btn-primary" data-screen="discover">Find fresh roles</button></div></div>' + nav("favorites") + '</section>';
+        return '<section class="screen"><div class="page-title"><h1>Favorites</h1><p>' + saved.length + ' shortlisted · ordered by freshness</p></div><div class="screen-scroll" style="padding-top:0"><div class="saved-list">' + saved.map(function (job) {
+          var st = state.studio[job.id];
+          var ready = st && st.generated && st.accepted.length >= 2;
+          var chip = ready ? '<span class="ready-chip ok">✓ Tailored &amp; ready</span>' : (st && st.generated ? '<span class="ready-chip top">Review suggestions</span>' : '<span class="ready-chip">Not tailored yet</span>');
+          return '<article class="saved-job" style="--company-color:' + job.color + '"><div class="saved-logo">' + job.monogram + '</div><div><h3>' + job.title + '</h3><p>' + job.company + ' · ' + job.location + '</p><p style="margin-top:6px">' + chip + '</p></div><button class="saved-arrow" data-action="open-detail" data-id="' + job.id + '" aria-label="Open details">›</button><div class="saved-cta"><span>' + job.match + '% fit · verified ' + job.fresh.toLowerCase() + '</span><button class="btn btn-small btn-dark" data-action="open-studio" data-id="' + job.id + '">' + (ready ? "Review &amp; apply" : "Tailor application") + '</button></div></article>';
+        }).join("") + '</div></div>' + nav("favorites") + '</section>';
+      }
+
+      function studioSuggestions(job) {
+        return [
+          { id: "cv-1", label: "Emphasize for this role", text: "Led discovery and end-to-end design for a new workflow product, partnering with engineering from prototype to launch.", evidence: "✓ From “Workflow launch” project" },
+          { id: "cv-2", label: "Reorder for relevance", text: "Move the design-system leadership bullet above visual design so it answers " + job.company + "’s first requirement.", evidence: "✓ From “Design system” role" }
+        ];
+      }
+
+      function renderStudio() {
+        var job = selectedJob();
+        var st = studioFor(job.id);
+        var content;
+        if (st.generating) {
+          content = '<div class="generating"><div><div class="spinner"></div><strong>Grounding your documents</strong><p style="color:var(--muted);font-size:11px;line-height:1.45">Comparing the job with your verified career profile.<br>No new claims will be created.</p></div></div>';
+        } else if (!st.generated) {
+          content = '<div class="grounding-note"><span>✓</span><span><strong>Evidence-only mode is on.</strong><br>Scout can sharpen wording and emphasis, but cannot add skills or outcomes missing from your career profile.</span></div><div class="doc-preview"><div class="doc-toolbar"><strong>' + (state.studioTab === "cv" ? "Product_Designer_CV.pdf" : "Cover letter") + '</strong><span style="font-size:9px;color:var(--muted)">Original</span></div><div class="doc-page"><h3>Arben Sejdiu</h3><span class="doc-sub">Senior Product Designer · Europe</span><div class="doc-line"></div><div class="doc-line"></div><div class="doc-line short"></div><div class="doc-line" style="margin-top:25px"></div><div class="doc-line"></div><div class="doc-line short"></div></div></div>';
+        } else if (state.studioTab === "cv") {
+          var suggestions = studioSuggestions(job);
+          content = '<div class="grounding-note"><span>✓</span><span>All suggested claims are traceable to your CV. One missing qualification stays visible to the employer.</span></div><div class="doc-preview"><div class="doc-toolbar"><strong>Product_Designer_CV.pdf</strong><span style="font-size:9px;color:var(--green)">' + suggestions.filter(function (s) { return st.accepted.indexOf(s.id) === -1; }).length + ' open suggestions</span></div><div class="doc-page"><h3>Arben Sejdiu</h3><span class="doc-sub">Senior Product Designer · Europe</span>' +
+            suggestions.map(function (s) {
+              var accepted = st.accepted.indexOf(s.id) !== -1;
+              return '<div class="suggestion"><span class="suggestion-label">' + s.label + '</span><p>' + s.text + '</p><span class="evidence">' + s.evidence + '</span><div class="change-actions"><button class="' + (accepted ? "accepted" : "") + '" data-action="accept-change" data-sid="' + s.id + '">' + (accepted ? "✓ Accepted" : "Accept") + '</button><button data-action="reject-change" data-sid="' + s.id + '">Keep original</button></div></div>';
+            }).join("") + '<div class="doc-line" style="margin-top:22px"></div><div class="doc-line"></div><div class="doc-line short"></div></div></div>';
+        } else {
+          var toneNote = st.tone ? ' · rewritten ' + st.tone.toLowerCase() : "";
+          content = '<div class="grounding-note"><span>✓</span><span>Drafted from your verified experience and the employer’s published requirements' + toneNote + '.</span></div><div class="doc-preview"><div class="doc-toolbar"><strong>Cover letter</strong><span style="font-size:9px;color:var(--green)">Draft ready</span></div><div class="doc-page"><p style="font-size:11px;line-height:1.55;margin-top:0">Hello ' + job.company + ' team,</p><p style="font-size:11px;line-height:1.55">I’m applying for the ' + job.title + ' role because the challenge closely matches the products I have spent the last six years designing.</p><div class="suggestion"><span class="suggestion-label">Grounded paragraph</span><p>At Aster, I led discovery and product design for a new workflow product through launch.</p><span class="evidence">✓ CV · Workflow launch</span></div><p style="font-size:11px;line-height:1.55">I would welcome the opportunity to discuss the work.</p></div></div>';
+        }
+        var readyCount = 1 + (st.generated ? 1 : 0) + (st.generated && st.accepted.length >= 2 ? 1 : 0);
+        var guide = state.guideOpen ? renderGuideSheet() : "";
+        return '<section class="screen">' + topbar("Application studio", "favorites") + '<header class="studio-head"><p class="overline">' + job.company + '</p><h2>' + job.title + '</h2><div class="readiness"><div class="readiness-row"><span>Application readiness</span><strong>' + readyCount + ' of 3 ready</strong></div><div class="readiness-bar"><span style="width:' + (readyCount / 3 * 100) + '%"></span></div></div></header><div class="segmented"><button class="' + (state.studioTab === "cv" ? "active" : "") + '" data-studio-tab="cv">CV</button><button class="' + (state.studioTab === "letter" ? "active" : "") + '" data-studio-tab="letter">Cover letter</button></div><div class="screen-scroll studio-scroll">' + content + '</div><footer class="studio-footer">' + (st.generated ? '<button class="btn btn-primary" data-screen="preflight">Review application</button><button class="btn btn-plain btn-small" data-action="open-guide">Regenerate with guidance</button>' : '<button class="btn btn-primary" data-action="generate">' + icon("spark") + ' Tailor both documents</button>') + '</footer>' + guide + '</section>';
+      }
+
+      function renderGuideSheet() {
+        var tones = ["Shorter", "More formal", "More direct", "Warmer"];
+        return '<div class="guide-sheet"><div class="guide-scrim" data-action="close-guide"></div><div class="guide-card"><div class="guide-grabber"></div><h3>Regenerate with guidance</h3><p>Pick a direction. Evidence-only mode stays on — wording changes, facts never do.</p><div class="guide-chips">' + tones.map(function (t) {
+          return '<button class="guide-chip ' + (state.guideTone === t ? "selected" : "") + '" data-tone="' + t + '">' + t + '</button>';
+        }).join("") + '</div><div class="button-stack"><button class="btn btn-primary" data-action="apply-guide" ' + (state.guideTone ? "" : "disabled") + '>Regenerate</button><button class="btn btn-plain btn-small" data-action="close-guide">Cancel</button></div></div></div>';
+      }
+
+      function renderPreflight(unsupported) {
+        var job = selectedJob();
+        var support = unsupported ? false : job.supported;
+        return '<section class="screen">' + topbar("Review", "studio") + '<div class="review-summary"><p class="overline">Final check</p><h2>Ready to apply?</h2><p>Nothing is sent until you confirm below.</p><section class="review-block"><div class="review-block-head"><h3>Contact details</h3><button class="text-link">Edit</button></div><div class="review-value"><strong>Arben Sejdiu</strong><br>arben@example.com · +389 70 000 000<br>Remote in Europe</div></section><section class="review-block"><div class="review-block-head"><h3>Documents</h3><button class="text-link" data-screen="studio">Review changes</button></div><div class="file-row"><span class="file-icon">PDF</span><div><strong>CV · tailored for ' + job.company + '</strong><span>2 pages · verified</span></div><span>✓</span></div><div class="file-row"><span class="file-icon">PDF</span><div><strong>Cover letter</strong><span>1 page · verified</span></div><span>✓</span></div></section><section class="review-block"><div class="review-block-head"><h3>Employer questions</h3><button class="text-link">Edit</button></div><div class="review-value">Authorized to work in Europe · Yes<br>Salary expectation · ' + job.salary + '<br>Notice period · 30 days</div></section><div class="verified-row"><span>✓</span><span><strong>Facts checked.</strong> Every answer and AI-edited claim maps to information you supplied.</span></div></div><footer class="apply-footer"><p>' + (support ? 'Supported application · direct employer submission' : 'This portal does not support direct submission yet') + '</p><button class="btn ' + (support ? "btn-primary" : "btn-dark") + '" style="width:100%" data-action="submit-application" data-supported="' + support + '">' + (support ? "Submit application" : "Open official application") + '</button></footer></section>';
+      }
+
+      function renderApplications() {
+        var rows = state.applied.map(function (a) {
+          var j = jobById(a.jobId);
+          var stage = appStage(a);
+          var label = stage === 0 ? "Submitting" : stage === 1 ? "Applied" : "Viewed";
+          return '<button class="activity-row" data-action="open-app" data-id="' + a.jobId + '"><div class="activity-dot">' + (stage === 2 ? "👀" : "✓") + '</div><div><h3>' + j.title + '</h3><p>' + j.company + ' · submitted today at 9:41 · tap for receipt</p></div><span class="status ' + (stage === 2 ? "viewed" : "") + '">' + label + '</span></button>';
+        }).join("");
+        return '<section class="screen"><div class="page-title"><h1>Applications</h1><p>Your submissions, receipts, and next actions.</p></div><div class="screen-scroll" style="padding-top:0">' + (state.applied.length ? rows : '<div class="empty-state" style="min-height:520px;padding:20px"><div><div class="empty-symbol">↗</div><h2>No applications yet</h2><p>Tailor a favorite, review every answer, then submit when you are ready.</p><button class="btn btn-primary" data-screen="favorites">Open favorites</button></div></div>') + '</div>' + nav("applications") + '</section>';
+      }
+
+      function renderAppDetail() {
+        var a = state.applied.find(function (x) { return x.jobId === state.selectedAppId; }) || state.applied[0];
+        if (!a) { return renderApplications(); }
+        var j = jobById(a.jobId);
+        var stage = appStage(a);
+        var steps = [
+          { t: "Submitted", d: "Sent directly to " + j.company + " with your approved documents." },
+          { t: "Confirmed by employer portal", d: "The listing’s applicant system acknowledged receipt." },
+          { t: "Viewed by a human", d: "Someone at " + j.company + " opened your application." }
+        ];
+        return '<section class="screen">' + topbar("Application receipt", "applications") + '<div class="screen-scroll"><div class="detail-hero" style="--company-color:' + j.color + '"><div class="company-tile">' + j.monogram + '</div><h2>' + j.title + '</h2><p>' + j.company + ' · submitted today at 9:41</p></div>' +
+          '<section class="section"><h3>Status</h3><div class="app-timeline">' + steps.map(function (s, i) {
+            var cls = i < stage ? "done" : i === stage ? "now" : "pending";
+            return '<div class="tl-step ' + cls + '"><span class="tl-dot">' + (i < stage ? "✓" : i === stage ? "●" : "") + '</span><div><h4>' + s.t + '</h4><p>' + s.d + '</p></div></div>';
+          }).join("") + '</div></section>' +
+          '<section class="section"><h3>Exactly what was sent</h3><div class="file-row"><span class="file-icon">PDF</span><div><strong>CV · tailored for ' + j.company + '</strong><span>2 pages · 2 accepted changes · evidence-checked</span></div><span>✓</span></div><div class="file-row"><span class="file-icon">PDF</span><div><strong>Cover letter</strong><span>1 page · grounded in “Workflow launch”</span></div><span>✓</span></div><div class="verified-row" style="margin-top:12px"><span>✓</span><span><strong>Receipt, not a promise.</strong> Scout stores the exact documents and answers submitted, permanently.</span></div></section>' +
+          '<section class="section"><h3>Actions</h3><div class="button-stack"><button class="btn" data-action="toast-only" data-msg="Opening the original listing">View original listing</button><button class="btn btn-plain" style="color:var(--red)" data-action="withdraw" data-id="' + a.jobId + '">Withdraw application</button></div></section></div></section>';
+      }
+
+      function renderPlans() {
+        return '<section class="screen">' + topbar("Plans", "discover") + '<div class="screen-scroll plans"><div class="page-title" style="padding-left:0;padding-right:0"><h1>Simple plans</h1><p>Three brackets, one number each. Cancel or pause the moment you are hired.</p></div>' +
+          '<div class="plan-card"><div class="plan-head"><h3>Free</h3><span class="plan-price">€0</span></div><p class="plan-sub">Taste it — no card, no catch</p><ul class="plan-feats"><li><b>✓</b>20 swipes per week</li><li><b>✓</b>Free tailored CV + letter on every saved job</li><li><b>✓</b>2 AI polish tries per job · typing always free</li><li><b>✓</b>Apply via the official listing</li><li class="na"><b>—</b>Automated applying</li></ul></div>' +
+          '<div class="plan-card featured"><span class="plan-flag">Most popular</span><div class="plan-head"><h3>Plus</h3><span class="plan-price">€14.99 <small>/month</small></span></div><p class="plan-sub">"Stop slowing me down" · €6.99/week · €34.99/quarter</p><ul class="plan-feats"><li><b>✓</b><strong>Unlimited swipes</strong></li><li><b>✓</b><strong>Unlimited AI tries</strong> on every job</li><li><b>✓</b>Everything in Free</li><li class="na"><b>—</b>Automated applying</li></ul><button class="btn btn-primary" data-action="toast-only" data-msg="This is where checkout would open">Get Plus</button></div>' +
+          '<div class="plan-card"><div class="plan-head"><h3>Pro</h3><span class="plan-price">€34.99 <small>/month</small></span></div><p class="plan-sub">"Apply while I sleep" · €12.99/week · €79.99/quarter</p><ul class="plan-feats"><li><b>✓</b>Everything in Plus</li><li><b>✓</b><strong>Automated applying — up to 1,000/month</strong>, no daily cap</li><li><b>✓</b>Human-paced submissions protect your accounts</li><li><b>✓</b>Receipt for every application: exact documents sent</li></ul><button class="btn btn-dark" data-action="toast-only" data-msg="This is where checkout would open">Go Pro</button></div>' +
+          '<p class="privacy" style="text-align:left">Fair use applies to unlimited features: limits are set far above any human job hunt and exist only to stop scripts. Same price for everyone in the same country — no personal pricing, ever.</p></div></section>';
+      }
+
+      function renderLimit() {
+        return '<section class="screen"><div class="page-title"><h1>Fresh roles</h1></div><div class="empty-state"><div><div class="empty-symbol">✋</div><h2>You’re out of free swipes</h2><p>Your 20 free swipes reset Monday. Your favorites, documents, and applications stay fully available — or go unlimited now.</p><div class="button-stack" style="margin-top:16px"><button class="btn btn-primary" data-screen="plans">See plans</button><button class="btn btn-plain" data-screen="favorites">Open favorites</button></div></div></div>' + nav("discover") + '</section>';
+      }
+
+      function renderProfile() {
+        return '<section class="screen"><div class="page-title"><h1>Profile</h1><p>The evidence and preferences behind your matches.</p></div><div class="screen-scroll" style="padding-top:0"><div class="profile-card"><div class="profile-avatar">AS</div><h2>Arben Sejdiu</h2><p>Senior Product Designer · Remote in Europe</p></div><button class="setting-row" data-screen="plans"><span>Plan</span><small>Free · ' + swipesLeft() + ' swipes left ›</small></button><button class="setting-row"><span>Career profile</span><small>CV verified ›</small></button><button class="setting-row"><span>Search preferences</span><small>8 active ›</small></button><button class="setting-row"><span>Application answers</span><small>12 saved ›</small></button><button class="setting-row"><span>Privacy and automation</span><small>Review first ›</small></button><button class="setting-row hired" data-action="hired"><span>I got hired 🎉</span><small>Pause everything ›</small></button></div>' + nav("profile") + '</section>';
+      }
+
+      function renderEmpty() {
+        return '<section class="screen">' + topbar("Fresh roles", "discover") + '<div class="empty-state"><div><div class="empty-symbol">⌁</div><h2>You are caught up</h2><p>We checked 137 company sites and 12 smaller boards. No new role clears your preferences yet.</p><button class="btn btn-primary" data-screen="discover">Check again</button><button class="btn btn-plain" data-screen="profile">Adjust preferences</button></div></div>' + nav("discover") + '</section>';
+      }
+
+      function renderOffline() {
+        return '<section class="screen">' + topbar("Offline", "discover") + '<div class="empty-state"><div><div class="empty-symbol" style="color:var(--ink);background:var(--quiet)">!</div><h2>No connection</h2><p>Your favorites and prepared applications are still available. New roles will refresh when you reconnect.</p><button class="btn btn-dark" data-screen="discover">Try again</button><button class="btn btn-plain" data-screen="favorites">Open favorites</button></div></div></section>';
+      }
+
+      function render() {
+        var screens = {
+          welcome: renderWelcome,
+          onboarding: renderOnboarding,
+          ready: renderReady,
+          discover: renderDiscover,
+          detail: renderDetail,
+          favorites: renderFavorites,
+          studio: renderStudio,
+          preflight: function () { return renderPreflight(false); },
+          unsupported: function () { state.selectedJobId = "fieldnote"; return renderPreflight(true); },
+          applications: renderApplications,
+          appdetail: renderAppDetail,
+          plans: renderPlans,
+          limit: renderLimit,
+          profile: renderProfile,
+          empty: renderEmpty,
+          offline: renderOffline
+        };
+        app.innerHTML = (screens[state.screen] || renderWelcome)();
+        document.querySelectorAll("[data-jump]").forEach(function (button) {
+          button.setAttribute("aria-current", button.getAttribute("data-jump") === state.screen ? "true" : "false");
+        });
+        if (state.screen === "discover") {
+          attachSwipe();
+          if (state.restoredId) {
+            var card = app.querySelector("[data-swipe-card]");
+            if (card) card.classList.add("restored");
+            state.restoredId = null;
+          }
+        }
+      }
+
+      function decide(type) {
+        var job = currentJob();
+        if (!job) return;
+        state.history.push({ id: job.id, type: type });
+        state.swipesUsed++;
+        state.decisions++;
+        if (type === "save" && state.favorites.indexOf(job.id) === -1) state.favorites.push(job.id);
+        if (type === "pass" && state.dismissed.indexOf(job.id) === -1) state.dismissed.push(job.id);
+        if (type === "save") showToast("Saved to Favorites", "Undo", "undo");
+        else showToast("Passed", "Undo", "undo");
+        render();
+      }
+
+      function undo() {
+        var last = state.history.pop();
+        if (!last) return;
+        state.swipesUsed = Math.max(0, state.swipesUsed - 1);
+        state.decisions = Math.max(0, state.decisions - 1);
+        state.dismissed = state.dismissed.filter(function (id) { return id !== last.id; });
+        if (last.type === "save") state.favorites = state.favorites.filter(function (id) { return id !== last.id; });
+        state.restoredId = last.id;
+        toast.classList.remove("show");
+        render();
+      }
+
+      function attachSwipe() {
+        var card = app.querySelector("[data-swipe-card]");
+        if (!card) return;
+        var startX = 0, startY = 0, dx = 0, dy = 0, active = false;
+        function move(event) {
+          if (!active) return;
+          dx = event.clientX - startX;
+          dy = event.clientY - startY;
+          card.style.transform = "translate(" + dx + "px," + (dy * 0.28) + "px) rotate(" + (dx / 18) + "deg)";
+          var saveStamp = card.querySelector(".decision-stamp.save");
+          var passStamp = card.querySelector(".decision-stamp.pass");
+          saveStamp.style.opacity = Math.max(0, Math.min(1, dx / 75));
+          passStamp.style.opacity = Math.max(0, Math.min(1, -dx / 75));
+        }
+        function end() {
+          if (!active) return;
+          active = false;
+          card.classList.remove("dragging");
+          if (Math.abs(dx) > 90) {
+            card.style.transform = "translate(" + (dx > 0 ? 520 : -520) + "px, 40px) rotate(" + (dx > 0 ? 18 : -18) + "deg)";
+            card.style.opacity = "0";
+            window.setTimeout(function () { decide(dx > 0 ? "save" : "pass"); }, 180);
+          } else {
+            card.style.transform = "";
+            card.querySelectorAll(".decision-stamp.save, .decision-stamp.pass").forEach(function (stamp) { stamp.style.opacity = 0; });
+          }
+          dx = 0; dy = 0;
+        }
+        card.addEventListener("pointerdown", function (event) { if (event.target.closest("button")) return; active = true; startX = event.clientX; startY = event.clientY; dx = 0; dy = 0; card.classList.add("dragging"); card.setPointerCapture(event.pointerId); });
+        card.addEventListener("pointermove", move);
+        card.addEventListener("pointerup", end);
+        card.addEventListener("pointercancel", end);
+      }
+
+      document.addEventListener("click", function (event) {
+        var jump = event.target.closest("[data-jump]");
+        if (jump) { setScreen(jump.getAttribute("data-jump")); return; }
+        var themeChoice = event.target.closest("[data-theme-choice]");
+        if (themeChoice) {
+          var theme = themeChoice.getAttribute("data-theme-choice");
+          document.body.setAttribute("data-theme", theme === "pink" ? "pink" : "indigo");
+          document.querySelectorAll("[data-theme-choice]").forEach(function (b) { b.setAttribute("aria-pressed", b === themeChoice ? "true" : "false"); });
+          return;
+        }
+        var screenBtn = event.target.closest("[data-screen]");
+        if (screenBtn) { setScreen(screenBtn.getAttribute("data-screen")); return; }
+        var choice = event.target.closest("[data-choice]");
+        if (choice) { state.answers[state.onboardingStep] = choice.getAttribute("data-choice"); render(); return; }
+        var tabBtn = event.target.closest("[data-studio-tab]");
+        if (tabBtn) { state.studioTab = tabBtn.getAttribute("data-studio-tab"); render(); return; }
+        var toneBtn = event.target.closest("[data-tone]");
+        if (toneBtn) { state.guideTone = toneBtn.getAttribute("data-tone"); render(); return; }
+        var action = event.target.closest("[data-action]");
+        if (!action) return;
+        var name = action.getAttribute("data-action");
+        if (name === "start-onboarding") { state.onboardingStep = 0; setScreen("onboarding"); }
+        else if (name === "onboard-back") { if (state.onboardingStep > 0) { state.onboardingStep--; render(); } else setScreen("welcome"); }
+        else if (name === "onboard-next") { if (state.onboardingStep < onboardingSteps.length - 1) { state.onboardingStep++; render(); } else setScreen("ready"); }
+        else if (name === "upload-cv") { state.uploaded = true; showToast("CV added securely"); render(); }
+        else if (name === "pass") decide("pass");
+        else if (name === "save") decide("save");
+        else if (name === "fast-track") {
+          var job = currentJob();
+          if (!job) return;
+          state.history.push({ id: job.id, type: "save" });
+          state.swipesUsed++; state.decisions++;
+          if (state.favorites.indexOf(job.id) === -1) state.favorites.push(job.id);
+          state.selectedJobId = job.id;
+          showToast("Starred — opening the studio");
+          setScreen("studio");
+        }
+        else if (name === "undo") undo();
+        else if (name === "dismiss-coach") { state.coached = true; render(); }
+        else if (name === "dismiss-learning") { state.learningDismissed = true; render(); }
+        else if (name === "open-detail") { state.selectedJobId = action.getAttribute("data-id") || (currentJob() && currentJob().id); setScreen("detail"); }
+        else if (name === "pass-from-detail") { state.screen = "discover"; decide("pass"); }
+        else if (name === "save-from-detail") { var sj = selectedJob(); if (state.favorites.indexOf(sj.id) === -1) state.favorites.push(sj.id); setScreen("favorites"); }
+        else if (name === "open-studio") { state.selectedJobId = action.getAttribute("data-id"); state.studioTab = "cv"; setScreen("studio"); }
+        else if (name === "generate") { var st = studioFor(selectedJob().id); st.generating = true; render(); window.setTimeout(function () { st.generating = false; st.generated = true; render(); }, 900); }
+        else if (name === "accept-change") { var st2 = studioFor(selectedJob().id); var sid = action.getAttribute("data-sid"); if (st2.accepted.indexOf(sid) === -1) st2.accepted.push(sid); showToast("Change accepted"); render(); }
+        else if (name === "reject-change") { var st3 = studioFor(selectedJob().id); var rid = action.getAttribute("data-sid"); st3.accepted = st3.accepted.filter(function (id) { return id !== rid; }); showToast("Original wording kept"); render(); }
+        else if (name === "open-guide") { state.guideOpen = true; state.guideTone = null; render(); }
+        else if (name === "close-guide") { state.guideOpen = false; render(); }
+        else if (name === "apply-guide") { var st4 = studioFor(selectedJob().id); st4.tone = state.guideTone; state.guideOpen = false; st4.generating = true; render(); window.setTimeout(function () { st4.generating = false; render(); showToast("Rewritten — " + st4.tone.toLowerCase() + ", facts unchanged"); }, 800); }
+        else if (name === "filters") showToast("Filters are driven by your job profile");
+        else if (name === "open-app") { state.selectedAppId = action.getAttribute("data-id"); setScreen("appdetail"); }
+        else if (name === "withdraw") { var wid = action.getAttribute("data-id"); state.applied = state.applied.filter(function (a) { return a.jobId !== wid; }); showToast("Application withdrawn"); setScreen("applications"); }
+        else if (name === "toast-only") showToast(action.getAttribute("data-msg") || "Done");
+        else if (name === "hired") showToast("Congratulations! Search paused — reactivate anytime 🎉");
+        else if (name === "submit-application") {
+          if (action.getAttribute("data-supported") === "true") {
+            var job2 = selectedJob();
+            if (!isApplied(job2.id)) state.applied.push({ jobId: job2.id, at: Date.now() });
+            showToast("Application submitted");
+            setScreen("applications");
+          } else showToast("Opening the verified employer page");
+        }
+      });
+
+      window.setInterval(function () {
+        if (state.screen === "applications" && state.applied.length) render();
+      }, 5000);
+
+      render();
+    })();
+  </script>
+</body>
+</html>
