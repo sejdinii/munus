@@ -71,6 +71,7 @@ type Store = MunusState & {
   decide: (jobId: string, type: Exclude<DecisionType, "unsave">) => void;
   undo: () => Decision | undefined;
   unsave: (jobId: string) => void;
+  restoreFavorite: (jobId: string) => void;
   setStudio: (jobId: string, patch: Partial<StudioState>) => void;
   setApplication: (jobId: string, status: ApplicationStatus) => void;
   setOnboarding: (patch: Partial<OnboardingAnswers>) => void;
@@ -149,6 +150,19 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  /* Inverse of unsave for the toast's Undo: restores the favorite and logs a
+     save decision WITHOUT consuming a swipe — undoing a removal is not a new
+     deck decision. */
+  const restoreFavorite = useCallback((jobId: string) => {
+    setState((s) => ({
+      ...s,
+      decisions: [...s.decisions, { jobId, type: "save", at: Date.now() }],
+      favorites: s.favorites.includes(jobId)
+        ? s.favorites
+        : [...s.favorites, jobId],
+    }));
+  }, []);
+
   const setStudio = useCallback(
     (jobId: string, patch: Partial<StudioState>) => {
       setState((s) => ({
@@ -203,6 +217,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       decide,
       undo,
       unsave,
+      restoreFavorite,
       setStudio,
       setApplication,
       setOnboarding,
@@ -215,6 +230,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       decide,
       undo,
       unsave,
+      restoreFavorite,
       setStudio,
       setApplication,
       setOnboarding,

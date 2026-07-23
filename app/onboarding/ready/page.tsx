@@ -6,9 +6,8 @@
    showing fabricated match data. No network call happens on this screen, so
    there is no distinct error path (see wave report). */
 
-import Link from "next/link";
 import { EmptyState, LoadingState } from "@/components/states";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/Button";
 import { useMunusStore } from "@/lib/mock/store";
 import { Wordmark } from "@/components/ui/Wordmark";
 
@@ -25,11 +24,9 @@ export default function OnboardingReadyPage() {
           title="Let's finish your profile"
           body="Answer the 6 quick questions first so we can build your matches."
         >
-          <Link href="/onboarding">
-            <Button variant="primary" className="w-full">
-              Continue setup
-            </Button>
-          </Link>
+          <LinkButton href="/onboarding" variant="primary" className="w-full">
+            Continue setup
+          </LinkButton>
         </EmptyState>
       </section>
     );
@@ -42,11 +39,13 @@ export default function OnboardingReadyPage() {
         <div className="relative mt-[34px] h-[230px]">
           <div className="absolute left-1/2 top-[30px] h-[165px] w-[230px] -translate-x-1/2 -rotate-[10deg] rounded-[25px] border border-line bg-rose shadow-[0_16px_40px_rgba(32,32,38,0.1)]" />
           <div className="absolute left-1/2 top-[18px] h-[165px] w-[230px] -translate-x-1/2 rotate-[8deg] rounded-[25px] border border-line bg-sky shadow-[0_16px_40px_rgba(32,32,38,0.1)]" />
+          {/* Honest art: a checkmark, not an invented match score — no real
+              matching exists until the deck ships (critic finding #1). */}
           <div className="absolute left-1/2 top-[5px] flex h-[165px] w-[230px] -translate-x-1/2 flex-col items-center justify-center rounded-[25px] border border-line bg-paper shadow-[0_16px_40px_rgba(32,32,38,0.1)]">
-            <strong className="text-[50px] leading-none tracking-[-0.06em]">
-              92
+            <strong className="text-[50px] leading-none tracking-[-0.06em] text-rose">
+              ✓
             </strong>
-            <span className="text-[10px] text-muted">top match</span>
+            <span className="text-[10px] text-muted">profile saved</span>
           </div>
         </div>
       </div>
@@ -55,17 +54,15 @@ export default function OnboardingReadyPage() {
           Profile ready
         </p>
         <h1 className="m-0 text-[38px] leading-[1.02] tracking-[-0.055em]">
-          We found 24 roles worth reviewing.
+          Your evidence store is set.
         </h1>
         <p className="mb-7 mt-3 text-sm leading-[1.45] text-muted">
-          The first eight were posted today. Swipe to shortlist; open any
-          role for the evidence behind its score.
+          Real matches build the moment live jobs arrive — the deck ships in
+          the next wave. You can preview the app with sample data now.
         </p>
-        <Link href="/discover">
-          <Button variant="primary" className="w-full">
-            Review fresh roles
-          </Button>
-        </Link>
+        <LinkButton href="/discover" variant="primary" className="w-full">
+          Preview with sample data
+        </LinkButton>
       </div>
     </section>
   );

@@ -4,9 +4,8 @@
    redirect-apply timeline (Prepared → Opened listing → Confirmed applied).
    Wave 1 slice 3. Empty-state copy kept verbatim from the shipped placeholder. */
 
-import Link from "next/link";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import { Button } from "@/components/ui/Button";
+import { Button, LinkButton } from "@/components/ui/Button";
 import { jobById, type Job } from "@/lib/mock/jobs";
 import { useMunusStore, type Application } from "@/lib/mock/store";
 import { ApplicationRow } from "./ApplicationRow";
@@ -64,11 +63,9 @@ export default function ApplicationsPage() {
           title="No applications yet"
           body="Tailor a favorite, review every answer, then apply on the official listing when you are ready."
         >
-          <Link href="/favorites">
-            <Button variant="primary" className="w-full">
-              Open favorites
-            </Button>
-          </Link>
+          <LinkButton href="/favorites" variant="primary" className="w-full">
+            Open favorites
+          </LinkButton>
         </EmptyState>
       </section>
     );

@@ -4,9 +4,8 @@
    the next wave; until then this screen shows the honest caught-up / limit
    states so the shell demos truthfully instead of faking a deck. */
 
-import Link from "next/link";
 import { EmptyState, LoadingState } from "@/components/states";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/Button";
 import { useMunusStore } from "@/lib/mock/store";
 
 export default function DiscoverPage() {
@@ -25,16 +24,12 @@ export default function DiscoverPage() {
           title="You’re out of free swipes"
           body="Your 20 free swipes reset Monday. Your favorites, documents, and applications stay fully available — or go unlimited now."
         >
-          <Link href="/plans">
-            <Button variant="primary" className="w-full">
-              See plans
-            </Button>
-          </Link>
-          <Link href="/favorites">
-            <Button variant="plain" className="w-full">
-              Open favorites
-            </Button>
-          </Link>
+          <LinkButton href="/plans" variant="primary" className="w-full">
+            See plans
+          </LinkButton>
+          <LinkButton href="/favorites" variant="plain" className="w-full">
+            Open favorites
+          </LinkButton>
         </EmptyState>
       </section>
     );
@@ -52,7 +47,11 @@ export default function DiscoverPage() {
         symbol="⌁"
         title="Deck under construction"
         body="Real, fresh jobs with evidence-based fit reasons will appear here once the matching engine is wired up."
-      />
+      >
+        <LinkButton href="/favorites" variant="plain" className="w-full">
+          Open favorites
+        </LinkButton>
+      </EmptyState>
     </section>
   );
 }

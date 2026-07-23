@@ -28,7 +28,7 @@ export function Tabbar() {
   return (
     <nav
       aria-label="Main navigation"
-      className="grid min-h-20 grid-cols-4 items-start border-t border-line bg-paper/95 px-1.5 pb-[18px] pt-2 backdrop-blur-lg"
+      className="grid min-h-20 grid-cols-4 items-start border-t border-line bg-paper/95 px-1.5 pb-[18px] pt-2 backdrop-blur-[18px]"
     >
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
@@ -38,7 +38,7 @@ export function Tabbar() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`grid justify-items-center gap-[3px] p-0.5 text-[9px] font-[620] ${
+            className={`grid min-h-[44px] content-center justify-items-center gap-[3px] p-0.5 text-[9px] font-[620] ${
               active ? "text-rose" : "text-[#8c8488]"
             } [&_svg]:size-[21px]`}
           >

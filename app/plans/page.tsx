@@ -5,6 +5,7 @@
    back to /discover. Pricing is verbatim from FEATURES.md D9; Pro is a
    waitlist button per D5/D8 — never checkout. */
 
+import Link from "next/link";
 import { Topbar } from "@/components/ui/Topbar";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -104,7 +105,7 @@ export default function PlansPage() {
               variant="dark"
               onClick={() =>
                 showToast(
-                  "You're on the waitlist — automation ships after launch",
+                  "Waitlist opens before launch — nothing is saved yet",
                 )
               }
             >
@@ -117,6 +118,15 @@ export default function PlansPage() {
           Fair use applies to unlimited features: limits are set far above any
           human job hunt and exist only to stop scripts. Same price for
           everyone in the same country — no personal pricing, ever.
+        </p>
+        <p className="mb-0 mt-3 text-left text-[10px] text-muted">
+          <Link href="/privacy" className="underline underline-offset-2">
+            Privacy
+          </Link>
+          {" · "}
+          <Link href="/terms" className="underline underline-offset-2">
+            Terms
+          </Link>
         </p>
       </div>
     </section>

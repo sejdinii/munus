@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ErrorState, LoadingState } from "@/components/states";
-import { Button } from "@/components/ui/Button";
+import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
 import { jobById } from "@/lib/mock/jobs";
@@ -35,7 +35,7 @@ const STEPS: Array<{ status: ApplicationStatus; title: string; body: string }> =
 
 export default function ApplicationReceiptPage() {
   const { id } = useParams<{ id: string }>();
-  const { hydrated, applications } = useMunusStore();
+  const { hydrated, applications, studio } = useMunusStore();
   const { showToast } = useToast();
 
   if (!hydrated) return <LoadingState label="Loading receipt" />;
@@ -51,11 +51,9 @@ export default function ApplicationReceiptPage() {
           title="Application not found"
           body="We could not find a receipt for this application. It may have been removed."
         >
-          <Link href="/applications">
-            <Button variant="dark" className="w-full">
-              Back to applications
-            </Button>
-          </Link>
+          <LinkButton href="/applications" variant="dark" className="w-full">
+            Back to applications
+          </LinkButton>
         </ErrorState>
       </section>
     );
@@ -140,41 +138,43 @@ export default function ApplicationReceiptPage() {
 
         <section className="border-t border-line py-5">
           <h3 className="m-0 mb-[13px] text-[13px]">Documents</h3>
-          <div className="grid grid-cols-[36px_1fr_auto] items-center gap-[9px]">
-            <span
-              aria-hidden
-              className="grid h-[42px] w-9 place-items-center rounded-lg bg-quiet text-[9px] font-extrabold"
-            >
-              PDF
-            </span>
-            <span>
-              <strong className="block text-[11px]">
-                CV · tailored for {job.company}
-              </strong>
-              <span className="text-[9px] text-muted">2 pages · verified</span>
-            </span>
-            <span aria-hidden>✓</span>
-          </div>
-          <div className="mt-[9px] grid grid-cols-[36px_1fr_auto] items-center gap-[9px]">
-            <span
-              aria-hidden
-              className="grid h-[42px] w-9 place-items-center rounded-lg bg-quiet text-[9px] font-extrabold"
-            >
-              PDF
-            </span>
-            <span>
-              <strong className="block text-[11px]">Cover letter</strong>
-              <span className="text-[9px] text-muted">1 page · verified</span>
-            </span>
-            <span aria-hidden>✓</span>
-          </div>
-          <div className="mt-3 grid grid-cols-[22px_1fr] gap-[9px] rounded-[13px] bg-[#eef8f3] p-3 text-[10px] leading-[1.4] text-[#22563d]">
-            <span aria-hidden>✓</span>
-            <span>
-              <strong>Receipt, not a promise.</strong> Munus stores the exact
-              documents you approved, permanently.
-            </span>
-          </div>
+          {/* Only claim documents that exist: the studio hasn't shipped, so
+              most applications have none — saying "2 pages · verified" here
+              would be the exact fiction D2/CONTRACTS §3.1 bans (critic #2). */}
+          {studio[job.id]?.generated ? (
+            <>
+              <div className="grid grid-cols-[36px_1fr_auto] items-center gap-[9px]">
+                <span
+                  aria-hidden
+                  className="grid h-[42px] w-9 place-items-center rounded-lg bg-quiet text-[9px] font-extrabold"
+                >
+                  PDF
+                </span>
+                <span>
+                  <strong className="block text-[11px]">
+                    CV · tailored for {job.company}
+                  </strong>
+                  <span className="text-[9px] text-muted">
+                    {studio[job.id]?.accepted.length ?? 0} accepted changes
+                  </span>
+                </span>
+                <span aria-hidden>✓</span>
+              </div>
+              <div className="mt-3 grid grid-cols-[22px_1fr] gap-[9px] rounded-[13px] bg-[#eef8f3] p-3 text-[10px] leading-[1.4] text-[#22563d]">
+                <span aria-hidden>✓</span>
+                <span>
+                  <strong>Receipt, not a promise.</strong> Munus stores the
+                  exact documents you approved, permanently.
+                </span>
+              </div>
+            </>
+          ) : (
+            <p className="m-0 text-[11px] leading-[1.45] text-muted">
+              No tailored documents yet — the application studio arrives in
+              the next wave. Once you tailor and approve documents, the exact
+              files you approved are stored here permanently.
+            </p>
+          )}
         </section>
 
         <section className="border-t border-line py-5">
@@ -182,7 +182,9 @@ export default function ApplicationReceiptPage() {
           <div className="grid gap-2.5">
             <Button
               className="w-full"
-              onClick={() => showToast("Opening the original listing")}
+              onClick={() =>
+                showToast("Live listing links arrive with real jobs (next wave)")
+              }
             >
               View original listing
             </Button>

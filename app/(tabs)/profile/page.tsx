@@ -61,8 +61,9 @@ export default function ProfilePage() {
           </h2>
           {onboarding.completed ? (
             <p className="m-0 text-[11px] text-muted">
-              {[onboarding.role, onboarding.location].filter(Boolean).join(" · ") ||
-                "Onboarding complete"}
+              {[onboarding.location, onboarding.level]
+                .filter(Boolean)
+                .join(" · ") || "Onboarding complete"}
             </p>
           ) : (
             <Link
@@ -86,6 +87,8 @@ export default function ProfilePage() {
           href="/onboarding"
         />
         <SettingRow label="Privacy and automation" meta="Review first ›" />
+        <SettingRow label="Privacy policy" meta="Draft ›" href="/privacy" />
+        <SettingRow label="Terms of service" meta="Draft ›" href="/terms" />
         <SettingRow
           label="I got hired 🎉"
           meta="Pause everything ›"

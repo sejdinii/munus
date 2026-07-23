@@ -4,9 +4,8 @@
    to jobs that have not already become an application (prototype's
    `renderFavorites`: applied jobs graduate to Applications). Wave 1 slice 3. */
 
-import Link from "next/link";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import { Button } from "@/components/ui/Button";
+import { Button, LinkButton } from "@/components/ui/Button";
 import { jobById } from "@/lib/mock/jobs";
 import { useMunusStore } from "@/lib/mock/store";
 import { FavoriteRow } from "./FavoriteRow";
@@ -73,11 +72,9 @@ export default function FavoritesPage() {
           title="No favorites yet"
           body="Save roles from Discover. We will keep checking whether they are still open."
         >
-          <Link href="/discover">
-            <Button variant="primary" className="w-full">
-              Find fresh roles
-            </Button>
-          </Link>
+          <LinkButton href="/discover" variant="primary" className="w-full">
+            Find fresh roles
+          </LinkButton>
         </EmptyState>
       </section>
     );

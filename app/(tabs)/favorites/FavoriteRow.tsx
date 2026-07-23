@@ -1,7 +1,7 @@
 "use client";
 
 /* Single favorites row — monogram tile, readiness chip, match/verified line,
-   disabled "Tailor application" CTA (studio route is a later wave), and a
+   "Tailor application" CTA (tap explains the studio is a later wave), and a
    chevron-triggered overflow menu for unsave (no swipe gesture here). */
 
 import { useState } from "react";
@@ -19,7 +19,7 @@ function readinessChip(studio: StudioState | undefined) {
 }
 
 export function FavoriteRow({ job }: { job: Job }) {
-  const { studio, unsave } = useMunusStore();
+  const { studio, unsave, restoreFavorite } = useMunusStore();
   const { showToast } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -46,9 +46,9 @@ export function FavoriteRow({ job }: { job: Job }) {
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
-          className="grid size-7 place-items-center rounded-full text-xl text-muted hover:bg-quiet"
+          className="grid size-11 place-items-center rounded-full text-xl text-muted hover:bg-quiet"
         >
-          ›
+          ⋯
         </button>
         {menuOpen ? (
           <>
@@ -68,7 +68,10 @@ export function FavoriteRow({ job }: { job: Job }) {
                 onClick={() => {
                   setMenuOpen(false);
                   unsave(job.id);
-                  showToast(`Removed “${job.title}” from favorites`);
+                  showToast(`Removed “${job.title}” from favorites`, {
+                    label: "Undo",
+                    onPress: () => restoreFavorite(job.id),
+                  });
                 }}
                 className="w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-[650] text-red hover:bg-quiet"
               >
@@ -85,10 +88,14 @@ export function FavoriteRow({ job }: { job: Job }) {
         <Button
           variant="dark"
           small
-          disabled
-          title="Application studio arrives in the next wave"
+          onClick={() =>
+            showToast("The application studio arrives in the next wave")
+          }
         >
-          Tailor application
+          {Boolean(studio[job.id]?.generated) &&
+          (studio[job.id]?.accepted.length ?? 0) >= 2
+            ? "Review & apply"
+            : "Tailor application"}
         </Button>
       </div>
     </article>
