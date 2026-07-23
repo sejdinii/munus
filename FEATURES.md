@@ -32,7 +32,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 ## WAVE ROADMAP (from plan §4 — "Done means" is the exit criterion; nothing depends on a later phase)
 | Wave | Plan phase | Weeks | Ships | Exit criterion ("Done means") | Status |
 |---|---|---|---|---|---|
-| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | MISSING |
+| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — app scaffold/CI/shell DONE (see FOUNDATION); Supabase schema/auth/CV BLOCKED on user creds |
 | W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | MISSING |
 | W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | MISSING |
 | W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | MISSING |
@@ -40,6 +40,18 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | W5 | 5 · Money & law | 5–6 | Usage metering, Stripe (Plus), paywall moments (3rd try, 21st swipe), privacy/terms, GDPR export+delete | A stranger can pay and a regulator can't hurt us | MISSING |
 | W6 | 6 · Polish & beta | 6–7 | Onboarding funnel, PWA install, PostHog, empty/offline states, 20-user closed beta | Beta users complete the loop unaided; crash-free | MISSING |
 | W7 | 7 · Launch | 8 | Fix beta findings, seed content, launch (designer communities, Product Hunt) | Public, measured, first organic signups | MISSING |
+
+## FOUNDATION (orchestrator-built, wave 1 base)
+| Item | Status | Verified how | Notes |
+|---|---|---|---|
+| Next.js 16 scaffold (TS strict, Tailwind 4) | DONE | typecheck+build+boot 2026-07-23, all routes 200 | Next 16.2.11 |
+| Design tokens (styles/tokens.css from prototype pink) | DONE | screenshots vs prototype 2026-07-23 | |
+| UI primitives (Button, chips, IconButton, Topbar, Toast, icons) | DONE | build + rendered in shell | hand-rolled: shadcn registry unreachable under network policy (justified deviation) |
+| State components (Loading/Empty/Error/Offline) | DONE | rendered on all tab screens | |
+| App shell: welcome + tabbar + 4 tab routes | DONE | boot + screenshots (393×852) | tab screens are honest placeholders pending slices |
+| Mock data layer (prototype jobs + persisted store) | DONE | vitest 4/4 + boot | replaced by real APIs in W2 |
+| CI workflow (typecheck/build/test) | PARTIAL | file authored; first run pending on GitHub | verify on next push |
+| PWA manifest stub | PARTIAL | served at /manifest.webmanifest | icons + service worker in W6 |
 
 ## CORE FLOWS (MVP-blocking)
 | Feature | Status | Verified how | Notes |
