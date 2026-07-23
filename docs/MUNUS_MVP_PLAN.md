@@ -1,6 +1,6 @@
-# Scout — Full MVP Build Plan
+# Munus — Full MVP Build Plan
 
-*Goal: ship the Scout prototype (`prototypes/scout-pink-v2.html`) as a real product, pixel-exact, with real jobs, real AI, real accounts and real payments. Scope matches the agreed business model: discovery + favorites + evidence-only AI documents + redirect apply. Automated applying (Pro) is architected for but not built in MVP.*
+*Goal: ship the Munus prototype (`prototypes/scout-pink-v2.html`) as a real product, pixel-exact, with real jobs, real AI, real accounts and real payments. Scope matches the agreed business model: discovery + favorites + evidence-only AI documents + redirect apply. Automated applying (Pro) is architected for but not built in MVP.*
 
 ---
 
@@ -126,8 +126,7 @@ Supabase Pro $25 · Vercel $0–20 · LLM $50–150 (parsing + tailoring; embedd
 - **ATS feed changes** → per-source adapters with health alerts; sources are additive.
 - **Apple tax later** → web/PWA first keeps Stripe economics; Capacitor wrapper only after PMF.
 - **Scope creep toward auto-apply** → Pro stays a waitlist button until Plus revenue exists.
-```
 
 ---
 
-*Prototype = spec: `prototypes/scout-pink-v2.html`. Pricing = `docs/PRICING.md` (Scout MVP sells Free + Plus only; Pro joins with automation). Design rules carry over: pink is forward motion, swipe is optional, AI never invents.*
+*Prototype = spec: `prototypes/scout-pink-v2.html`. Pricing = `docs/PRICING.md` (Munus MVP sells Free + Plus only; Pro joins with automation). Design rules carry over: pink is forward motion, swipe is optional, AI never invents.*
