@@ -1,47 +1,52 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
-html,
-body {
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--phone);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
-
-button,
-input {
-  font: inherit;
-}
-
-button {
-  color: inherit;
-  cursor: pointer;
-}
-
-:focus-visible {
-  outline: 2.5px solid var(--rose);
-  outline-offset: 2px;
-}
-
-/* Desktop: the app is a mobile-first PWA; centre it on a canvas. */
-@media (min-width: 761px) {
+/* Element defaults live in @layer base so Tailwind utilities (a later layer)
+   can override them — unlayered rules here would silently defeat any text-*
+   or bg-* utility on these elements. */
+@layer base {
+  html,
   body {
-    background: var(--canvas);
+    min-height: 100%;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
+  body {
+    margin: 0;
+    background: var(--phone);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    color: inherit;
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2.5px solid var(--rose);
+    outline-offset: 2px;
+  }
+
+  /* Desktop: the app is a mobile-first PWA; centre it on a canvas. */
+  @media (min-width: 761px) {
+    body {
+      background: var(--canvas);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 }
 

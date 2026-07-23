@@ -2,11 +2,16 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type Variant = "default" | "primary" | "dark" | "plain";
 
+/* Disabled styling is per-variant, never element-level opacity: fading the
+   whole element makes white-on-dark buttons converge with a light page
+   background from both directions until the label disappears. */
 const variantClasses: Record<Variant, string> = {
-  default: "border-line bg-paper",
-  primary: "border-rose bg-rose text-white",
-  dark: "border-ink bg-ink text-white",
-  plain: "border-transparent bg-transparent",
+  default:
+    "border-line bg-paper disabled:border-line disabled:bg-quiet disabled:text-muted",
+  primary:
+    "border-rose bg-rose text-white disabled:border-transparent disabled:bg-rose/40",
+  dark: "border-ink bg-ink text-white disabled:border-transparent disabled:bg-ink/50",
+  plain: "border-transparent bg-transparent disabled:text-muted",
 };
 
 export function Button({
@@ -25,7 +30,7 @@ export function Button({
     : "min-h-[52px] rounded-[15px] px-[18px]";
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 border font-[710] transition-transform hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0 ${size} ${variantClasses[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 border font-[710] transition-transform hover:-translate-y-px disabled:cursor-default disabled:hover:translate-y-0 ${size} ${variantClasses[variant]} ${className}`}
       {...rest}
     >
       {children}

@@ -82,13 +82,8 @@ export function FavoriteRow({ job }: { job: Job }) {
         <span className="text-[10px] font-[750] text-green">
           {job.match}% fit · verified {job.fresh.toLowerCase()}
         </span>
-        {/* variant="default" not "dark": Button's disabled:opacity-40 is a
-            single group-opacity applied to the whole element, so a dark-bg/
-            white-text button fades toward the light page background from
-            both directions and the label goes unreadable. Flagged as a
-            SHARED-CHANGE REQUEST against components/ui/Button.tsx. */}
         <Button
-          variant="default"
+          variant="dark"
           small
           disabled
           title="Application studio arrives in the next wave"

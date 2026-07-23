@@ -1,7 +1,5 @@
-/* Local copy of the wordmark mark from app/page.tsx — no shared component
-   exists yet to import (components/ui/ has no Wordmark). Duplicated per
-   CLAUDE.md Rule 7 file-ownership boundaries; see SUGGESTIONS in the wave
-   report about promoting this to components/ui/. */
+/* Munus wordmark — shared brand mark (promoted from app/onboarding after
+   wave 1 duplicated it; duplication = foundation signal per protocol). */
 export function Wordmark() {
   return (
     <div className="flex items-center gap-[9px] text-[17px] font-[790] tracking-[-0.02em]">

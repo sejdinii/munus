@@ -10,7 +10,7 @@ import Link from "next/link";
 import { EmptyState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/Button";
 import { useMunusStore } from "@/lib/mock/store";
-import { Wordmark } from "../Wordmark";
+import { Wordmark } from "@/components/ui/Wordmark";
 
 export default function OnboardingReadyPage() {
   const { hydrated, onboarding } = useMunusStore();
