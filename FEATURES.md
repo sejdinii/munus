@@ -131,3 +131,13 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 - D12 · 2026-07-23 · prototypes/scout-pink-v2.html is the BINDING visual spec;
   pink theme ships; product copy says Munus wherever the prototype says Scout.
   (bootstrap instruction)
+- D13 · 2026-07-23 · Ingestion adapter requirements adopted from founder batch 1:
+  no slug guessing, EU Greenhouse host fallback, empty-feed-is-healthy,
+  dual-ATS migration tolerance, vertical-as-config. (checkpoint; CONTRACTS §2)
+- D14 · 2026-07-23 · decisions.type gains `unsave` so favorites stays a pure
+  view over the swipe log. (checkpoint)
+- D15 · 2026-07-23 · Pro waitlist gets a `waitlist` table in W5. (checkpoint)
+- D16 · 2026-07-23 · Working defaults adopted pending user override (open until
+  W2): keep guest preview mode; auth happens at the CV-upload moment; Google
+  sign-in first, Apple before beta; alert channel = email digest in W6.
+  (checkpoint — user can override any of these)
