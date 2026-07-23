@@ -171,6 +171,10 @@ Einride, Jobandtalent, Kahoot!, Epidemic Sound, Malt, ManoMano.
 | Application archive (replaces prototype "Withdraw") | Prototype offers "Withdraw application", impossible externally under redirect apply — record-keeping semantics + honest copy needed (orchestrator, 2026-07-23) | valuable (Phase 4) | applications screen + table | ACCEPTED (W4) |
 | "I got hired" pause flow | Prototype profile row (pause everything); not in any plan phase. Strong retention/goodwill moment (orchestrator, 2026-07-23) | later | profile, subscriptions (Stripe pause) | ACCEPTED-LATER (post-MVP; revisit after W7) |
 | Second vertical (engineering) as config | Plan §1: "a config change, not a build" — needs the seed list + matching thresholds to actually be config-driven from day one (orchestrator, 2026-07-23) | later (but architect for it in Phase 1) | seed list config, matching | ACCEPTED as W1 architecture requirement (config-driven vertical) |
+| Onboarding name question + profiles.name in mock | Wave1 slice4: initials derive from role — a person's name is table-stakes for a profile (implementer report 2026-07-23) | valuable (W2) | onboarding steps, store, profile | ACCEPTED (W2) |
+| undo() inverse for unsave decisions | Wave1 slice3: unsave toast can't offer Undo without store support (implementer report 2026-07-23) | later | lib/mock/store, decisions API | ACCEPTED-LATER (with real decisions API) |
+| Wire documents/receipt snapshot into store | Wave1 slice3: receipt doc rows are static until Studio emits real documents (implementer report 2026-07-23) | blocking for W3/W4 exit criteria | store, studio, receipt | ACCEPTED (W3) |
+| Shared radio-choice primitive | Wave1 slice2: onboarding choice rows will be wanted by Studio tone sheet + filters (implementer report 2026-07-23) | later | components/ui | ACCEPTED-LATER (promote on second use, per protocol) |
 
 ## DESIGN INTEL
 - (pattern worth cloning - app, source, date)

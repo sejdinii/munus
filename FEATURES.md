@@ -33,7 +33,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Wave | Plan phase | Weeks | Ships | Exit criterion ("Done means") | Status |
 |---|---|---|---|---|---|
 | W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — app scaffold/CI/shell DONE (see FOUNDATION); Supabase schema/auth/CV BLOCKED on user creds |
-| W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | MISSING |
+| W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | PARTIAL — adapters/normalize/dedupe DONE (fixture-tested); seed config, cron, embeddings, real-feed run BLOCKED on network policy |
 | W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | MISSING |
 | W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | MISSING |
 | W4 | 4 · Apply loop | 4–5 | Preflight; redirect + return-confirm; applications + receipts; "still open" checks | Full journey: swipe → tailor → apply → receipt | MISSING |
@@ -57,37 +57,48 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
 | Auth (Google/Apple via Supabase) | MISSING | — | placement in flow: see GAPS |
-| Onboarding 6-question flow | MISSING | — | prototype screens 02 |
+| Onboarding 6-question flow | DONE | wave1: implementer browser-run + integrated build/boot 2026-07-23 | mock persistence; real profile API lands W2+ |
 | CV upload → facts extraction (LLM parse) | MISSING | — | facts table = evidence store |
-| Job ingestion (Greenhouse + Lever first) | MISSING | — | founder building seed list in BACKLOG.md |
+| Job ingestion (Greenhouse + Lever first) | PARTIAL | wave1: 34 fixture tests pass | adapters+normalize+dedupe done; cron/seed/embeddings/real feeds pending (network policy) |
 | Matching (embeddings + rule layer, cached reasons) | MISSING | — | LLM only above threshold, top 30/day polish |
 | Discover swipe deck (physics, star, undo, coach) | MISSING | — | pixel-exact from prototype |
 | Job detail | MISSING | — | |
-| Favorites + readiness chips + "still open" check | MISSING | — | |
+| Favorites + readiness chips + "still open" check | PARTIAL | wave1: seeded-store browser-run, all states | UI done vs mock incl. unsave; still-open check needs real data (W4) |
 | Studio: evidence-only tailoring + verifier gate | MISSING | — | verifier is blocking, zero escapes |
 | Studio: Accept/Keep, tone regen, PDF export | MISSING | — | |
 | Preflight review | MISSING | — | NO employer-questions block in MVP (D3) |
 | Redirect apply + return-confirm + receipt | MISSING | — | Prepared → Opened → Confirmed |
-| Applications list + receipt timeline | MISSING | — | MVP copy ≠ prototype's direct-submit copy (D2) |
+| Applications list + receipt timeline | PARTIAL | wave1: all 3 statuses + timeline states browser-run | D2-compliant copy; real records + archive land W4 |
 | Usage metering (server-side) | MISSING | — | Free 20 swipes/wk, 2 tries/job |
 | Stripe: Plus checkout + portal + webhooks | MISSING | — | €14.99/mo · €6.99/wk · €34.99/q |
 | Paywall moments (3rd AI try, 21st swipe) | MISSING | — | |
-| Plans screen (Free/Plus/Pro-waitlist) | MISSING | — | Pro = waitlist button (D5) |
+| Plans screen (Free/Plus/Pro-waitlist) | DONE | wave1: rendered, D9 prices grep-verified, contrast checked | checkout + waitlist capture are W5 stubs (toasts) |
 | Privacy, terms, GDPR export/delete | MISSING | — | |
 
 ## REQUIRED BUT NOT CORE (post-boot, pre-launch)
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
-| Loading/empty/error states on every screen | MISSING | — | prototype ships: caught-up, offline, unsupported, out-of-swipes |
+| Loading/empty/error states on every screen | PARTIAL | wave1: verified on all 10 built routes | deck/studio/preflight screens still to come; offline state component exists, not yet wired |
 | PWA install (manifest, service worker, offline shell) | MISSING | — | |
 | PostHog (EU) cookie-less analytics | MISSING | — | KPI events from plan §6 |
 | Onboarding funnel measurement | MISSING | — | target >60% completion |
 | Alert delivery (email digest at minimum) | BLOCKED | — | plan collects preference, ships no mechanism — BACKLOG item, needs user call |
 | Pro waitlist capture | MISSING | — | needs a table; BACKLOG item |
-| Profile/settings (prefs edit, plan, career profile) | MISSING | — | |
+| Profile/settings (prefs edit, plan, career profile) | DONE | wave1: integrated boot | mock-backed; rows link to onboarding/plans |
 | "I got hired" pause flow | MISSING | — | BACKLOG; later |
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
+- 2026-07-23 (wave1 slice3): mock store lacks the `receipt jsonb` docs
+  snapshot — receipt document rows are static placeholders until Studio (W3)
+  produces real documents.
+- 2026-07-23 (wave1 slice3): store `undo()` cannot restore an `unsave` —
+  unsave toast is feedback-only until decisions handling grows an inverse.
+- 2026-07-23 (wave1 slice4): no `name` field in onboarding/profiles mock —
+  profile initials derive from role; real profiles table has name (schema OK,
+  mock+onboarding question missing).
+- 2026-07-23 (wave1 checkpoint): unlayered element CSS silently defeats
+  Tailwind utilities — all future base styles MUST live in @layer base
+  (bug shipped in foundation, caught at integration).
 - 2026-07-23 (bootstrap): **Alert delivery is unshipped.** Onboarding asks alert
   cadence (§1.1) but no phase builds any notification channel. Decide: email
   digest in W6, or label "coming soon" and stop asking the question.
