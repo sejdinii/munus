@@ -181,6 +181,13 @@ Einride, Jobandtalent, Kahoot!, Epidemic Sound, Malt, ManoMano.
 
 ## RISKS
 - (market/competitor/category threats, with source)
+- **Plan's LLM is being turned off (orchestrator, 2026-07-24):** Groq
+  deprecated llama-3.3-70b-versatile on 2026-06-17; requests stop serving
+  ~Aug 2026 (free/developer tiers). Same wave kills llama-3.1-8b-instant and
+  qwen3-32b. Replacement per Groq: openai/gpt-oss-120b (D17). Free-tier
+  caps are per-model and TPM-bound (~12k tokens/min class) — the CV-parse +
+  tailoring pipeline needs 429 retry/backoff and a user-facing busy state
+  from day one. Source: Groq docs/console via search, 2026-07-24.
 - **WebFetch tool outage this session (2026-07-23, founder):** every WebFetch call failed with HTTP 403, including non-ATS control URLs (`example.com`, `example.org`, `wikipedia.org`, `news.ycombinator.com`), confirming it's a proxy/tool-level failure this run, not sites blocking the agent. No Bash/curl tool was available to me to inspect `/root/.ccr/README.md` or the proxy status endpoint. Net effect: Batch 1 above is WebSearch-corroborated only. **Action needed:** whichever agent has a working fetch tool should run one real HTTP GET against all 50 feed_urls before the ingestion worker treats them as live — this is a 2-minute script, not a research task.
 - **Same WebFetch outage confirmed again in the Batch 2 run (2026-07-23, founder):** re-tested with the identical control URL (`https://example.com`) at the start of this run — still a flat 403. Two consecutive sessions now show this as a persistent tool/proxy condition rather than a one-off blip. Whoever eventually gets a working fetch tool should treat verifying the combined 85-company list (Batch 1 + Batch 2) as one batch job, not two.
 - **Greenhouse EU data-residency hosts (founder, 2026-07-23):** at least two companies in Batch 1 (TrueLayer, Payhawk) serve their candidate-facing job board from `job-boards.eu.greenhouse.io` instead of the default `job-boards.greenhouse.io`. It is undocumented from search alone whether the public Job Board API for these accounts still lives at the shared `boards-api.greenhouse.io`, or requires an EU-specific API host (e.g. `boards-api.eu.greenhouse.io`). If it's the latter, those two feed_urls (and any future EU-hosted Greenhouse company) will 404 on the standard template. The ingestion adapter should try both hosts and log which one 200s per company, rather than assuming one. **Batch 2 update:** this pattern is more common than a two-off — four more companies (Bitpanda, Wallapop, Darktrace, Livi/Kry) also resolve their candidate-facing board on the `.eu.` host. That's 6 of 85 companies so far (~7%) on the EU host variant; budget real verification time for this specifically, it is not a rare edge case.

@@ -172,3 +172,8 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D17 · 2026-07-24 · Plan §2 names Groq llama-3.3-70b, but Groq deprecated it
+  (June 17 2026; serving stops ~Aug 2026 on free/dev tiers). The plan's real
+  decision — Groq for fast cheap inference — stands; the model ID moves to
+  Groq's stated replacement openai/gpt-oss-120b. Working default pending user
+  override; verify the live model list in the console after signup.
