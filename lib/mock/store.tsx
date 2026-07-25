@@ -7,6 +7,13 @@
    applications.status = prepared | opened | confirmed (D2). */
 
 import {
+  confirmAppliedIn,
+  markOpenedIn,
+  setArchivedIn,
+  type Application,
+  type ApplicationStatus,
+} from "./transitions";
+import {
   createContext,
   useCallback,
   useContext,
@@ -20,16 +27,9 @@ import {
 export type DecisionType = "save" | "pass" | "star" | "unsave";
 export type Decision = { jobId: string; type: DecisionType; at: number };
 
-export type ApplicationStatus = "prepared" | "opened" | "confirmed";
-export type Application = {
-  jobId: string;
-  status: ApplicationStatus;
-  /** When the user opened the official listing (redirect apply, D2). */
-  openedAt?: number;
-  confirmedAt?: number;
-  /** Archived = hidden from the default list; the receipt survives. */
-  archived?: boolean;
-};
+/* The apply-loop shapes and transitions live in ./transitions as pure,
+   directly-tested functions (D2 state machine). */
+export type { Application, ApplicationStatus };
 
 export type StudioState = {
   generated: boolean;
@@ -249,31 +249,21 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
   const markOpened = useCallback((jobId: string) => {
     setState((s) => ({
       ...s,
-      applications: s.applications.map((a) =>
-        a.jobId === jobId && a.status === "prepared"
-          ? { ...a, status: "opened" as const, openedAt: Date.now() }
-          : a,
-      ),
+      applications: markOpenedIn(s.applications, jobId, Date.now()),
     }));
   }, []);
 
   const confirmApplied = useCallback((jobId: string) => {
     setState((s) => ({
       ...s,
-      applications: s.applications.map((a) =>
-        a.jobId === jobId && a.status !== "confirmed"
-          ? { ...a, status: "confirmed" as const, confirmedAt: Date.now() }
-          : a,
-      ),
+      applications: confirmAppliedIn(s.applications, jobId, Date.now()),
     }));
   }, []);
 
   const setArchived = useCallback((jobId: string, archived: boolean) => {
     setState((s) => ({
       ...s,
-      applications: s.applications.map((a) =>
-        a.jobId === jobId ? { ...a, archived } : a,
-      ),
+      applications: setArchivedIn(s.applications, jobId, archived),
     }));
   }, []);
 
