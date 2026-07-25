@@ -329,15 +329,13 @@ export default function StudioPage() {
       <footer className="grid gap-2 border-t border-line bg-paper/95 px-[18px] pb-5 pt-[11px] backdrop-blur-[18px]">
         {generated && kit ? (
           <>
-            <Button
+            <LinkButton
+              href={`/preflight/${job.id}`}
               variant="primary"
-              disabled={generating}
-              onClick={() =>
-                showToast("Preflight review arrives in the next wave")
-              }
+              className={generating ? "pointer-events-none opacity-50" : ""}
             >
               Review application
-            </Button>
+            </LinkButton>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 small

@@ -38,6 +38,8 @@ export function Button({
   variant?: Variant;
   small?: boolean;
   children: ReactNode;
+  /** React 19 ref-as-prop; typed explicitly since ButtonHTMLAttributes omits it. */
+  ref?: React.Ref<HTMLButtonElement>;
 }) {
   return (
     <button
