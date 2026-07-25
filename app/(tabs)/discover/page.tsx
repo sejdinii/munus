@@ -5,9 +5,7 @@
    gradient, no card-top blob. Data is the mock catalog until W1/W2 real
    feeds arrive — the header says so honestly.
 
-   Temporary deviation (recorded in FEATURES gaps): the prototype's star
-   fast-track opens the studio; the studio ships next wave, so star saves
-   and toasts instead of navigating. */
+   Star fast-track opens the studio (prototype behavior, restored in W3). */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -200,16 +198,8 @@ export default function DiscoverPage() {
           decidingRef.current = top.id;
           setRestoredId(null);
           store.decide(top.id, "star");
-          showToast("Starred — the studio arrives next wave", {
-            label: "Undo",
-            onPress: () => {
-              const last = store.undo();
-              if (last) {
-                decidingRef.current = null;
-                setRestoredId(last.jobId);
-              }
-            },
-          });
+          showToast("Starred — opening the studio");
+          router.push(`/studio/${top.id}`);
         }}
         onSave={() => decide("save")}
         onInfo={() => router.push(`/jobs/${top.id}`)}

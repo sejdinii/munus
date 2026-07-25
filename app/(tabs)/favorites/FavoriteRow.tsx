@@ -1,12 +1,12 @@
 "use client";
 
 /* Single favorites row — monogram tile, readiness chip, match/verified line,
-   "Tailor application" CTA (tap explains the studio is a later wave), and a
+   "Tailor application" CTA opening the studio, and a
    chevron-triggered overflow menu for unsave (no swipe gesture here). */
 
 import { useState } from "react";
 import { ReadyChip } from "@/components/ui/Chip";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import type { Job } from "@/lib/mock/jobs";
 import { useMunusStore, type StudioState } from "@/lib/mock/store";
@@ -85,18 +85,12 @@ export function FavoriteRow({ job }: { job: Job }) {
         <span className="text-[10px] font-[750] text-green">
           {job.match}% fit · verified {job.fresh.toLowerCase()}
         </span>
-        <Button
-          variant="dark"
-          small
-          onClick={() =>
-            showToast("The application studio arrives in the next wave")
-          }
-        >
+        <LinkButton variant="dark" small href={`/studio/${job.id}`}>
           {Boolean(studio[job.id]?.generated) &&
           (studio[job.id]?.accepted.length ?? 0) >= 2
             ? "Review & apply"
             : "Tailor application"}
-        </Button>
+        </LinkButton>
       </div>
     </article>
   );
