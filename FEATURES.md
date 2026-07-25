@@ -78,7 +78,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 ## REQUIRED BUT NOT CORE (post-boot, pre-launch)
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
-| Loading/empty/error states on every screen | PARTIAL | wave1: verified on all 10 built routes | deck/studio/preflight screens still to come; offline state component exists, not yet wired |
+| Loading/empty/error states on every screen | DONE | auditor 2026-07-26: all 11 dynamic routes verified (statics exempt) | offline state component exists, not yet wired to a network layer (W6) |
 | PWA install (manifest, service worker, offline shell) | MISSING | — | |
 | PostHog (EU) cookie-less analytics | MISSING | — | KPI events from plan §6 |
 | Onboarding funnel measurement | MISSING | — | target >60% completion |
@@ -92,7 +92,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   studio — RESOLVED in wave3: star → save → studio restored.
 - 2026-07-25 (wave2/auditor): vitest was double-counting suites from agent
   worktrees under .claude/ — fixed via vitest.config.ts exclude; earlier
-  "80 tests" claims were inflated, true wave-1 count was 34 (now 50).
+  "80 tests" claims were inflated, true wave-1 count was 34 (82 as of W4).
 - 2026-07-23 (wave1 slice3): mock store lacks the `receipt jsonb` docs
   snapshot — receipt document rows are static placeholders until Studio (W3)
   produces real documents.
