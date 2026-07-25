@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ingest:dry": "tsx workers/ingestion/index.ts --dry-run"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
@@ -22,6 +23,7 @@
     "@types/react-dom": "^19",
     "playwright-core": "^1.61.1",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.1",
     "typescript": "^5",
     "vitest": "^3"
   }
