@@ -108,9 +108,24 @@ export async function main(argv: string[] = process.argv.slice(2)) {
   console.log(`took      ${summary.durationMs}ms\n`);
 
   if (broken.length) {
-    console.log("Feeds needing a slug re-check before ingestion trusts them:");
-    for (const h of broken) {
-      console.log(`  ✗ ${h.company} (${h.ats}) — ${h.error ?? "unknown"}`);
+    /* If EVERY feed failed the same way, the problem is almost certainly on
+       our side (blocked egress / proxy), not 175 simultaneously-wrong slugs.
+       Say so, rather than sending someone to re-verify good data. */
+    const reasons = new Set(broken.map((h) => h.error ?? "unknown"));
+    const allFailedIdentically =
+      broken.length === health.length && reasons.size === 1;
+
+    if (allFailedIdentically) {
+      console.log(
+        `All ${broken.length} feeds failed identically (${[...reasons][0]}).\n` +
+          "That is an environment problem, not a data problem — check the\n" +
+          "network policy allows the ATS hosts before re-verifying any slug.",
+      );
+    } else {
+      console.log("Feeds needing a slug re-check before ingestion trusts them:");
+      for (const h of broken) {
+        console.log(`  ✗ ${h.company} (${h.ats}) — ${h.error ?? "unknown"}`);
+      }
     }
   }
   return { summary, health };
