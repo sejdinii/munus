@@ -22,6 +22,10 @@ export type DocKind = "cv" | "letter";
 export type Suggestion = {
   id: string;
   docKind: DocKind;
+  /** content = text that appears in a document; instruction = an editing
+      action (e.g. reorder) that must never be exported as document text
+      (critic W3 #4). */
+  kind: "content" | "instruction";
   /** Uppercase chip label, e.g. "Emphasize for this role". */
   label: string;
   text: string;
@@ -31,11 +35,12 @@ export type Suggestion = {
   evidenceLabel: string;
 };
 
+/* Providers return ONLY suggestions. There is deliberately no free-text
+   channel: the letter's greeting/closing are fixed app templates, and every
+   substantive paragraph is a verifier-gated letter suggestion
+   (critic W3 #3 — §3.1 hole closed). */
 export type TailorResult = {
   suggestions: Suggestion[];
-  /** Grounded letter paragraphs (each cites facts via `factIds` on the
-      matching suggestion, or is neutral boilerplate the user wrote). */
-  letterParagraphs: string[];
 };
 
 export type TailorRequest = {
@@ -56,6 +61,5 @@ export type VerifierDrop = {
 
 export type VerifiedResult = {
   suggestions: Suggestion[];
-  letterParagraphs: string[];
   dropped: VerifierDrop[];
 };

@@ -34,5 +34,5 @@ export function verify(result: TailorResult, facts: Fact[]): VerifiedResult {
     );
   }
 
-  return { suggestions, letterParagraphs: result.letterParagraphs, dropped };
+  return { suggestions, dropped };
 }

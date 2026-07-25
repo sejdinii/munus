@@ -31,21 +31,53 @@ export function ToneSheet({
 }) {
   const [entered, setEntered] = useState(false);
   const firstChipRef = useRef<HTMLButtonElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) {
       setEntered(false);
       return;
     }
+    /* Remember the opener so focus returns to it on close (critic W3 #7). */
+    triggerRef.current = document.activeElement as HTMLElement | null;
     const raf = requestAnimationFrame(() => setEntered(true));
     firstChipRef.current?.focus();
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      triggerRef.current?.focus();
+    };
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onCancel();
+      if (e.key === "Escape") {
+        onCancel();
+        return;
+      }
+      /* Focus trap: Tab cycles within the sheet (critic W3 #7). */
+      if (e.key === "Tab" && cardRef.current) {
+        const focusables = Array.from(
+          cardRef.current.querySelectorAll<HTMLElement>(
+            "button:not([disabled])",
+          ),
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0]!;
+        const last = focusables[focusables.length - 1]!;
+        const active = document.activeElement;
+        if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!cardRef.current.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -61,6 +93,7 @@ export function ToneSheet({
         className="absolute inset-0 bg-ink/35"
       />
       <div
+        ref={cardRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="tone-sheet-title"

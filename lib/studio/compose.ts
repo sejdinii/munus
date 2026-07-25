@@ -1,11 +1,17 @@
 /* Composes export documents from the evidence store + verified, accepted
    suggestions — nothing else. The PDF can only contain facts and
    suggestions that survived the verifier AND were explicitly accepted
-   (CONTRACTS §3.1: the user approves every change). */
+   (CONTRACTS §3.1: the user approves every change).
+
+   Suggestion kinds matter here (critic W3 #4): content-kind text may enter
+   a document; instruction-kind suggestions are editing ACTIONS (today:
+   reorder) and must never be exported as prose. Facts superseded by an
+   accepted content suggestion are suppressed from the base sections so the
+   CV doesn't say the same thing twice (critic W3 #12). */
 
 import type { Job } from "@/lib/mock/jobs";
 import type { CvDocument, LetterDocument } from "@/lib/pdf/types";
-import type { Fact, Suggestion, VerifiedResult } from "./types";
+import type { Fact, Suggestion } from "./types";
 
 const PLACEHOLDER_NAME = "Your Name";
 
@@ -15,19 +21,41 @@ export function composeCvDocument(
   headline: string | undefined,
 ): CvDocument {
   const acceptedCv = accepted.filter((s) => s.docKind === "cv");
-  const experience = facts
-    .filter((f) => f.kind === "role" || f.kind === "outcome")
+  const contentCv = acceptedCv.filter((s) => s.kind === "content");
+  const instructions = acceptedCv.filter((s) => s.kind === "instruction");
+
+  /* Facts whose content an accepted suggestion supersedes stay out of the
+     base sections — the tailored highlight replaces them. */
+  const supersededIds = new Set(contentCv.flatMap((s) => s.factIds));
+
+  let experience = facts
+    .filter(
+      (f) =>
+        (f.kind === "role" || f.kind === "outcome") && !supersededIds.has(f.id),
+    )
     .map((f) => f.content);
-  const skills = facts.filter((f) => f.kind === "skill").map((f) => f.content);
+  let skills = facts
+    .filter((f) => f.kind === "skill" && !supersededIds.has(f.id))
+    .map((f) => f.content);
   const education = facts
     .filter((f) => f.kind === "education")
     .map((f) => f.content);
 
+  /* The one instruction the mock provider issues: move the design-system
+     bullet to the top of Experience. Applied as an ORDERING change. */
+  if (instructions.some((s) => s.id === "cv-reorder-systems")) {
+    const systemsFact = facts.find((f) => f.id === "fact-skill-systems");
+    if (systemsFact && !supersededIds.has(systemsFact.id)) {
+      skills = skills.filter((content) => content !== systemsFact.content);
+      experience = [systemsFact.content, ...experience];
+    }
+  }
+
   const sections: CvDocument["sections"] = [];
-  if (acceptedCv.length > 0) {
+  if (contentCv.length > 0) {
     sections.push({
       heading: "Tailored highlights",
-      bullets: acceptedCv.map((s) => s.text),
+      bullets: contentCv.map((s) => s.text),
     });
   }
   if (experience.length) sections.push({ heading: "Experience", bullets: experience });
@@ -41,24 +69,24 @@ export function composeCvDocument(
   };
 }
 
+/** Fixed letter frame — app templates, not provider output (critic W3 #3). */
+export function letterGreeting(job: Job): string {
+  return `Hello ${job.company} team,`;
+}
+export const LETTER_CLOSING =
+  "I would welcome the opportunity to discuss the work.";
+
 export function composeLetterDocument(
   job: Job,
-  kit: VerifiedResult,
   accepted: Suggestion[],
 ): LetterDocument {
-  const acceptedLetter = accepted.filter((s) => s.docKind === "letter");
-  const [greeting, ...rest] = kit.letterParagraphs;
-  const closing = rest.pop();
-  const paragraphs = [
-    greeting ?? `Hello ${job.company} team,`,
-    ...rest,
-    ...acceptedLetter.map((s) => s.text),
-    closing ?? "I would welcome the opportunity to discuss the work.",
-  ].filter((p): p is string => Boolean(p));
+  const body = accepted
+    .filter((s) => s.docKind === "letter" && s.kind === "content")
+    .map((s) => s.text);
 
   return {
     recipientCompany: job.company,
-    paragraphs,
+    paragraphs: [letterGreeting(job), ...body, LETTER_CLOSING],
     signoffName: PLACEHOLDER_NAME,
   };
 }

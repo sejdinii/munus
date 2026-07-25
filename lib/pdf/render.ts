@@ -38,5 +38,7 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
+  /* Immediate revocation races the download in non-Chromium browsers
+     (critic W3 #13) — defer it. */
+  window.setTimeout(() => URL.revokeObjectURL(url), 2000);
 }

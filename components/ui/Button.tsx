@@ -17,8 +17,10 @@ const variantClasses: Record<Variant, string> = {
   plain: "border-transparent bg-transparent disabled:text-muted",
 };
 
+/* The svg constraint matches the prototype's `.btn svg` (18px, no shrink) —
+   without it an unconstrained icon fills the button (critic W3 #1). */
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 border font-[710] transition-transform hover:-translate-y-px";
+  "inline-flex items-center justify-center gap-2 border font-[710] transition-transform hover:-translate-y-px [&_svg]:size-[18px] [&_svg]:shrink-0";
 
 function sizeClasses(small: boolean) {
   return small

@@ -4,11 +4,10 @@
    moat's screen). Prototype renderStudio()/renderGuideSheet() under the
    pink theme. All suggestions arrive exclusively through
    lib/studio/pipeline.generateKit (provider → verifier → UI); this screen
-   cannot skip the gate. Mock provider until GROQ_API_KEY exists (D17).
-
-   Sanctioned addition (D20 pending record): a "Download PDF kit" action —
-   W3's exit criterion is generate → accept → DOWNLOAD; the prototype defers
-   export to preflight, which ships next wave. */
+   cannot skip the gate, and the letter is a fixed frame whose substantive
+   paragraphs are verifier-gated suggestions only (no free-text channel).
+   Mock provider until GROQ_API_KEY exists (D17). Sanctioned deviations
+   recorded as D20 in FEATURES.md. */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
@@ -32,7 +31,12 @@ import { useMunusStore } from "@/lib/mock/store";
 import { mockFacts } from "@/lib/studio/facts";
 import { mockTailorProvider } from "@/lib/studio/mockProvider";
 import { generateKit } from "@/lib/studio/pipeline";
-import { composeCvDocument, composeLetterDocument } from "@/lib/studio/compose";
+import {
+  composeCvDocument,
+  composeLetterDocument,
+  LETTER_CLOSING,
+  letterGreeting,
+} from "@/lib/studio/compose";
 import type { VerifiedResult } from "@/lib/studio/types";
 
 const TONES = ["Shorter", "More formal", "More direct", "Warmer"];
@@ -54,6 +58,7 @@ export default function StudioPage() {
   const [exporting, setExporting] = useState(false);
   const [generateError, setGenerateError] = useState(false);
   const regenerated = useRef(false);
+  const generatingRef = useRef(false);
 
   const job = jobById(jobId);
   const st = store.studio[jobId];
@@ -63,9 +68,16 @@ export default function StudioPage() {
 
   const runGenerate = useCallback(
     async (nextTone: string | null, announce?: string) => {
-      if (!job) return;
+      /* Single in-flight generation (critic W3 #6). */
+      if (!job || generatingRef.current) return;
+      generatingRef.current = true;
       setGenerating(true);
       setGenerateError(false);
+      /* Studio work must be reachable afterwards: an unfavorited job would
+         orphan its kit (critic W3 #9) — generating implies saving. */
+      if (!store.favorites.includes(job.id)) {
+        store.decide(job.id, "save", { meter: false });
+      }
       try {
         const result = await generateKit(
           mockTailorProvider,
@@ -79,6 +91,7 @@ export default function StudioPage() {
       } catch {
         setGenerateError(true);
       } finally {
+        generatingRef.current = false;
         setGenerating(false);
       }
     },
@@ -116,7 +129,13 @@ export default function StudioPage() {
   const letterSuggestions =
     kit?.suggestions.filter((s) => s.docKind === "letter") ?? [];
   const openCount = cvSuggestions.filter((s) => !accepted.includes(s.id)).length;
-  const readyCount = 1 + (generated ? 1 : 0) + (generated && accepted.length >= 2 ? 1 : 0);
+  const readyCount =
+    1 + (generated ? 1 : 0) + (generated && accepted.length >= 2 ? 1 : 0);
+  const acceptedSuggestions =
+    kit?.suggestions.filter((s) => accepted.includes(s.id)) ?? [];
+  const acceptedLetterCount = acceptedSuggestions.filter(
+    (s) => s.docKind === "letter" && s.kind === "content",
+  ).length;
 
   const toggleAccept = (id: string, accept: boolean) => {
     const next = accept
@@ -128,11 +147,8 @@ export default function StudioPage() {
     showToast(accept ? "Change accepted" : "Original wording kept");
   };
 
-  const acceptedSuggestions =
-    kit?.suggestions.filter((s) => accepted.includes(s.id)) ?? [];
-
   const downloadKit = async () => {
-    if (!kit) return;
+    if (!kit || exporting || generating) return;
     setExporting(true);
     try {
       const { renderCvPdf, renderLetterPdf, downloadBlob } = await import(
@@ -143,10 +159,23 @@ export default function StudioPage() {
         acceptedSuggestions,
         store.onboarding.role,
       );
-      const letterDoc = composeLetterDocument(job, kit, acceptedSuggestions);
       downloadBlob(await renderCvPdf(cvDoc), `CV-${job.company}.pdf`);
-      downloadBlob(await renderLetterPdf(letterDoc), `Letter-${job.company}.pdf`);
-      showToast("PDF kit downloaded — evidence-checked");
+      if (acceptedLetterCount > 0) {
+        /* Sequential with a gap — simultaneous programmatic downloads trip
+           the multiple-download permission outside automation (W3 #13). */
+        await new Promise((r) => setTimeout(r, 500));
+        const letterDoc = composeLetterDocument(job, acceptedSuggestions);
+        downloadBlob(
+          await renderLetterPdf(letterDoc),
+          `Letter-${job.company}.pdf`,
+        );
+        showToast("PDF kit downloaded — every claim evidence-checked");
+      } else {
+        /* An empty letter would be greeting + closing only (W3 #5). */
+        showToast(
+          "CV downloaded. Accept a letter paragraph to export the letter too",
+        );
+      }
     } catch {
       showToast("PDF export failed — try again");
     } finally {
@@ -210,7 +239,11 @@ export default function StudioPage() {
           title="Your CV"
           status={
             <span className="text-[9px] text-green">
-              {openCount > 0 ? `${openCount} open suggestions` : "All reviewed"}
+              {cvSuggestions.length === 0
+                ? "No changes suggested"
+                : openCount > 0
+                  ? `${openCount} open suggestions`
+                  : "All reviewed"}
             </span>
           }
         >
@@ -218,17 +251,25 @@ export default function StudioPage() {
           <span className="text-[9px] text-muted">
             {mockFacts.length} verified facts · sample data
           </span>
-          {cvSuggestions.map((s) => (
-            <SuggestionCard
-              key={s.id}
-              label={s.label}
-              text={s.text}
-              evidence={s.evidenceLabel}
-              accepted={accepted.includes(s.id)}
-              onAccept={() => toggleAccept(s.id, true)}
-              onKeepOriginal={() => toggleAccept(s.id, false)}
-            />
-          ))}
+          {cvSuggestions.length === 0 ? (
+            <p className="mt-4 text-[11px] leading-[1.45] text-muted">
+              Nothing to suggest for this role — your profile already covers
+              its requirements as written. The verifier dropped anything it
+              could not trace to your CV.
+            </p>
+          ) : (
+            cvSuggestions.map((s) => (
+              <SuggestionCard
+                key={s.id}
+                label={s.label}
+                text={s.text}
+                evidence={s.evidenceLabel}
+                accepted={accepted.includes(s.id)}
+                onAccept={() => toggleAccept(s.id, true)}
+                onKeepOriginal={() => toggleAccept(s.id, false)}
+              />
+            ))
+          )}
           <DocLines count={3} className="mt-[22px]" />
         </DocPreview>
       </>
@@ -238,18 +279,18 @@ export default function StudioPage() {
     content = (
       <>
         <GroundingNote>
-          Drafted from your verified experience and the employer’s published
-          requirements{toneNote}.
+          The letter is a fixed frame — every substantive paragraph below is
+          an evidence-checked suggestion you approve individually{toneNote}.
         </GroundingNote>
         <DocPreview
           title="Cover letter"
-          status={<span className="text-[9px] text-green">Draft ready</span>}
+          status={
+            <span className="text-[9px] text-green">
+              {acceptedLetterCount > 0 ? "Draft ready" : "Awaiting approvals"}
+            </span>
+          }
         >
-          {kit.letterParagraphs.slice(0, -1).map((p) => (
-            <p key={p} className="mt-0 text-[11px] leading-[1.55]">
-              {p}
-            </p>
-          ))}
+          <p className="my-2 text-[11px] leading-[1.55]">{letterGreeting(job)}</p>
           {letterSuggestions.map((s) => (
             <SuggestionCard
               key={s.id}
@@ -261,9 +302,7 @@ export default function StudioPage() {
               onKeepOriginal={() => toggleAccept(s.id, false)}
             />
           ))}
-          <p className="mt-3 text-[11px] leading-[1.55]">
-            {kit.letterParagraphs[kit.letterParagraphs.length - 1]}
-          </p>
+          <p className="my-2 mt-3 text-[11px] leading-[1.55]">{LETTER_CLOSING}</p>
         </DocPreview>
       </>
     );
@@ -292,6 +331,7 @@ export default function StudioPage() {
           <>
             <Button
               variant="primary"
+              disabled={generating}
               onClick={() =>
                 showToast("Preflight review arrives in the next wave")
               }
@@ -299,12 +339,17 @@ export default function StudioPage() {
               Review application
             </Button>
             <div className="grid grid-cols-2 gap-2">
-              <Button small disabled={exporting} onClick={downloadKit}>
+              <Button
+                small
+                disabled={exporting || generating}
+                onClick={downloadKit}
+              >
                 {exporting ? "Exporting…" : "Download PDF kit"}
               </Button>
               <Button
                 small
                 variant="plain"
+                disabled={generating}
                 onClick={() => {
                   setPendingTone(null);
                   setSheetOpen(true);

@@ -9,6 +9,7 @@ import type { Suggestion, TailorProvider, TailorResult } from "./types";
 const validSuggestion: Suggestion = {
   id: "s1",
   docKind: "cv",
+  kind: "content",
   label: "Emphasize",
   text: "Grounded claim",
   factIds: ["fact-outcome-workflow"],
@@ -16,7 +17,7 @@ const validSuggestion: Suggestion = {
 };
 
 function result(suggestions: Suggestion[]): TailorResult {
-  return { suggestions, letterParagraphs: ["Hello"] };
+  return { suggestions };
 }
 
 describe("verifier — the blocking gate (CONTRACTS §3.1)", () => {
@@ -92,8 +93,23 @@ describe("pipeline — the gate cannot be skipped", () => {
   it("mock provider output is fully verifiable end-to-end (no drops)", async () => {
     const job = jobs.find((j) => j.id === "loomery")!;
     const v = await generateKit(mockTailorProvider, job, mockFacts, null);
-    expect(v.suggestions.length).toBeGreaterThanOrEqual(3);
+    expect(v.suggestions.length).toBeGreaterThanOrEqual(4);
     expect(v.dropped).toHaveLength(0);
+  }, 10000);
+
+  it("there is NO unverified free-text channel in the result (W3 #3)", async () => {
+    const job = jobs[0]!;
+    const v = await generateKit(mockTailorProvider, job, mockFacts, null);
+    expect(Object.keys(v).sort()).toEqual(["dropped", "suggestions"]);
+  }, 10000);
+
+  it("Shorter tone never mangles interpolated job titles (W3 #2)", async () => {
+    const growth = jobs.find((j) => j.title.includes(","))!;
+    const v = await generateKit(mockTailorProvider, growth, mockFacts, "Shorter");
+    for (const s of v.suggestions) {
+      expect(s.text).not.toMatch(/\.\./);
+      if (s.id === "letter-intro") expect(s.text).toContain(growth.title);
+    }
   }, 10000);
 
   it("tone regeneration stays grounded (same fact ids, different words)", async () => {

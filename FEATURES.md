@@ -179,6 +179,16 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D20 · 2026-07-25 · Studio deviations from the prototype, all sanctioned:
+  (a) "Download PDF kit" button added — W3's exit criterion demands an
+  in-studio download; (b) the letter is a FIXED FRAME (app-template greeting
+  + closing) whose substantive paragraphs are verifier-gated suggestions
+  with per-paragraph Accept/Keep — closes the free-text hallucination
+  channel the prototype's letter implied (critic W3 #3); (c) grounding-note
+  copy states the real guarantee instead of the prototype's sample claims;
+  (d) doc toolbar says "Your CV" — prototype's filename was sample personal
+  data; (e) suggestions carry a content-vs-instruction kind: instructions
+  (reorder) apply as ordering actions and never export as prose.
 - D19 · 2026-07-25 · PDF export is CLIENT-SIDE during the mock phase (no
   server infra exists); the plan §2's server-side render + Supabase Storage
   + documents.pdf_path becomes the production path once creds exist —
