@@ -12,7 +12,12 @@
 
 /** ATS platforms this slice implements. CONTRACTS §2 lists ashby/workable/
  * smartrecruiters too — out of scope for this wave. */
-export type AtsSource = "greenhouse" | "lever";
+export type AtsSource =
+  | "greenhouse"
+  | "lever"
+  | "ashby"
+  | "workable"
+  | "smartrecruiters";
 
 export interface NormalizedJob {
   source: AtsSource;

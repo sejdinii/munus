@@ -25,7 +25,7 @@ import type { AtsSource, CompanyFeed, FetchJson, IngestionResult, NormalizedJob 
  * final report, SHARED-CHANGE REQUEST: widen AtsSource to include the three
  * new sources. Once that lands this constant's cast is a no-op.
  */
-export const ASHBY_SOURCE = "ashby" as AtsSource;
+export const ASHBY_SOURCE: AtsSource = "ashby";
 
 interface AshbyJob {
   id: string;

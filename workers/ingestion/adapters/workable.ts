@@ -30,7 +30,7 @@ import type { AtsSource, CompanyFeed, FetchJson, IngestionResult, NormalizedJob 
 
 /** See ashby.ts for the full rationale — same closed-AtsSource-union
  * workaround, same SHARED-CHANGE REQUEST in this slice's final report. */
-export const WORKABLE_SOURCE = "workable" as AtsSource;
+export const WORKABLE_SOURCE: AtsSource = "workable";
 
 interface WorkableJobLocation {
   city?: string;

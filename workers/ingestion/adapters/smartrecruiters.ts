@@ -29,7 +29,7 @@ import type { AtsSource, CompanyFeed, FetchJson, IngestionResult, NormalizedJob 
 
 /** See ashby.ts for the full rationale — same closed-AtsSource-union
  * workaround, same SHARED-CHANGE REQUEST in this slice's final report. */
-export const SMARTRECRUITERS_SOURCE = "smartrecruiters" as AtsSource;
+export const SMARTRECRUITERS_SOURCE: AtsSource = "smartrecruiters";
 
 /**
  * SmartRecruiters' postings LIST endpoint never carries a job description or
