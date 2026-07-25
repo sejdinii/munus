@@ -59,10 +59,10 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Auth (Google/Apple via Supabase) | MISSING | — | placement in flow: see GAPS |
 | Onboarding 6-question flow | DONE | wave1: implementer browser-run + integrated build/boot 2026-07-23 | mock persistence; real profile API lands W2+ |
 | CV upload → facts extraction (LLM parse) | MISSING | — | facts table = evidence store |
-| Job ingestion (Greenhouse + Lever first) | PARTIAL | wave1: 34 fixture tests pass | adapters+normalize+dedupe done; cron/seed/embeddings/real feeds pending (network policy) |
+| Job ingestion (all 5 ATS adapters) | PARTIAL | wave2: 50 fixture tests pass (5 adapters) | adapters+normalize+dedupe done incl. ashby/workable/smartrecruiters; cron/seed config/embeddings/real-feed run pending (network policy) |
 | Matching (embeddings + rule layer, cached reasons) | MISSING | — | LLM only above threshold, top 30/day polish |
-| Discover swipe deck (physics, star, undo, coach) | MISSING | — | pixel-exact from prototype |
-| Job detail | MISSING | — | |
+| Discover swipe deck (physics, star, undo, coach) | DONE | wave2: Playwright-driven swipes/undo/buttons/limit/caught-up 2026-07-25 | mock data by design until W1 feeds + matching; star toasts pending studio (see GAPS) |
+| Job detail | DONE | wave2: implementer browser-run + integrated boot | mock data; real job API later |
 | Favorites + readiness chips + "still open" check | PARTIAL | wave1: seeded-store browser-run, all states | UI done vs mock incl. unsave; still-open check needs real data (W4) |
 | Studio: evidence-only tailoring + verifier gate | MISSING | — | verifier is blocking, zero escapes |
 | Studio: Accept/Keep, tone regen, PDF export | MISSING | — | |
@@ -73,7 +73,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Stripe: Plus checkout + portal + webhooks | MISSING | — | €14.99/mo · €6.99/wk · €34.99/q |
 | Paywall moments (3rd AI try, 21st swipe) | MISSING | — | |
 | Plans screen (Free/Plus/Pro-waitlist) | DONE | wave1: rendered, D9 prices grep-verified, contrast checked | checkout + waitlist capture are W5 stubs (toasts) |
-| Privacy, terms, GDPR export/delete | MISSING | — | |
+| Privacy, terms, GDPR export/delete | STUB | auditor 2026-07-25: draft pages exist | privacy/terms are labelled drafts (W1 slice 4); GDPR export/delete not started (W5) |
 
 ## REQUIRED BUT NOT CORE (post-boot, pre-launch)
 | Feature | Status | Verified how | Notes |
@@ -88,6 +88,12 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | "I got hired" pause flow | MISSING | — | BACKLOG; later |
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
+- 2026-07-25 (wave2): deck star fast-track toasts instead of opening the
+  studio (route doesn't exist until W3) — restore prototype behavior
+  (star → save → studio) when the studio ships.
+- 2026-07-25 (wave2/auditor): vitest was double-counting suites from agent
+  worktrees under .claude/ — fixed via vitest.config.ts exclude; earlier
+  "80 tests" claims were inflated, true wave-1 count was 34 (now 50).
 - 2026-07-23 (wave1 slice3): mock store lacks the `receipt jsonb` docs
   snapshot — receipt document rows are static placeholders until Studio (W3)
   produces real documents.
@@ -150,7 +156,9 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   Plus revenue exists. (plan §7)
 - D9 · 2026-07-23 · Pricing: Free (20 swipes/wk, 2 AI tries/job, free first kit
   per saved job) · Plus €14.99/mo · €6.99/wk · €34.99/q, unlimited within fair
-  use (500 swipes/day, 30 gens/day). (plan §1/§2)
+  use (500 swipes/day, 30 gens/day). (plan §1/§2) · Amended 2026-07-25
+  (auditor): Pro DISPLAY pricing on the plans screen is €34.99/mo · €12.99/wk
+  · €79.99/q per the prototype — display-only, Pro remains waitlist (D8).
 - D10 · 2026-07-23 · Stack: Next.js 16 + Vercel + Supabase + Groq llama-3.3-70b
   + MiniLM/bge-small + Stripe + PostHog EU — same stack as talk.cv on purpose.
   (plan §2)
