@@ -6,8 +6,7 @@
    listing → Confirmed applied. No "Submitted"/"Viewed by a human" direct-
    submit copy from the prototype — MVP never auto-submits (CONTRACTS §3.3). */
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
@@ -15,27 +14,61 @@ import { useToast } from "@/components/ui/Toast";
 import { jobById } from "@/lib/mock/jobs";
 import { useMunusStore, type ApplicationStatus } from "@/lib/mock/store";
 
-const STEPS: Array<{ status: ApplicationStatus; title: string; body: string }> = [
+/* Relative-or-clock stamp for timeline steps (Wave 4 slice A): same day
+   shows a clock time, otherwise a short relative/absolute fallback — never
+   a bare epoch, never a fabricated "just now" for a step that has not
+   actually happened yet (that's what the `pending` branch below is for). */
+function formatStamp(ms: number): string {
+  const d = new Date(ms);
+  const now = new Date();
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  if (sameDay) {
+    return d.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  const days = Math.floor((now.getTime() - ms) / 86_400_000);
+  if (days <= 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+const STEPS: Array<{
+  status: ApplicationStatus;
+  title: string;
+  pending: string;
+  done: (stamp: string) => string;
+}> = [
   {
     status: "prepared",
     title: "Prepared",
-    body: "Documents tailored and reviewed.",
+    pending: "Documents tailored and reviewed.",
+    /* No preparedAt in the Application shape — this stage has no real
+       timestamp to show yet, so it never claims one. */
+    done: () => "Documents tailored and reviewed.",
   },
   {
     status: "opened",
     title: "Opened listing",
-    body: "You opened the official application on the employer’s site.",
+    pending: "You opened the official application on the employer’s site.",
+    done: (stamp) => `Opened the listing · ${stamp}`,
   },
   {
     status: "confirmed",
     title: "Confirmed applied",
-    body: "You confirmed you submitted it there.",
+    pending: "You confirmed you submitted it there.",
+    done: (stamp) => `Confirmed applied · ${stamp}`,
   },
 ];
 
 export default function ApplicationReceiptPage() {
   const { id } = useParams<{ id: string }>();
-  const { hydrated, applications, studio } = useMunusStore();
+  const router = useRouter();
+  const { hydrated, applications, studio, setArchived } = useMunusStore();
   const { showToast } = useToast();
 
   if (!hydrated) return <LoadingState label="Loading receipt" />;
@@ -127,7 +160,17 @@ export default function ApplicationReceiptPage() {
                       {step.title}
                     </h4>
                     <p className="m-0 text-[10px] leading-[1.4] text-muted">
-                      {step.body}
+                      {(() => {
+                        const stamp =
+                          step.status === "opened"
+                            ? application.openedAt
+                            : step.status === "confirmed"
+                              ? application.confirmedAt
+                              : undefined;
+                        return stamp
+                          ? step.done(formatStamp(stamp))
+                          : step.pending;
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -155,7 +198,8 @@ export default function ApplicationReceiptPage() {
                     CV · tailored for {job.company}
                   </strong>
                   <span className="text-[9px] text-muted">
-                    {studio[job.id]?.accepted.length ?? 0} accepted changes
+                    {studio[job.id]?.accepted.length ?? 0} accepted changes ·
+                    evidence-checked
                   </span>
                 </span>
                 <span aria-hidden>✓</span>
@@ -180,21 +224,41 @@ export default function ApplicationReceiptPage() {
         <section className="border-t border-line py-5">
           <h3 className="m-0 mb-[13px] text-[13px]">Actions</h3>
           <div className="grid gap-2.5">
-            <Button
-              className="w-full"
-              onClick={() =>
-                showToast("Live listing links arrive with real jobs (next wave)")
-              }
-            >
-              View original listing
-            </Button>
+            {application.status === "prepared" ? (
+              <LinkButton
+                href={`/preflight/${job.id}`}
+                variant="primary"
+                className="w-full"
+              >
+                Continue to review
+              </LinkButton>
+            ) : null}
+            <div className="grid gap-1.5">
+              <a
+                href={job.applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[15px] border border-line bg-paper px-[18px] font-[710] transition-transform hover:-translate-y-px"
+              >
+                Open sample listing
+              </a>
+              <p className="m-0 text-center text-[10px] text-muted">
+                Sample URL until live feeds arrive
+              </p>
+            </div>
             <Button
               variant="plain"
               className="w-full text-red"
-              disabled
-              title="Archive lands with the real API (W4)"
+              onClick={() => {
+                setArchived(job.id, true);
+                showToast(`Archived “${job.title}”`, {
+                  label: "Undo",
+                  onPress: () => setArchived(job.id, false),
+                });
+                router.push("/applications");
+              }}
             >
-              Archive application
+              Archive
             </Button>
           </div>
         </section>
