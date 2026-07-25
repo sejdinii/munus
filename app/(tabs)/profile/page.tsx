@@ -79,7 +79,7 @@ export default function ProfilePage() {
         <SettingRow
           label="Career profile"
           meta={onboarding.cvUploaded ? "CV added ›" : "Add your CV ›"}
-          href="/onboarding"
+          href="/profile/career"
         />
         <SettingRow
           label="Search preferences"
