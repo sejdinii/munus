@@ -64,7 +64,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Discover swipe deck (physics, star, undo, coach) | DONE | wave2: Playwright-driven swipes/undo/buttons/limit/caught-up 2026-07-25 | mock data by design until W1 feeds + matching; star toasts pending studio (see GAPS) |
 | Job detail | DONE | wave2: implementer browser-run + integrated boot | mock data; real job API later |
 | Favorites + readiness chips + "still open" check | PARTIAL | wave1: seeded-store browser-run, all states | UI done vs mock incl. unsave; still-open check needs real data (W4) |
-| Studio: evidence-only tailoring + verifier gate | PARTIAL | wave3: 12 pipeline tests incl. lying-provider; browser-run | deterministic verifier DONE; mock provider until GROQ_API_KEY (D17) |
+| Studio: evidence-only tailoring + verifier gate | PARTIAL | wave3: 15 pipeline/compose tests incl. lying-provider + no-free-text-channel; browser-run | deterministic verifier DONE, letter structurally gated (D20b); mock provider until GROQ_API_KEY (D17) |
 | Studio: Accept/Keep, tone regen, PDF export | DONE | wave3: browser-driven accept/tone/download, both PDFs verified | client-side PDF per D19 (server render in production) |
 | Preflight review | MISSING | — | NO employer-questions block in MVP (D3) |
 | Redirect apply + return-confirm + receipt | MISSING | — | Prepared → Opened → Confirmed |
