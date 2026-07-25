@@ -71,7 +71,12 @@ const STORAGE_KEY = "munus-mock-v1";
 
 type Store = MunusState & {
   hydrated: boolean;
-  decide: (jobId: string, type: Exclude<DecisionType, "unsave">) => void;
+  storageError: boolean;
+  decide: (
+    jobId: string,
+    type: Exclude<DecisionType, "unsave">,
+    opts?: { meter?: boolean },
+  ) => void;
   undo: () => Decision | undefined;
   unsave: (jobId: string) => void;
   restoreFavorite: (jobId: string) => void;
@@ -88,6 +93,7 @@ const MunusContext = createContext<Store | null>(null);
 export function MunusStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<MunusState>(initialState);
   const [hydrated, setHydrated] = useState(false);
+  const [storageError, setStorageError] = useState(false);
   /* Synchronous mirror of state for actions that must READ current state
      when called (undo returns the reverted decision). Reading inside a
      setState updater and returning it does NOT work — updaters run after
@@ -102,7 +108,9 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) setState({ ...initialState, ...JSON.parse(raw) });
     } catch {
-      /* corrupted storage: start fresh */
+      /* corrupted storage: start fresh, but say so — screens can offer a
+         real error state instead of silently losing data (critic W2 #5) */
+      setStorageError(true);
     }
     setHydrated(true);
   }, []);
@@ -116,16 +124,28 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state, hydrated]);
 
+  /* meter:false = decisions made outside the deck (e.g. from job detail)
+     — swipes are the deck's currency only (critic W2 finding 4, D9). A pass
+     always removes any favorite: passing is an explicit negative signal and
+     favorited+dismissed is a contradiction. */
   const decide = useCallback(
-    (jobId: string, type: Exclude<DecisionType, "unsave">) => {
+    (
+      jobId: string,
+      type: Exclude<DecisionType, "unsave">,
+      opts?: { meter?: boolean },
+    ) => {
+      const meter = opts?.meter !== false;
       setState((s) => ({
         ...s,
         decisions: [...s.decisions, { jobId, type, at: Date.now() }],
-        swipesUsed: s.swipesUsed + 1,
+        swipesUsed: meter ? s.swipesUsed + 1 : s.swipesUsed,
         favorites:
-          (type === "save" || type === "star") && !s.favorites.includes(jobId)
-            ? [...s.favorites, jobId]
-            : s.favorites,
+          type === "pass"
+            ? s.favorites.filter((id) => id !== jobId)
+            : (type === "save" || type === "star") &&
+                !s.favorites.includes(jobId)
+              ? [...s.favorites, jobId]
+              : s.favorites,
         dismissed:
           type === "pass" && !s.dismissed.includes(jobId)
             ? [...s.dismissed, jobId]
@@ -138,7 +158,9 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
   const undo = useCallback(() => {
     const last =
       stateRef.current.decisions[stateRef.current.decisions.length - 1];
-    if (!last) return undefined;
+    /* unsave is not a deck decision: undoing it here would leak a free
+       swipe and not restore the favorite (critic W2 finding 2). */
+    if (!last || last.type === "unsave") return undefined;
     setState((s) => ({
       ...s,
       decisions: s.decisions.slice(0, -1),
@@ -228,6 +250,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       hydrated,
+      storageError,
       decide,
       undo,
       unsave,
@@ -242,6 +265,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     [
       state,
       hydrated,
+      storageError,
       decide,
       undo,
       unsave,

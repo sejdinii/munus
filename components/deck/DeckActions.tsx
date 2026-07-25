@@ -34,7 +34,7 @@ function RoundAction({
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`grid place-items-center rounded-full border border-line bg-paper shadow-[0_5px_13px_rgba(31,32,38,0.07)] disabled:opacity-30 disabled:shadow-none ${
+      className={`grid place-items-center rounded-full border border-line bg-paper shadow-[0_5px_13px_rgba(31,32,38,0.07)] disabled:opacity-[.32] disabled:shadow-none ${
         large ? "size-14" : "size-[46px]"
       } [&_svg]:size-[22px] ${className}`}
     >
@@ -45,6 +45,7 @@ function RoundAction({
 
 export function DeckActions({
   canUndo,
+  disabledAll = false,
   onUndo,
   onPass,
   onStar,
@@ -52,6 +53,8 @@ export function DeckActions({
   onInfo,
 }: {
   canUndo: boolean;
+  /** Coach overlay open: nothing under it may act (critic W2 finding 7). */
+  disabledAll?: boolean;
   onUndo: () => void;
   onPass: () => void;
   onStar: () => void;
@@ -60,13 +63,22 @@ export function DeckActions({
 }) {
   return (
     <div className="grid grid-cols-[46px_56px_46px_56px_46px] items-center justify-center gap-2.5 px-2.5 pb-2 pt-3.5">
-      <RoundAction label="Undo last decision" onClick={onUndo} disabled={!canUndo}>
+      <RoundAction
+        label="Undo last decision"
+        onClick={onUndo}
+        disabled={disabledAll || !canUndo}
+      >
         <UndoIcon />
       </RoundAction>
-      <RoundAction label="Pass on this job" onClick={onPass} large>
+      <RoundAction label="Pass on this job" onClick={onPass} large disabled={disabledAll}>
         <XIcon />
       </RoundAction>
-      <RoundAction label="Star: save and tailor now" onClick={onStar} className="text-rose-ink">
+      <RoundAction
+        label="Star: save and tailor now"
+        onClick={onStar}
+        className="text-rose-ink"
+        disabled={disabledAll}
+      >
         <StarIcon />
       </RoundAction>
       <RoundAction
@@ -74,10 +86,11 @@ export function DeckActions({
         onClick={onSave}
         large
         className="!border-rose !bg-rose text-white"
+        disabled={disabledAll}
       >
         <HeartIcon />
       </RoundAction>
-      <RoundAction label="View job details" onClick={onInfo}>
+      <RoundAction label="View job details" onClick={onInfo} disabled={disabledAll}>
         <InfoIcon />
       </RoundAction>
     </div>

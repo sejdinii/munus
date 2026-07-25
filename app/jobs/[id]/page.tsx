@@ -46,13 +46,13 @@ export default function JobDetailPage() {
   const isFavorited = favorites.includes(job.id);
 
   function handlePass() {
-    decide(job!.id, "pass");
+    decide(job!.id, "pass", { meter: false });
     showToast("Passed");
     router.push("/discover");
   }
 
   function handleSave() {
-    decide(job!.id, "save");
+    decide(job!.id, "save", { meter: false });
     showToast("Saved to Favorites");
     router.push("/favorites");
   }
@@ -112,15 +112,24 @@ export default function JobDetailPage() {
       </div>
 
       {/* detail-actions: sticky pass/save footer */}
-      <footer className="sticky bottom-0 grid grid-cols-[52px_1fr] gap-2.5 border-t border-line bg-paper/95 px-[18px] pb-5 pt-3 backdrop-blur-[18px]">
-        <button
-          type="button"
-          aria-label="Pass"
-          onClick={handlePass}
-          className="grid size-[46px] place-items-center rounded-full border border-line bg-paper text-ink shadow-[0_5px_13px_rgba(31,32,38,0.07)] transition-transform hover:-translate-y-px [&_svg]:size-[22px]"
-        >
-          <XIcon />
-        </button>
+      {/* Favorited jobs get no Pass here: "pass" on a shortlisted role is
+          really remove-from-favorites, which lives on the Favorites screen
+          (critic W2 finding 4 — avoids favorited+dismissed contradictions). */}
+      <footer
+        className={`sticky bottom-0 grid gap-2.5 border-t border-line bg-paper/95 px-[18px] pb-5 pt-3 backdrop-blur-[18px] ${
+          isFavorited ? "grid-cols-1" : "grid-cols-[52px_1fr]"
+        }`}
+      >
+        {!isFavorited ? (
+          <button
+            type="button"
+            aria-label="Pass"
+            onClick={handlePass}
+            className="grid size-[46px] place-items-center rounded-full border border-line bg-paper text-ink shadow-[0_5px_13px_rgba(31,32,38,0.07)] transition-transform hover:-translate-y-px [&_svg]:size-[22px]"
+          >
+            <XIcon />
+          </button>
+        ) : null}
         {isFavorited ? (
           <LinkButton href="/favorites" variant="primary" className="w-full">
             Open in favorites

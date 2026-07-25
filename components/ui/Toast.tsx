@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span>{toast.message}</span>
             {toast.action ? (
               <button
-                className="pointer-events-auto border-0 bg-transparent p-0 text-[11px] font-extrabold text-butter"
+                className="pointer-events-auto -my-3 -mr-2 grid min-h-11 min-w-11 place-items-center border-0 bg-transparent px-2 text-[11px] font-extrabold text-butter"
                 onClick={() => {
                   toast.action?.onPress();
                   setVisible(false);

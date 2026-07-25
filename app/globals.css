@@ -71,7 +71,10 @@
   }
 }
 
-/* BACK stamp flash after undo — prototype's stampFlash: fade in, hold, out. */
+/* BACK stamp flash after undo — prototype's stampFlash: fade in, hold, out.
+   Base opacity is 1 so prefers-reduced-motion (animation: none) shows a
+   STATIC stamp instead of nothing; the deck clears it via timeout. With
+   motion, `both` fill starts the animation at its 0-opacity first frame. */
 @keyframes stamp-flash {
   0% {
     opacity: 0;
@@ -88,6 +91,22 @@
 }
 
 .stamp-back {
-  opacity: 0;
-  animation: stamp-flash 1.1s ease;
+  opacity: 1;
+  animation: stamp-flash 1.1s ease both;
+}
+
+/* Incoming top card — prototype's cardIn/.promote mount animation. */
+@keyframes card-in {
+  from {
+    transform: scale(0.96) translateY(10px);
+    opacity: 0.8;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.card-promote {
+  animation: card-in 0.26s ease;
 }

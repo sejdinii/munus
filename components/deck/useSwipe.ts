@@ -7,7 +7,7 @@
      otherwise springs back
    - drags starting on buttons/links are ignored so taps keep working */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type SwipeDirection = "save" | "pass";
 
@@ -31,6 +31,11 @@ export function useSwipe(onCommit: (direction: SwipeDirection) => void) {
   });
   const start = useRef<{ x: number; y: number } | null>(null);
   const committed = useRef(false);
+  const commitTimer = useRef<number | undefined>(undefined);
+
+  /* If the card unmounts before the delayed commit fires (e.g. a button
+     decided the deck first), the stale commit must never run. */
+  useEffect(() => () => window.clearTimeout(commitTimer.current), []);
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLElement>) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
@@ -53,7 +58,7 @@ export function useSwipe(onCommit: (direction: SwipeDirection) => void) {
       if (Math.abs(s.dx) > COMMIT_PX) {
         const direction: SwipeDirection = s.dx > 0 ? "save" : "pass";
         committed.current = true;
-        window.setTimeout(() => onCommit(direction), 180);
+        commitTimer.current = window.setTimeout(() => onCommit(direction), 180);
         return { ...s, dragging: false, leaving: direction };
       }
       return { dx: 0, dy: 0, dragging: false, leaving: null };

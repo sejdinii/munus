@@ -9,10 +9,10 @@
    fast-track opens the studio; the studio ships next wave, so star saves
    and toasts instead of navigating. */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { EmptyState, LoadingState } from "@/components/states";
-import { LinkButton } from "@/components/ui/Button";
+import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { Button, LinkButton } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { jobs, type Job } from "@/lib/mock/jobs";
 import { useMunusStore } from "@/lib/mock/store";
@@ -26,6 +26,17 @@ export default function DiscoverPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [restoredId, setRestoredId] = useState<string | null>(null);
+  /* One decision per top card: swipe-commit fires after a 180ms animation
+     window during which the action buttons are still live (critic W2 #3). */
+  const decidingRef = useRef<string | null>(null);
+
+  /* Clear the BACK stamp by timeout so reduced-motion users (static stamp,
+     no fade-out animation) aren't left with it forever (critic W2 #6). */
+  useEffect(() => {
+    if (!restoredId) return;
+    const t = window.setTimeout(() => setRestoredId(null), 1400);
+    return () => window.clearTimeout(t);
+  }, [restoredId]);
 
   const deck: Job[] = jobs.filter(
     (j) =>
@@ -35,25 +46,68 @@ export default function DiscoverPage() {
   );
   const top = deck[0];
   const behind = deck[1];
-  const decidedCount = jobs.length - deck.length;
+  /* Current top at call time — delayed swipe commits carry a stale top in
+     their closure; deciding must be refused unless the card is STILL the
+     top of the deck (critic W2 #3, second pass). */
+  const topIdRef = useRef<string | null>(null);
+  topIdRef.current = top?.id ?? null;
+  const lastDecision = store.decisions[store.decisions.length - 1];
+  const canUndo = Boolean(lastDecision && lastDecision.type !== "unsave");
+
+  const runUndo = () => {
+    const last = store.undo();
+    if (last) {
+      decidingRef.current = null;
+      setRestoredId(last.jobId);
+    }
+  };
 
   const decide = useCallback(
-    (direction: SwipeDirection) => {
-      if (!top) return;
+    (direction: SwipeDirection, jobId?: string) => {
+      const id = jobId ?? topIdRef.current;
+      if (!id || topIdRef.current !== id || decidingRef.current === id) return;
+      decidingRef.current = id;
       setRestoredId(null);
-      store.decide(top.id, direction);
+      store.decide(id, direction);
       showToast(direction === "save" ? "Saved to Favorites" : "Passed", {
         label: "Undo",
         onPress: () => {
           const last = store.undo();
-          if (last) setRestoredId(last.jobId);
+          if (last) {
+            decidingRef.current = null;
+            setRestoredId(last.jobId);
+          }
         },
       });
     },
-    [top, store, showToast],
+    [store, showToast],
   );
 
+  /* New top card = new decision allowed. */
+  useEffect(() => {
+    if (top && decidingRef.current !== top.id) decidingRef.current = null;
+  }, [top]);
+
   if (!store.hydrated) return <LoadingState label="Preparing your deck" />;
+
+  if (store.storageError && store.decisions.length === 0) {
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <div className="px-5 pb-2 pt-2.5">
+          <h1 className="m-0 text-2xl tracking-[-0.04em]">Fresh roles</h1>
+        </div>
+        <ErrorState body="We could not load your saved progress — it may be corrupted. Your deck starts fresh; favorites and applications from this browser could not be recovered.">
+          <Button
+            variant="dark"
+            className="w-full"
+            onClick={() => window.location.reload()}
+          >
+            Try again
+          </Button>
+        </ErrorState>
+      </section>
+    );
+  }
 
   if (store.swipesLeft <= 0) {
     return (
@@ -91,14 +145,11 @@ export default function DiscoverPage() {
           <LinkButton href="/favorites" variant="primary" className="w-full">
             Open favorites
           </LinkButton>
-          {store.decisions.length > 0 ? (
+          {canUndo ? (
             <button
               type="button"
               className="min-h-[52px] rounded-[15px] border border-transparent px-[18px] font-[710]"
-              onClick={() => {
-                const last = store.undo();
-                if (last) setRestoredId(last.jobId);
-              }}
+              onClick={runUndo}
             >
               Undo last decision
             </button>
@@ -114,24 +165,14 @@ export default function DiscoverPage() {
         <div>
           <h1 className="m-0 text-2xl tracking-[-0.04em]">Fresh roles</h1>
           <p className="m-0 mt-0.5 text-[11px] text-muted">
-            {deck.length} sample roles · live feeds arrive with W1
+            {deck.length} sample roles · live listings coming soon
           </p>
         </div>
       </div>
       <div
-        className="flex gap-1 px-5 pb-2"
-        aria-label={`${decidedCount} of ${jobs.length} roles decided`}
+        className="relative mx-3.5 mt-1 min-h-0 flex-1"
+        inert={!store.coached ? true : undefined}
       >
-        {jobs.map((j, i) => (
-          <i
-            key={j.id}
-            className={`h-[3px] w-3.5 rounded-[2px] ${
-              i < decidedCount ? "bg-rose" : "bg-line"
-            }`}
-          />
-        ))}
-      </div>
-      <div className="relative mx-3.5 mt-1 min-h-0 flex-1">
         {behind ? (
           <BehindCard job={behind} />
         ) : (
@@ -141,34 +182,38 @@ export default function DiscoverPage() {
           key={top.id}
           job={top}
           restored={restoredId === top.id}
-          onDecide={decide}
+          onDecide={(direction) => decide(direction, top.id)}
         />
-        {!store.coached ? <CoachOverlay onDismiss={store.setCoached} /> : null}
       </div>
+      {!store.coached ? (
+        <div className="absolute inset-x-3.5 bottom-[150px] top-[60px] z-[8]">
+          <CoachOverlay onDismiss={store.setCoached} />
+        </div>
+      ) : null}
       <DeckActions
-        canUndo={store.decisions.length > 0}
-        onUndo={() => {
-          const last = store.undo();
-          if (last) setRestoredId(last.jobId);
-        }}
+        canUndo={canUndo}
+        disabledAll={!store.coached}
+        onUndo={runUndo}
         onPass={() => decide("pass")}
         onStar={() => {
+          if (decidingRef.current === top.id) return;
+          decidingRef.current = top.id;
           setRestoredId(null);
           store.decide(top.id, "star");
           showToast("Starred — the studio arrives next wave", {
             label: "Undo",
             onPress: () => {
               const last = store.undo();
-              if (last) setRestoredId(last.jobId);
+              if (last) {
+                decidingRef.current = null;
+                setRestoredId(last.jobId);
+              }
             },
           });
         }}
         onSave={() => decide("save")}
         onInfo={() => router.push(`/jobs/${top.id}`)}
       />
-      <p className="m-0 pb-1 text-center text-[9px] text-muted">
-        Swipe is optional — every action has a button.
-      </p>
     </section>
   );
 }
