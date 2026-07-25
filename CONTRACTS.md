@@ -64,6 +64,9 @@ subscriptions   (profile_id, stripe_sub_id, plan, period, status, renews_at)
    (~20% of Greenhouse slugs are legacy names — miro=realtimeboardglobal etc.).
 2. Greenhouse adapter tries `boards-api.greenhouse.io` then
    `boards-api.eu.greenhouse.io`, records which host 200s per company.
+   Lever likewise has a documented EU variant (`api.eu.lever.co`) — the
+   Lever adapter needs the same fallback before real-feed runs (founder
+   batch 4, first affected row: Silverfin).
 3. A 200 with an empty jobs array is healthy-but-quiet, never an error and
    never a reason to drop the company.
 4. A company may be live on two ATS platforms mid-migration (Alan, Back
