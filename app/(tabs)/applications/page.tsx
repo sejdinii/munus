@@ -31,8 +31,11 @@ export default function ApplicationsPage() {
   if (!hydrated) return <LoadingState label="Loading applications" />;
 
   // Most recently touched first.
+  /* Most recently touched first, by the stamp that actually exists —
+     insertion order left confirmations buried (critic W4 #9). */
+  const touchedAt = (a: Application) => a.confirmedAt ?? a.openedAt ?? 0;
   const rows = [...applications]
-    .reverse()
+    .sort((x, y) => touchedAt(y) - touchedAt(x))
     .map((application) => {
       const job = jobById(application.jobId);
       return job ? { application, job } : null;

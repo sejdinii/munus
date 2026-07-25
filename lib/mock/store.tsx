@@ -9,6 +9,7 @@
 import {
   confirmAppliedIn,
   markOpenedIn,
+  openApplicationIn,
   setArchivedIn,
   type Application,
   type ApplicationStatus,
@@ -87,6 +88,8 @@ type Store = MunusState & {
   setStudio: (jobId: string, patch: Partial<StudioState>) => void;
   setApplication: (jobId: string, status: ApplicationStatus) => void;
   markOpened: (jobId: string) => void;
+  /** Atomic create-or-advance to `opened` (redirect apply). */
+  openApplication: (jobId: string) => void;
   confirmApplied: (jobId: string) => void;
   setArchived: (jobId: string, archived: boolean) => void;
   setOnboarding: (patch: Partial<OnboardingAnswers>) => void;
@@ -253,6 +256,13 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const openApplication = useCallback((jobId: string) => {
+    setState((s) => ({
+      ...s,
+      applications: openApplicationIn(s.applications, jobId, Date.now()),
+    }));
+  }, []);
+
   const confirmApplied = useCallback((jobId: string) => {
     setState((s) => ({
       ...s,
@@ -289,6 +299,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       setStudio,
       setApplication,
       markOpened,
+      openApplication,
       confirmApplied,
       setArchived,
       setOnboarding,
@@ -307,6 +318,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       setStudio,
       setApplication,
       markOpened,
+      openApplication,
       confirmApplied,
       setArchived,
       setOnboarding,

@@ -7,6 +7,20 @@ import { ReadyChip } from "@/components/ui/Chip";
 import type { Job } from "@/lib/mock/jobs";
 import type { Application } from "@/lib/mock/store";
 
+/* Real stamps only — the row used three identical filler strings while
+   openedAt/confirmedAt sat unused in state (critic W4 #9). */
+function stamp(application: Application): string | null {
+  const at = application.confirmedAt ?? application.openedAt;
+  if (!at) return null;
+  const d = new Date(at);
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const today = new Date().toDateString() === d.toDateString();
+  const when = today
+    ? `today at ${time}`
+    : d.toLocaleDateString([], { day: "numeric", month: "short" });
+  return application.confirmedAt ? `applied ${when}` : `opened ${when}`;
+}
+
 const STATUS_COPY: Record<
   Application["status"],
   { label: string; tone: "default" | "top" | "ok" }
@@ -74,7 +88,11 @@ export function ApplicationRow({
       </span>
       <span>
         <h3 className="m-0 mb-[3px] text-[13px]">{job.title}</h3>
-        <p className="m-0 text-[10px] text-muted">{job.company} · tap for receipt</p>
+        <p className="m-0 text-[10px] text-muted">
+          {[job.company, stamp(application), "tap for receipt"]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
       </span>
       <ReadyChip tone={status.tone}>{status.label}</ReadyChip>
     </Link>

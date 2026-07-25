@@ -26,6 +26,21 @@ export type Application = {
   archived?: boolean;
 };
 
+/** Create-or-advance in one step: two sequential setState calls
+ *  (setApplication then markOpened) would run the second against pre-update
+ *  state and silently no-op. */
+export function openApplicationIn(
+  applications: Application[],
+  jobId: string,
+  now: number,
+): Application[] {
+  const existing = applications.find((a) => a.jobId === jobId);
+  if (!existing) {
+    return [...applications, { jobId, status: "opened", openedAt: now }];
+  }
+  return markOpenedIn(applications, jobId, now);
+}
+
 export function markOpenedIn(
   applications: Application[],
   jobId: string,
@@ -43,6 +58,11 @@ export function confirmAppliedIn(
   jobId: string,
   now: number,
 ): Application[] {
+  /* A user may confirm without ever opening through us (they applied from
+     the listing elsewhere) — create the record rather than lose the fact. */
+  if (!applications.some((a) => a.jobId === jobId)) {
+    return [...applications, { jobId, status: "confirmed", confirmedAt: now }];
+  }
   return applications.map((a) =>
     a.jobId === jobId && a.status !== "confirmed"
       ? { ...a, status: "confirmed" as const, confirmedAt: a.confirmedAt ?? now }

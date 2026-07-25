@@ -46,21 +46,21 @@ const STEPS: Array<{
   {
     status: "prepared",
     title: "Prepared",
-    pending: "Documents tailored and reviewed.",
-    /* No preparedAt in the Application shape — this stage has no real
-       timestamp to show yet, so it never claims one. */
+    /* Future voice: a pending step must never narrate an event that has not
+       happened (critic W4 #4). */
+    pending: "Tailor your documents in the studio when you're ready.",
     done: () => "Documents tailored and reviewed.",
   },
   {
     status: "opened",
     title: "Opened listing",
-    pending: "You opened the official application on the employer’s site.",
+    pending: "Not yet — open the official listing when you're ready.",
     done: (stamp) => `Opened the listing · ${stamp}`,
   },
   {
     status: "confirmed",
     title: "Confirmed applied",
-    pending: "You confirmed you submitted it there.",
+    pending: "Confirm here once you've submitted on the employer's site.",
     done: (stamp) => `Confirmed applied · ${stamp}`,
   },
 ];
@@ -68,7 +68,8 @@ const STEPS: Array<{
 export default function ApplicationReceiptPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { hydrated, applications, studio, setArchived } = useMunusStore();
+  const { hydrated, applications, studio, setArchived, confirmApplied } =
+    useMunusStore();
   const { showToast } = useToast();
 
   if (!hydrated) return <LoadingState label="Loading receipt" />;
@@ -127,7 +128,15 @@ export default function ApplicationReceiptPage() {
           <h3 className="m-0 mb-[13px] text-[13px]">Status</h3>
           <div>
             {STEPS.map((step, i) => {
-              const cls = i < stage ? "done" : i === stage ? "now" : "pending";
+              /* A confirmed application is COMPLETE: its final step must read as done,
+             not as the current in-progress step (critic W4 #8). */
+          const terminal = application.status === "confirmed";
+          const cls =
+            i < stage || (terminal && i === stage)
+              ? "done"
+              : i === stage
+                ? "now"
+                : "pending";
               return (
                 <div
                   key={step.status}
@@ -204,7 +213,22 @@ export default function ApplicationReceiptPage() {
                 </span>
                 <span aria-hidden>✓</span>
               </div>
-              <div className="mt-3 grid grid-cols-[22px_1fr] gap-[9px] rounded-[13px] bg-[#eef8f3] p-3 text-[10px] leading-[1.4] text-[#22563d]">
+                  <div className="mt-[9px] grid grid-cols-[36px_1fr_auto] items-center gap-[9px]">
+                <span
+                  aria-hidden
+                  className="grid h-[42px] w-9 place-items-center rounded-lg bg-quiet text-[9px] font-extrabold"
+                >
+                  PDF
+                </span>
+                <span>
+                  <strong className="block text-[11px]">Cover letter</strong>
+                  <span className="text-[9px] text-muted">
+                    fixed frame · approved paragraphs only
+                  </span>
+                </span>
+                <span aria-hidden>✓</span>
+              </div>
+          <div className="mt-3 grid grid-cols-[22px_1fr] gap-[9px] rounded-[13px] bg-[#eef8f3] p-3 text-[10px] leading-[1.4] text-[#22563d]">
                 <span aria-hidden>✓</span>
                 <span>
                   <strong>Receipt, not a promise.</strong> Munus stores the
@@ -214,9 +238,9 @@ export default function ApplicationReceiptPage() {
             </>
           ) : (
             <p className="m-0 text-[11px] leading-[1.45] text-muted">
-              No tailored documents yet — the application studio arrives in
-              the next wave. Once you tailor and approve documents, the exact
-              files you approved are stored here permanently.
+              No tailored documents yet. Tailor and approve them in the
+              studio — the exact files you approve are stored here
+              permanently.
             </p>
           )}
         </section>
@@ -232,6 +256,21 @@ export default function ApplicationReceiptPage() {
               >
                 Continue to review
               </LinkButton>
+            ) : null}
+            {/* An opened application MUST be confirmable from here: the user
+                may return via Applications rather than the preflight tab
+                (critic W4 #2 — the loop dead-ended). */}
+            {application.status === "opened" ? (
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={() => {
+                  confirmApplied(job.id);
+                  showToast("Receipt filed — congratulations");
+                }}
+              >
+                Yes, I applied — file my receipt
+              </Button>
             ) : null}
             <div className="grid gap-1.5">
               <a

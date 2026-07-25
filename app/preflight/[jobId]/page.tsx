@@ -7,7 +7,7 @@
    the return-confirm ("Did you apply?", Handshake pattern) files the
    receipt. Sample listing URLs are labelled as samples (mock phase). */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -24,7 +24,12 @@ export default function PreflightPage() {
   const store = useMunusStore();
   const { showToast } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const promptedThisReturn = useRef(false);
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  /* Armed when the user actually leaves for the listing; only a real
+     return (visibility/focus) may raise the dialog. The old
+     status-change effect fired it on DEPARTURE and consumed the latch,
+     so the real return prompted nothing (critic W4 #1). */
+  const returnPending = useRef(false);
 
   const job = jobById(jobId);
   const st = store.studio[jobId];
@@ -32,41 +37,59 @@ export default function PreflightPage() {
   const generated = st?.generated ?? false;
   const acceptedCount = st?.accepted.length ?? 0;
 
-  /* Docs reviewed and ready = a `prepared` application exists (D2 stage 1).
-     Created once, on arrival with generated docs. */
-  useEffect(() => {
-    if (store.hydrated && job && generated && !application) {
-      store.setApplication(job.id, "prepared");
-    }
-  }, [store, job, generated, application]);
+  /* The `prepared` record is created when the user actually commits by
+     opening the listing — merely visiting this screen must not write a
+     permanent Applications row (critic W4 #10). */
 
   /* Return-confirm: when the tab regains focus while the listing is opened,
      ask once per return (Handshake pattern). Also prompts on direct
      navigation back to this page in the opened state. */
-  const maybePrompt = useCallback(() => {
-    if (application?.status === "opened" && !promptedThisReturn.current) {
-      promptedThisReturn.current = true;
+  /* Detecting "the user came back" is genuinely unreliable: opening a new
+     tab does not always hide or blur the opener (desktop especially), so
+     visibilitychange/focus alone can miss the return entirely. Any of three
+     signals therefore counts as a return, and the latch guarantees the
+     prompt appears exactly once per departure:
+       - visibilitychange → mobile tab switching (the common case)
+       - focus            → desktop window/tab refocus
+       - pointerdown/keydown on our page → they are demonstrably back
+     If all three somehow miss, the inline banner below is the fallback. */
+  useEffect(() => {
+    function onReturn() {
+      if (document.visibilityState !== "visible") return;
+      if (!returnPending.current) return;
+      returnPending.current = false;
       setConfirmOpen(true);
     }
-  }, [application?.status]);
-
-  useEffect(() => {
-    function onVisible() {
-      if (document.visibilityState === "visible") maybePrompt();
-    }
-    document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onVisible);
+    document.addEventListener("visibilitychange", onReturn);
+    window.addEventListener("focus", onReturn);
+    document.addEventListener("pointerdown", onReturn);
+    document.addEventListener("keydown", onReturn);
     return () => {
-      document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onVisible);
+      document.removeEventListener("visibilitychange", onReturn);
+      window.removeEventListener("focus", onReturn);
+      document.removeEventListener("pointerdown", onReturn);
+      document.removeEventListener("keydown", onReturn);
     };
-  }, [maybePrompt]);
-
-  useEffect(() => {
-    if (store.hydrated) maybePrompt();
-  }, [store.hydrated, maybePrompt]);
+  }, []);
 
   if (!store.hydrated) return <LoadingState label="Preparing your review" />;
+
+  if (store.storageError && store.applications.length === 0) {
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <Topbar title="Review" backHref="/favorites" />
+        <ErrorState body="We could not load your saved progress — it may be corrupted. Re-open the studio to rebuild your documents before applying.">
+          <Button
+            variant="dark"
+            className="w-full"
+            onClick={() => window.location.reload()}
+          >
+            Try again
+          </Button>
+        </ErrorState>
+      </section>
+    );
+  }
 
   if (!job) {
     return (
@@ -105,9 +128,21 @@ export default function PreflightPage() {
   }
 
   const openListing = () => {
-    store.markOpened(job.id);
-    promptedThisReturn.current = false;
-    window.open(job.applyUrl, "_blank", "noopener");
+    /* NOT window.open(url, "_blank", "noopener"): that always returns null,
+       which is indistinguishable from a blocked popup. Open normally, then
+       sever `opener` ourselves for the same security guarantee. */
+    const opened = window.open(job.applyUrl, "_blank");
+    if (opened) opened.opener = null;
+    if (!opened) {
+      /* Popup blocked: nothing was opened, so claiming "opened" would be a
+         lie and would arm a confirm prompt for a page never seen
+         (critic W4 #6). */
+      setPopupBlocked(true);
+      showToast("Your browser blocked the new tab — use the link below");
+      return;
+    }
+    store.openApplication(job.id);
+    returnPending.current = true;
     showToast("Listing opened — come back when you’re done");
   };
 
@@ -121,9 +156,9 @@ export default function PreflightPage() {
   const confirmed = application?.status === "confirmed";
 
   return (
-    <section className="screen-in relative flex flex-1 flex-col">
+    <section className="screen-in relative flex min-h-0 flex-1 flex-col">
       <Topbar title="Review" backHref={`/studio/${job.id}`} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[120px]">
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">
         <p className="m-0 mb-1.5 text-[11px] font-[760] uppercase tracking-[0.1em] text-rose-ink">
           Final check
         </p>
@@ -136,13 +171,24 @@ export default function PreflightPage() {
         </p>
 
         <section className="border-t border-line py-[17px]">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="m-0 text-[13px]">Contact details</h3>
-          </div>
-          <p className="m-0 text-[11px] leading-[1.4] text-muted">
-            Contact details attach when accounts arrive with real sign-in —
-            until then you enter them on the employer’s form yourself.
-          </p>
+          <h3 className="m-0 mb-3 text-[13px]">What happens next</h3>
+          <ol className="m-0 grid list-none gap-2.5 p-0">
+            {[
+              "We open the employer’s official listing in a new tab.",
+              "You apply there — Munus never submits on your behalf.",
+              "When you come back, tell us if you applied and we file your receipt.",
+            ].map((step, i) => (
+              <li
+                key={step}
+                className="grid grid-cols-[22px_1fr] gap-[9px] text-[11px] leading-[1.4]"
+              >
+                <span className="grid size-[22px] place-items-center rounded-full bg-rose-soft text-[10px] font-extrabold text-rose-ink">
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <section className="border-t border-line py-[17px]">
@@ -201,6 +247,25 @@ export default function PreflightPage() {
           </span>
         </div>
 
+        {popupBlocked ? (
+          <div className="mt-4 rounded-[13px] border border-amber/40 bg-[#fff7ec] p-3 text-[11px] leading-[1.4] text-[#70471a]">
+            <strong>Your browser blocked the new tab.</strong> Open the
+            listing with this link, then come back and confirm below.
+            <a
+              href={job.applyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                store.openApplication(job.id);
+                returnPending.current = true;
+              }}
+              className="mt-2 block break-all font-[750] underline"
+            >
+              {job.applyUrl}
+            </a>
+          </div>
+        ) : null}
+
         {application?.status === "opened" ? (
           <button
             type="button"
@@ -213,7 +278,7 @@ export default function PreflightPage() {
         ) : null}
       </div>
 
-      <footer className="absolute inset-x-0 bottom-0 border-t border-line bg-paper/95 px-[18px] pb-5 pt-[11px] backdrop-blur-[18px]">
+      <footer className="sticky bottom-0 border-t border-line bg-paper/95 px-[18px] pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[11px] backdrop-blur-[18px]">
         <p className="m-0 mb-2 text-center text-[9px] text-muted">
           {confirmed
             ? "Receipt filed — this application is confirmed."

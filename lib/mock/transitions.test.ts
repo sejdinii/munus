@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   confirmAppliedIn,
   markOpenedIn,
+  openApplicationIn,
   setArchivedIn,
   type Application,
 } from "./transitions";
@@ -74,8 +75,41 @@ describe("apply-loop state machine (D2)", () => {
     expect(a?.openedAt).toBe(T1);
   });
 
-  it("unknown job ids are no-ops, never insertions", () => {
-    expect(markOpenedIn([prepared], "ghost", T1)).toHaveLength(1);
-    expect(confirmAppliedIn([prepared], "ghost", T1)[0]?.status).toBe("prepared");
+  it("markOpened on an unknown id is a no-op — it never invents a record", () => {
+    const next = markOpenedIn([prepared], "ghost", T1);
+    expect(next).toHaveLength(1);
+    expect(next[0]?.jobId).toBe("mono");
+  });
+
+  it("confirmApplied on an unknown id DOES create (applied elsewhere) and leaves others alone", () => {
+    const next = confirmAppliedIn([prepared], "ghost", T1);
+    expect(next).toHaveLength(2);
+    expect(next.find((a) => a.jobId === "mono")?.status).toBe("prepared");
+    expect(next.find((a) => a.jobId === "ghost")?.status).toBe("confirmed");
+  });
+});
+
+describe("atomic create-or-advance (React batching safety)", () => {
+  it("openApplicationIn creates an opened record when none exists", () => {
+    const [a] = openApplicationIn([], "mono", T1);
+    expect(a?.status).toBe("opened");
+    expect(a?.openedAt).toBe(T1);
+  });
+
+  it("openApplicationIn advances an existing prepared record", () => {
+    const [a] = openApplicationIn([prepared], "mono", T1);
+    expect(a?.status).toBe("opened");
+  });
+
+  it("openApplicationIn never downgrades a confirmed record", () => {
+    const [a] = openApplicationIn([confirmed], "mono", 9_999);
+    expect(a?.status).toBe("confirmed");
+    expect(a?.confirmedAt).toBe(T2);
+  });
+
+  it("confirmAppliedIn creates a record when the user applied elsewhere", () => {
+    const [a] = confirmAppliedIn([], "mono", T2);
+    expect(a?.status).toBe("confirmed");
+    expect(a?.confirmedAt).toBe(T2);
   });
 });

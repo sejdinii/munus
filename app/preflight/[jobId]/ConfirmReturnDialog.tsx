@@ -22,6 +22,9 @@ export function ConfirmReturnDialog({
   useEffect(() => {
     const trigger = document.activeElement as HTMLElement | null;
     yesRef.current?.focus();
+    /* Lock background scroll while modal (critic W4 #11). */
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         onNotYet();
@@ -49,6 +52,7 @@ export function ConfirmReturnDialog({
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
       trigger?.focus();
     };
   }, [onNotYet]);
@@ -77,7 +81,7 @@ export function ConfirmReturnDialog({
           <Button ref={yesRef} variant="primary" onClick={onConfirm}>
             Yes, I applied
           </Button>
-          <Button variant="plain" small onClick={onNotYet}>
+          <Button variant="plain" className="min-h-11" onClick={onNotYet}>
             Not yet
           </Button>
         </div>
