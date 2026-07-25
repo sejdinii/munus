@@ -1,0 +1,5 @@
+{
+  "_comment": "Hand-authored fixture — network is unavailable in this environment. Represents a real, correctly-slugged Workable account with zero current postings (D13 #3: healthy-but-quiet, not an error).",
+  "name": "Loomery Widget",
+  "jobs": []
+}
