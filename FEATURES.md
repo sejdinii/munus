@@ -180,6 +180,11 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D19 · 2026-07-25 · PDF export is CLIENT-SIDE during the mock phase (no
+  server infra exists); the plan §2's server-side render + Supabase Storage
+  + documents.pdf_path becomes the production path once creds exist —
+  receipts require durably stored PDFs, so the client path is temporary.
+  (slice B suggestion, adopted)
 - D18 · 2026-07-25 · Discover header (title + honest sample-data line) is an
   ADDITION to the prototype (renderDiscover ships no header) — justified by
   the honesty rule; batch dots and swipe-hint were removed as unsanctioned
