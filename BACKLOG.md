@@ -380,6 +380,17 @@ below cites a source found this run, none from memory.
 - **Every mainstream AI writing tool's accept/reject unit operates at the sentence/phrase-span level, never the whole-document level:** Grammarly, and by structural analogy Workable's job-ad AI assistant, both apply suggestions as localized, independently-actionable spans rather than "regenerate the whole document, accept/reject as one block" — this confirms Munus's plan (§"Evidence-only studio": "Accept/Keep per suggestion") is aligned with category convention and should NOT be simplified to a single whole-document accept/reject in a later wave for "simplicity," since that would be a regression from table-stakes UX in this category. Source: Grammarly Editor user guide, support.grammarly.com, 2026, via WebSearch, 2026-07-25.
 - **Gap/caveat on this run's research, flagged honestly:** WebSearch results for "Notion AI accept/reject," "Gmail Help Me Write," and "LinkedIn AI writing assistant" returned mostly SEO-farm summaries and pricing-comparison pages rather than primary UI documentation — I was not able to independently confirm Notion AI's or Gmail's exact accept/reject interaction model this run beyond what's broadly known to be true of inline AI-edit tools generally (accept/reject/regenerate buttons appearing on hover near AI-inserted text). Do not cite this paragraph as a sourced claim for any of those three products specifically; re-run with WebFetch (if it recovers) against each product's own help-center pages before treating Notion/Gmail-specific patterns as confirmed.
 
+### Orchestrator verdicts on W3 design intel (checkpoint 2026-07-26)
+- Per-claim provenance chips as ownable differentiator: ACCEPTED — evidence
+  chips already ship; elevate to marketing copy at W7 (BACKLOG will carry).
+- Grammarly binary accept/dismiss card as reference unit: ACCEPTED-CONFIRMED
+  (SuggestionCard already matches).
+- Named-tone presets over sliders: ACCEPTED-CONFIRMED (ToneSheet chips).
+- Workable widget-vs-v3 API split: ACCEPTED as ingestion note (adapter uses
+  the no-auth widget endpoint; revisit if v3 needed).
+- Notion/Gmail/LinkedIn unconfirmed interaction models: NOTED — no action
+  on SEO-farm evidence.
+
 ## RISKS
 - (market/competitor/category threats, with source)
 - **Plan's LLM is being turned off (orchestrator, 2026-07-24):** Groq

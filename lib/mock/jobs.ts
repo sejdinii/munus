@@ -5,6 +5,9 @@
 
 export type Job = {
   id: string;
+  /** Sample listing URL — clearly example.com until real feeds arrive.
+      The preflight labels it as a sample; never fake a real employer URL. */
+  applyUrl: string;
   company: string;
   monogram: string;
   color: string;
@@ -25,6 +28,7 @@ export type Job = {
 export const jobs: Job[] = [
   {
     id: "northstar",
+    applyUrl: "https://example.com/sample-listing/northstar",
     company: "Northstar",
     monogram: "N",
     color: "#dcd6ff",
@@ -47,6 +51,7 @@ export const jobs: Job[] = [
   },
   {
     id: "loomery",
+    applyUrl: "https://example.com/sample-listing/loomery",
     company: "Loomery",
     monogram: "L",
     color: "#bfe9ff",
@@ -70,6 +75,7 @@ export const jobs: Job[] = [
   },
   {
     id: "fieldnote",
+    applyUrl: "https://example.com/sample-listing/fieldnote",
     company: "Fieldnote",
     monogram: "F",
     color: "#d8f3b5",
@@ -92,6 +98,7 @@ export const jobs: Job[] = [
   },
   {
     id: "arc",
+    applyUrl: "https://example.com/sample-listing/arc",
     company: "Arc Health",
     monogram: "A",
     color: "#ffdbbb",
@@ -114,6 +121,7 @@ export const jobs: Job[] = [
   },
   {
     id: "mono",
+    applyUrl: "https://example.com/sample-listing/mono",
     company: "Mono",
     monogram: "M",
     color: "#ffd9e6",
@@ -136,6 +144,7 @@ export const jobs: Job[] = [
   },
   {
     id: "brightline",
+    applyUrl: "https://example.com/sample-listing/brightline",
     company: "Brightline",
     monogram: "B",
     color: "#d6ecff",
@@ -158,6 +167,7 @@ export const jobs: Job[] = [
   },
   {
     id: "cargo",
+    applyUrl: "https://example.com/sample-listing/cargo",
     company: "Cargo",
     monogram: "C",
     color: "#e3ddff",
@@ -180,6 +190,7 @@ export const jobs: Job[] = [
   },
   {
     id: "halide",
+    applyUrl: "https://example.com/sample-listing/halide",
     company: "Halide",
     monogram: "H",
     color: "#d9f2ea",

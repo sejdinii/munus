@@ -24,7 +24,11 @@ export type ApplicationStatus = "prepared" | "opened" | "confirmed";
 export type Application = {
   jobId: string;
   status: ApplicationStatus;
+  /** When the user opened the official listing (redirect apply, D2). */
+  openedAt?: number;
   confirmedAt?: number;
+  /** Archived = hidden from the default list; the receipt survives. */
+  archived?: boolean;
 };
 
 export type StudioState = {
@@ -82,6 +86,9 @@ type Store = MunusState & {
   restoreFavorite: (jobId: string) => void;
   setStudio: (jobId: string, patch: Partial<StudioState>) => void;
   setApplication: (jobId: string, status: ApplicationStatus) => void;
+  markOpened: (jobId: string) => void;
+  confirmApplied: (jobId: string) => void;
+  setArchived: (jobId: string, archived: boolean) => void;
   setOnboarding: (patch: Partial<OnboardingAnswers>) => void;
   setCoached: () => void;
   swipesLeft: number;
@@ -236,6 +243,40 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  /* Apply-loop transitions (D2 state machine): prepared → opened →
+     confirmed. markOpened never downgrades a confirmed application;
+     confirmApplied is terminal. */
+  const markOpened = useCallback((jobId: string) => {
+    setState((s) => ({
+      ...s,
+      applications: s.applications.map((a) =>
+        a.jobId === jobId && a.status === "prepared"
+          ? { ...a, status: "opened" as const, openedAt: Date.now() }
+          : a,
+      ),
+    }));
+  }, []);
+
+  const confirmApplied = useCallback((jobId: string) => {
+    setState((s) => ({
+      ...s,
+      applications: s.applications.map((a) =>
+        a.jobId === jobId && a.status !== "confirmed"
+          ? { ...a, status: "confirmed" as const, confirmedAt: Date.now() }
+          : a,
+      ),
+    }));
+  }, []);
+
+  const setArchived = useCallback((jobId: string, archived: boolean) => {
+    setState((s) => ({
+      ...s,
+      applications: s.applications.map((a) =>
+        a.jobId === jobId ? { ...a, archived } : a,
+      ),
+    }));
+  }, []);
+
   const setOnboarding = useCallback((patch: Partial<OnboardingAnswers>) => {
     setState((s) => ({ ...s, onboarding: { ...s.onboarding, ...patch } }));
   }, []);
@@ -257,6 +298,9 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       restoreFavorite,
       setStudio,
       setApplication,
+      markOpened,
+      confirmApplied,
+      setArchived,
       setOnboarding,
       setCoached,
       swipesLeft: Math.max(0, FREE_SWIPES - state.swipesUsed),
@@ -272,6 +316,9 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       restoreFavorite,
       setStudio,
       setApplication,
+      markOpened,
+      confirmApplied,
+      setArchived,
       setOnboarding,
       setCoached,
       reset,
