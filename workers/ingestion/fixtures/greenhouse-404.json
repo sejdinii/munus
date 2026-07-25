@@ -1,0 +1,4 @@
+{
+  "_comment": "Hand-authored fixture — the JSON body Greenhouse returns alongside an HTTP 404 for an unknown board slug. Tests pair this body with status: 404 explicitly; the status code itself is not part of a JSON fixture.",
+  "error": "Not Found"
+}

@@ -54,8 +54,23 @@ subscriptions   (profile_id, stripe_sub_id, plan, period, status, renews_at)
 - Every table lives in `supabase/migrations/` from day one. No dashboard-only schema.
 - Dedupe key for jobs: `(source, external_id)`. `verified_at` powers the freshness
   pill; a 404 on the posting flips `open=false` and the job leaves every deck.
-- Open schema question (BACKLOG: "Unsave semantics"): `decisions` needs an
-  `unsave` type or `favorites` cannot be a pure view. Resolve in Phase 0 migration.
+- Approved schema deltas (checkpoint 2026-07-23, FEATURES D14–D15):
+  `decisions.type` gains `unsave` (undo support — favorites stays a view);
+  a `waitlist (profile_id, tier, created_at)` table lands in W5 for the Pro
+  waitlist button.
+
+### Ingestion adapter contract (checkpoint 2026-07-23, from founder batch 1 — FEATURES D13)
+1. Never guess slugs: every `companies.slug` must be evidence-confirmed
+   (~20% of Greenhouse slugs are legacy names — miro=realtimeboardglobal etc.).
+2. Greenhouse adapter tries `boards-api.greenhouse.io` then
+   `boards-api.eu.greenhouse.io`, records which host 200s per company.
+3. A 200 with an empty jobs array is healthy-but-quiet, never an error and
+   never a reason to drop the company.
+4. A company may be live on two ATS platforms mid-migration (Alan, Back
+   Market, Ledger today) — company-level dedupe must tolerate two
+   `(source, external_id)` roots; prefer the fresher/larger board.
+5. The beachhead vertical is CONFIG, not code — seed list + matching
+   thresholds load from config so vertical #2 is a data change (FEATURES D13).
 
 ## 3. Non-negotiable invariants
 1. **Evidence-only AI.** Tailoring input = facts + job description, nothing else.

@@ -1,0 +1,27 @@
+[
+  {
+    "_comment": "Hand-authored fixture — network is unavailable in this environment, so this is a realistic reconstruction of a Lever `postings/{slug}?mode=json` response, not a live capture.",
+    "id": "a1b2c3d4-0001",
+    "text": "Software Engineer, Payments",
+    "categories": { "location": "Remote - Europe" },
+    "hostedUrl": "https://jobs.lever.co/loomery/a1b2c3d4-0001",
+    "createdAt": 1784548800000,
+    "descriptionPlain": "Build and maintain payment processing infrastructure for our merchant platform. Compensation: €70,000–€90,000 base plus equity."
+  },
+  {
+    "id": "a1b2c3d4-0002",
+    "text": "Account Executive",
+    "categories": { "location": "Dublin, Ireland" },
+    "hostedUrl": "https://jobs.lever.co/loomery/a1b2c3d4-0002",
+    "createdAt": 1784635200000,
+    "descriptionPlain": "Own the full sales cycle for our mid-market segment. Compensation is not published for this role and will be discussed with the recruiter."
+  },
+  {
+    "id": "a1b2c3d4-0003",
+    "text": "Site Reliability Engineer",
+    "categories": { "location": "Remote - US" },
+    "hostedUrl": "https://jobs.lever.co/loomery/a1b2c3d4-0003",
+    "createdAt": 1784721600000,
+    "descriptionPlain": "Keep our infrastructure reliable at scale. Base salary $135,000 - $160,000 depending on level."
+  }
+]
