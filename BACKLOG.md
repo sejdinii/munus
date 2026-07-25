@@ -526,6 +526,22 @@ cites a source found this run.
   when real ingestion runs. Good catch: an unexpected day-to-day is exactly
   the kind of surprise this product exists to prevent.
 
+### Founder action items from W5 slices (checkpoint 2026-07-26)
+- **Legal placeholders needing a human decision** (grep `founder to` in
+  app/(marketing)): privacy contact email; legal entity name + registered
+  address; company registration number; erasure response window; lead
+  supervisory authority; signed Supabase/Groq DPAs; liability cap figure;
+  governing law + venue. A solicitor review is required before launch —
+  the pages say so on their face.
+- **BACKLOG arithmetic drift (slice A):** per-batch prose totals disagreed
+  with the literal table rows twice. Founder should tally from the tables,
+  not from memory. Config ships 175 rows (174 claimed) — the difference is
+  three legitimately-uncaveated Greenhouse rows in Batch 4.
+- **Feed verification is now automated:** `npm run ingest:dry` performs the
+  real HTTP pass over every feed_url that has been outstanding for five
+  sessions. It needs only the network policy. Rows flip verifiedVia
+  "search" → "http" once it runs clean.
+
 ## RISKS
 - (market/competitor/category threats, with source)
 - **Plan's LLM is being turned off (orchestrator, 2026-07-24):** Groq

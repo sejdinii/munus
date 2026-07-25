@@ -37,7 +37,8 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | PARTIAL — deck UI + detail DONE (critic-reviewed, 12 findings fixed); matching + real jobs BLOCKED on creds/network |
 | W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | PARTIAL — exit criterion MET vs mock facts/provider (browser-verified downloads); real CV-parse + Groq provider BLOCKED on creds |
 | W4 | 4 · Apply loop | 4–5 | Preflight; redirect + return-confirm; applications + receipts; "still open" checks | Full journey: swipe → tailor → apply → receipt | PARTIAL — full journey DONE vs sample listings (browser-verified end-to-end); "still open" checks + real URLs BLOCKED on live feeds |
-| W5 | 5 · Money & law | 5–6 | Usage metering, Stripe (Plus), paywall moments (3rd try, 21st swipe), privacy/terms, GDPR export+delete | A stranger can pay and a regulator can't hurt us | MISSING |
+| W5a | 5 · Law & metering (real, D21) | 5–6 | Real metering logic, privacy/terms, GDPR export+delete | A regulator can't hurt us; the meter protects LLM cost | PARTIAL — metering logic + legal pages DONE; GDPR export/delete and API enforcement need auth |
+| W5b | 5 · Payments (MOCK per D21) | later | Mock upgrade path, Pro waitlist capture | A tester can simulate Plus; no money moves | MISSING |
 | W6 | 6 · Polish & beta | 6–7 | Onboarding funnel, PWA install, PostHog, empty/offline states, 20-user closed beta | Beta users complete the loop unaided; crash-free | MISSING |
 | W7 | 7 · Launch | 8 | Fix beta findings, seed content, launch (designer communities, Product Hunt) | Public, measured, first organic signups | MISSING |
 
@@ -52,6 +53,17 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Mock data layer (prototype jobs + persisted store) | DONE | vitest 4/4 + boot | replaced by real APIs in W2 |
 | CI workflow (typecheck/build/test) | PARTIAL | file authored; first run pending on GitHub | verify on next push |
 | PWA manifest stub | PARTIAL | served at /manifest.webmanifest | icons + service worker in W6 |
+
+## REAL-DATA READINESS (wave 5 — built ahead of credentials)
+| Item | Status | Verified how | Notes |
+|---|---|---|---|
+| Supabase schema (14 tables, migrations) | DONE | typecheck of SQL by review; runs on first `db push` | favorites is a real view over the decision log; verifier_drops audit table |
+| RLS policies on every table | DONE | written + reviewed | owner-only user data; NO client write on usage/subscriptions (D21 consequence b) |
+| Seed-list config (175 companies) | DONE | 880 per-row data guards + distribution test | Pollfish excluded (unverified slug, rule #1) |
+| Ingestion runner (all 5 ATS) | DONE | 10 behavioural tests, in-memory store | transient outage never mass-marks jobs closed |
+| Company identity bridge | DONE | 7 tests incl. no-collision across all rows + type-level runner contract | dual-ATS companies share one id |
+| Dry-run feed verifier CLI | DONE | ran against live network: correctly reported blocked egress | `npm run ingest:dry` — needs ONLY network policy, not Supabase |
+| Supabase JobStore implementation | MISSING | — | the one ingestion piece that truly needs credentials |
 
 ## CORE FLOWS (MVP-blocking)
 | Feature | Status | Verified how | Notes |
@@ -69,11 +81,12 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Preflight review | DONE | wave4: browser-run, D3-compliant (no employer questions) | docs counts real; contact details arrive with auth |
 | Redirect apply + return-confirm + receipt | DONE | wave4: full journey browser-run incl. popup return + both confirm branches | sample URLs labelled; real URLs with live feeds |
 | Applications list + receipt timeline | DONE | wave4: archive/undo/unarchive + real timestamps + real doc counts browser-run | still-open checks need live feeds (W4 leftover) |
-| Usage metering (server-side) | MISSING | — | Free 20 swipes/wk, 2 tries/job |
+| Usage metering (server-side) | PARTIAL | wave5: 11 tests on limits + honest paywall copy | pure logic DONE; API-route enforcement needs auth. RLS already denies client writes to usage/subscriptions |
 | Stripe: Plus checkout + portal + webhooks | MISSING | — | €14.99/mo · €6.99/wk · €34.99/q |
 | Paywall moments (3rd AI try, 21st swipe) | MISSING | — | |
 | Plans screen (Free/Plus/Pro-waitlist) | DONE | wave1: rendered, D9 prices grep-verified, contrast checked | checkout + waitlist capture are W5 stubs (toasts) |
-| Privacy, terms, GDPR export/delete | STUB | auditor 2026-07-25: draft pages exist | privacy/terms are labelled drafts (W1 slice 4); GDPR export/delete not started (W5) |
+| Privacy, terms | PARTIAL | wave5: real GDPR-accurate content, browser-verified TOC | founder placeholders listed in BACKLOG; needs solicitor review before launch |
+| GDPR export/delete flows | MISSING | — | blocked on auth; privacy policy currently points to email fallback |
 
 ## REQUIRED BUT NOT CORE (post-boot, pre-launch)
 | Feature | Status | Verified how | Notes |
