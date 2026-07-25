@@ -1,0 +1,40 @@
+{
+  "_comment": "Hand-authored fixture — network is unavailable in this environment, so this is a realistic reconstruction of an Ashby posting-api job-board response, not a live capture. Re-verify the live shape before the first real cron run.",
+  "jobs": [
+    {
+      "id": "9f8b3c1a-0001",
+      "title": "Senior Frontend Engineer",
+      "location": "Amsterdam, Netherlands",
+      "secondaryLocations": [],
+      "employmentType": "FullTime",
+      "isRemote": false,
+      "publishedAt": "2026-07-18T10:00:00.000Z",
+      "jobUrl": "https://jobs.ashbyhq.com/northwind/9f8b3c1a-0001",
+      "applyUrl": "https://jobs.ashbyhq.com/northwind/9f8b3c1a-0001/application",
+      "descriptionPlain": "Build our design system and core web app. Compensation: €70,000–€85,000 base."
+    },
+    {
+      "id": "9f8b3c1a-0002",
+      "title": "Growth Marketing Lead",
+      "location": "San Francisco, US",
+      "secondaryLocations": ["Remote - US"],
+      "employmentType": "FullTime",
+      "isRemote": false,
+      "publishedAt": "2026-07-19T12:00:00.000Z",
+      "jobUrl": "https://jobs.ashbyhq.com/northwind/9f8b3c1a-0002",
+      "applyUrl": "https://jobs.ashbyhq.com/northwind/9f8b3c1a-0002/application",
+      "descriptionPlain": "Own growth marketing strategy across paid and lifecycle channels. Compensation is not published for this role."
+    },
+    {
+      "id": "9f8b3c1a-0003",
+      "title": "Staff Site Reliability Engineer",
+      "location": "Remote - Global",
+      "secondaryLocations": [],
+      "employmentType": "FullTime",
+      "isRemote": true,
+      "publishedAt": "2026-07-20T09:30:00.000Z",
+      "applyUrl": "https://jobs.ashbyhq.com/northwind/9f8b3c1a-0003/application",
+      "descriptionPlain": "Keep production infra reliable at global scale. Base salary $145,000 - $170,000."
+    }
+  ]
+}
