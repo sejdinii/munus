@@ -35,7 +35,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — app scaffold/CI/shell DONE (see FOUNDATION); Supabase schema/auth/CV BLOCKED on user creds |
 | W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | PARTIAL — adapters/normalize/dedupe DONE (fixture-tested); seed config, cron, embeddings, real-feed run BLOCKED on network policy |
 | W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | PARTIAL — deck UI + detail DONE (critic-reviewed, 12 findings fixed); matching + real jobs BLOCKED on creds/network |
-| W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | MISSING |
+| W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | PARTIAL — exit criterion MET vs mock facts/provider (browser-verified downloads); real CV-parse + Groq provider BLOCKED on creds |
 | W4 | 4 · Apply loop | 4–5 | Preflight; redirect + return-confirm; applications + receipts; "still open" checks | Full journey: swipe → tailor → apply → receipt | MISSING |
 | W5 | 5 · Money & law | 5–6 | Usage metering, Stripe (Plus), paywall moments (3rd try, 21st swipe), privacy/terms, GDPR export+delete | A stranger can pay and a regulator can't hurt us | MISSING |
 | W6 | 6 · Polish & beta | 6–7 | Onboarding funnel, PWA install, PostHog, empty/offline states, 20-user closed beta | Beta users complete the loop unaided; crash-free | MISSING |
@@ -64,8 +64,8 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Discover swipe deck (physics, star, undo, coach) | DONE | wave2: Playwright-driven swipes/undo/buttons/limit/caught-up 2026-07-25 | mock data by design until W1 feeds + matching; star toasts pending studio (see GAPS) |
 | Job detail | DONE | wave2: implementer browser-run + integrated boot | mock data; real job API later |
 | Favorites + readiness chips + "still open" check | PARTIAL | wave1: seeded-store browser-run, all states | UI done vs mock incl. unsave; still-open check needs real data (W4) |
-| Studio: evidence-only tailoring + verifier gate | MISSING | — | verifier is blocking, zero escapes |
-| Studio: Accept/Keep, tone regen, PDF export | MISSING | — | |
+| Studio: evidence-only tailoring + verifier gate | PARTIAL | wave3: 12 pipeline tests incl. lying-provider; browser-run | deterministic verifier DONE; mock provider until GROQ_API_KEY (D17) |
+| Studio: Accept/Keep, tone regen, PDF export | DONE | wave3: browser-driven accept/tone/download, both PDFs verified | client-side PDF per D19 (server render in production) |
 | Preflight review | MISSING | — | NO employer-questions block in MVP (D3) |
 | Redirect apply + return-confirm + receipt | MISSING | — | Prepared → Opened → Confirmed |
 | Applications list + receipt timeline | PARTIAL | wave1: all 3 statuses + timeline states browser-run | D2-compliant copy; real records + archive land W4 |
@@ -89,8 +89,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
 - 2026-07-25 (wave2): deck star fast-track toasts instead of opening the
-  studio (route doesn't exist until W3) — restore prototype behavior
-  (star → save → studio) when the studio ships.
+  studio — RESOLVED in wave3: star → save → studio restored.
 - 2026-07-25 (wave2/auditor): vitest was double-counting suites from agent
   worktrees under .claude/ — fixed via vitest.config.ts exclude; earlier
   "80 tests" claims were inflated, true wave-1 count was 34 (now 50).
