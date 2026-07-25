@@ -12,6 +12,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -50,6 +51,7 @@ type MunusState = {
   studio: Record<string, StudioState>;
   swipesUsed: number;
   onboarding: OnboardingAnswers;
+  coached: boolean;
 };
 
 /* northstar starts favorited — prototype parity for the demo. */
@@ -61,6 +63,7 @@ const initialState: MunusState = {
   studio: {},
   swipesUsed: 0,
   onboarding: {},
+  coached: false,
 };
 
 export const FREE_SWIPES = 20;
@@ -75,6 +78,7 @@ type Store = MunusState & {
   setStudio: (jobId: string, patch: Partial<StudioState>) => void;
   setApplication: (jobId: string, status: ApplicationStatus) => void;
   setOnboarding: (patch: Partial<OnboardingAnswers>) => void;
+  setCoached: () => void;
   swipesLeft: number;
   reset: () => void;
 };
@@ -84,6 +88,14 @@ const MunusContext = createContext<Store | null>(null);
 export function MunusStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<MunusState>(initialState);
   const [hydrated, setHydrated] = useState(false);
+  /* Synchronous mirror of state for actions that must READ current state
+     when called (undo returns the reverted decision). Reading inside a
+     setState updater and returning it does NOT work — updaters run after
+     the handler, so callers would always get undefined. */
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     try {
@@ -124,21 +136,19 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
   );
 
   const undo = useCallback(() => {
-    let last: Decision | undefined;
-    setState((s) => {
-      last = s.decisions[s.decisions.length - 1];
-      if (!last) return s;
-      return {
-        ...s,
-        decisions: s.decisions.slice(0, -1),
-        swipesUsed: Math.max(0, s.swipesUsed - 1),
-        favorites:
-          last.type === "save" || last.type === "star"
-            ? s.favorites.filter((id) => id !== last?.jobId)
-            : s.favorites,
-        dismissed: s.dismissed.filter((id) => id !== last?.jobId),
-      };
-    });
+    const last =
+      stateRef.current.decisions[stateRef.current.decisions.length - 1];
+    if (!last) return undefined;
+    setState((s) => ({
+      ...s,
+      decisions: s.decisions.slice(0, -1),
+      swipesUsed: Math.max(0, s.swipesUsed - 1),
+      favorites:
+        last.type === "save" || last.type === "star"
+          ? s.favorites.filter((id) => id !== last.jobId)
+          : s.favorites,
+      dismissed: s.dismissed.filter((id) => id !== last.jobId),
+    }));
     return last;
   }, []);
 
@@ -208,6 +218,10 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, onboarding: { ...s.onboarding, ...patch } }));
   }, []);
 
+  const setCoached = useCallback(() => {
+    setState((s) => ({ ...s, coached: true }));
+  }, []);
+
   const reset = useCallback(() => setState(initialState), []);
 
   const value = useMemo<Store>(
@@ -221,6 +235,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       setStudio,
       setApplication,
       setOnboarding,
+      setCoached,
       swipesLeft: Math.max(0, FREE_SWIPES - state.swipesUsed),
       reset,
     }),
@@ -234,6 +249,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       setStudio,
       setApplication,
       setOnboarding,
+      setCoached,
       reset,
     ],
   );

@@ -70,3 +70,24 @@
     transform: rotate(360deg);
   }
 }
+
+/* BACK stamp flash after undo — prototype's stampFlash: fade in, hold, out. */
+@keyframes stamp-flash {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.stamp-back {
+  opacity: 0;
+  animation: stamp-flash 1.1s ease;
+}
