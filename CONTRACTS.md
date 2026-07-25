@@ -72,7 +72,14 @@ subscriptions   (profile_id, stripe_sub_id, plan, period, status, renews_at)
 4. A company may be live on two ATS platforms mid-migration (Alan, Back
    Market, Ledger today) — company-level dedupe must tolerate two
    `(source, external_id)` roots; prefer the fresher/larger board.
-5. The beachhead vertical is CONFIG, not code — seed list + matching
+5. Seed-list EU scope: include a company when it has an EU/UK entity or
+   office, OR posts roles explicitly scoped to a European location or
+   timezone. Exclude "remote — worldwide" postings where Europe is
+   incidental (US-timezone/payroll/visa constraints make them false hope).
+6. Company type (`companies.type`: product | consultancy | agency) is a
+   pending schema delta — consultancy roles have a different day-to-day and
+   must be labelled on the job card (founder W4, deferred to W6).
+7. The beachhead vertical is CONFIG, not code — seed list + matching
    thresholds load from config so vertical #2 is a data change (FEATURES D13).
 
 ## 3. Non-negotiable invariants
