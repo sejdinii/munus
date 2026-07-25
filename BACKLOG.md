@@ -261,6 +261,17 @@ unconfirmed, consistent with Batch 2's finding).
 - **Stacked-card peek is the primary "there's more" affordance, not a separate hint:** card UIs in this genre render 1–2 next cards partially visible behind the active one (offset/scaled down), so the browsing affordance is communicated by the stack's own geometry rather than a "swipe for more" label or arrow. Source: Mobbin, "Card UI Design: Best practices, Design variants & Examples," mobbin.com/glossary/card, 2026.
 - **2026 job-swipe entrants conflate "swipe right" with "auto-submit" — Munus should explicitly not copy this:** newer job-swipe apps (Sorce, Switch) pair the right-swipe gesture with an AI auto-apply action baked into the same gesture, a materially different contract from Munus's swipe = save-only model. Any copy, iconography, or micro-interaction borrowed from these apps' right-swipe needs rewording so users don't infer auto-submission. Source: sorce.jobs, "Swipe Jobs: Tinder-Style Job Apps (2026)"; switch-inc company/product listings, via search, 2026.
 
+### Orchestrator verdicts on W2 design intel (checkpoint 2026-07-25)
+- Velocity-OR-position swipe threshold: ACCEPTED — implemented in
+  components/deck/useSwipe.ts this checkpoint.
+- WCAG 2.5.7 button parity, Rewind-style single-step undo, stacked-card
+  peek, gesture-zone separation: ACCEPTED-CONFIRMED — deck already ships
+  these; treated as regression guards for the critic.
+- Reduced-motion swap-not-slow: ACCEPTED — BACK stamp static variant done;
+  broader animation swaps revisit in W6 polish.
+- Right-swipe ≠ auto-apply copy guardrail (Sorce/Switch conflation):
+  ACCEPTED as standing copy rule — deck/coach copy says save, never apply.
+
 ## RISKS
 - (market/competitor/category threats, with source)
 - **Plan's LLM is being turned off (orchestrator, 2026-07-24):** Groq

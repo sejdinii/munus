@@ -19,6 +19,10 @@ type SwipeState = {
 };
 
 const COMMIT_PX = 90;
+/* Flick: a fast short swipe commits too (BACKLOG W2 design intel —
+   react-tinder-card/rn-swiper-list pattern: position OR velocity). */
+const FLICK_VELOCITY_PX_MS = 0.6;
+const FLICK_MIN_PX = 30;
 const STAMP_RAMP_PX = 75;
 const FLING_PX = 520;
 
@@ -32,6 +36,8 @@ export function useSwipe(onCommit: (direction: SwipeDirection) => void) {
   const start = useRef<{ x: number; y: number } | null>(null);
   const committed = useRef(false);
   const commitTimer = useRef<number | undefined>(undefined);
+  const lastMove = useRef<{ x: number; t: number } | null>(null);
+  const velocity = useRef(0);
 
   /* If the card unmounts before the delayed commit fires (e.g. a button
      decided the deck first), the stale commit must never run. */
@@ -49,13 +55,26 @@ export function useSwipe(onCommit: (direction: SwipeDirection) => void) {
     if (!start.current || committed.current) return;
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
+    const now = performance.now();
+    if (lastMove.current) {
+      const dt = now - lastMove.current.t;
+      if (dt > 0) velocity.current = (e.clientX - lastMove.current.x) / dt;
+    }
+    lastMove.current = { x: e.clientX, t: now };
     setState({ dx, dy, dragging: true, leaving: null });
   }, []);
 
   const end = useCallback(() => {
     if (!start.current || committed.current) return;
+    const vx = velocity.current;
+    velocity.current = 0;
+    lastMove.current = null;
     setState((s) => {
-      if (Math.abs(s.dx) > COMMIT_PX) {
+      const flick =
+        Math.abs(vx) > FLICK_VELOCITY_PX_MS &&
+        Math.abs(s.dx) > FLICK_MIN_PX &&
+        Math.sign(vx) === Math.sign(s.dx);
+      if (Math.abs(s.dx) > COMMIT_PX || flick) {
         const direction: SwipeDirection = s.dx > 0 ? "save" : "pass";
         committed.current = true;
         commitTimer.current = window.setTimeout(() => onCommit(direction), 180);
