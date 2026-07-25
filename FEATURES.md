@@ -104,6 +104,16 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 - 2026-07-23 (wave1 checkpoint): unlayered element CSS silently defeats
   Tailwind utilities — all future base styles MUST live in @layer base
   (bug shipped in foundation, caught at integration).
+- 2026-07-26 (wave4 critic): verdict FIX-FIRST, 12 findings, 5 demo-breaking
+  — all fixed and browser-verified. TWO were invisible to my own testing:
+  my walkthrough closed the popup and refocused in one motion, masking that
+  the confirm dialog fired on DEPARTURE, and an "opened" application had no
+  confirm path outside preflight. Standing lesson: verify a state machine by
+  asserting WHEN each transition happens, not just that the end state
+  eventually appears. Root causes worth remembering: window.open(url,
+  "_blank", "noopener") ALWAYS returns null (so blocked-popup detection read
+  every success as a block), and two setState calls in one tick race React
+  batching — state machines need atomic actions (now lib/mock/transitions).
 - 2026-07-23 (wave1 critic): design-critic verdict was FIX-FIRST with 15
   findings (3 demo-breaking honesty violations). 13 fixed and browser-
   verified same session. Deferred: discover placeholder has no error branch
