@@ -189,6 +189,19 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D21 · 2026-07-26 · **USER SCOPE DIRECTIVE: everything real except payments.**
+  Real accounts + onboarding, real job ingestion, fully functional app;
+  Stripe/checkout stays a mock. Consequences recorded now so they are not
+  re-litigated: (a) the LAW half of W5 is NOT deferred — real accounts hold
+  real CVs, so privacy policy, GDPR export/delete and RLS become mandatory
+  the moment sign-in ships, not at launch; (b) usage METERING must be real
+  even with mock payments, or one account can exhaust the Groq free tier —
+  the meter protects cost, the checkout only collects money; (c) the mock
+  upgrade path must be guarded so it can never reach a public deployment;
+  (d) "scrape" = the plan's public ATS JSON APIs (legal, structured,
+  free), NOT HTML scraping — unchanged from §2.
+  Re-sequenced plan: W0 auth+CV parse and W1 real ingestion come next,
+  W5 splits into W5a (metering + law, real) and W5b (checkout, mocked).
 - D20 · 2026-07-25 · Studio deviations from the prototype, all sanctioned:
   (a) "Download PDF kit" button added — W3's exit criterion demands an
   in-studio download; (b) the letter is a FIXED FRAME (app-template greeting
