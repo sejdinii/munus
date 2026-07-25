@@ -34,7 +34,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 |---|---|---|---|---|---|
 | W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — app scaffold/CI/shell DONE (see FOUNDATION); Supabase schema/auth/CV BLOCKED on user creds |
 | W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | PARTIAL — adapters/normalize/dedupe DONE (fixture-tested); seed config, cron, embeddings, real-feed run BLOCKED on network policy |
-| W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | MISSING |
+| W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | PARTIAL — deck UI + detail DONE (critic-reviewed, 12 findings fixed); matching + real jobs BLOCKED on creds/network |
 | W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | MISSING |
 | W4 | 4 · Apply loop | 4–5 | Preflight; redirect + return-confirm; applications + receipts; "still open" checks | Full journey: swipe → tailor → apply → receipt | MISSING |
 | W5 | 5 · Money & law | 5–6 | Usage metering, Stripe (Plus), paywall moments (3rd try, 21st swipe), privacy/terms, GDPR export+delete | A stranger can pay and a regulator can't hurt us | MISSING |
@@ -180,6 +180,11 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D18 · 2026-07-25 · Discover header (title + honest sample-data line) is an
+  ADDITION to the prototype (renderDiscover ships no header) — justified by
+  the honesty rule; batch dots and swipe-hint were removed as unsanctioned
+  (prototype dead code). Critic W2 verdict FIX-FIRST: all 12 findings fixed
+  and browser-verified same session.
 - D17 · 2026-07-24 · Plan §2 names Groq llama-3.3-70b, but Groq deprecated it
   (June 17 2026; serving stops ~Aug 2026 on free/dev tiers). The plan's real
   decision — Groq for fast cheap inference — stands; the model ID moves to
