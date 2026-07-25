@@ -1,0 +1,10 @@
+{
+  "name": "Munus",
+  "short_name": "Munus",
+  "description": "Find the roles worth your time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f6f6",
+  "theme_color": "#f8f6f6",
+  "icons": []
+}
