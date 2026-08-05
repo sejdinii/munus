@@ -198,7 +198,7 @@ export default function PreflightPage() {
               href={`/studio/${job.id}`}
               variant="plain"
               small
-              className="!min-h-0 !p-0 text-[11px] font-[750] !text-rose-ink"
+              className="!min-h-11 items-center !p-0 text-[11px] font-[750] !text-rose-ink"
             >
               Review changes
             </LinkButton>

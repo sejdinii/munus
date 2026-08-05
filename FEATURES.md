@@ -202,6 +202,16 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D22 · 2026-08-05 · **OPERATING MODEL (founder): MERGED.** Munus's in-repo
+  build machinery executes the build; Hermes owns product gates and independent
+  verification; one canonical repo ledger; standing independent audit at every
+  wave checkpoint. Consequence A: the independent Playwright harness (393×852 +
+  320×568, 44px targets, overflow, console, semantics) is a STANDING gate check —
+  every wave checkpoint runs it before APPROVE_*. Consequence B: first audit
+  found 9 touch-target violations (Read full job profile links 23–24px,
+  Tailor application 40px, Topbar Back 42×42, SegmentedTabs 34px, preflight
+  Review changes 21px) — fixed on branch, harness re-run to green. (Discord
+  message 1534658397259956324)
 - D21 · 2026-07-26 · **USER SCOPE DIRECTIVE: everything real except payments.**
   Real accounts + onboarding, real job ingestion, fully functional app;
   Stripe/checkout stays a mock. Consequences recorded now so they are not

@@ -63,7 +63,7 @@ function CardInner({ job, restored }: { job: Job; restored?: boolean }) {
         </div>
         <Link
           href={`/jobs/${job.id}`}
-          className="mt-[11px] w-full p-1 text-center text-[11px] font-[750] text-ink underline underline-offset-[3px]"
+          className="mt-[5px] flex min-h-[44px] w-full items-center justify-center p-1 text-center text-[11px] font-[750] text-ink underline underline-offset-[3px]"
         >
           Read full job profile
         </Link>

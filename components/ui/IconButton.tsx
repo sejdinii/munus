@@ -12,7 +12,7 @@ export function IconButton({
   return (
     <button
       aria-label={label}
-      className={`grid size-[42px] place-items-center rounded-full bg-transparent hover:bg-quiet [&_svg]:size-[22px] ${className}`}
+      className={`grid size-11 place-items-center rounded-full bg-transparent hover:bg-quiet [&_svg]:size-[22px] ${className}`}
       {...rest}
     >
       {children}
