@@ -6,13 +6,15 @@
    Answers persist through lib/mock/store's setOnboarding as the user
    progresses (W2+ this becomes POST /api/profile). */
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { BackIcon, UploadIcon } from "@/components/ui/icons";
 import { useMunusStore, type OnboardingAnswers } from "@/lib/mock/store";
+import { useSession } from "@/lib/supabase/session";
+import { SignInGate } from "@/components/auth/SignInGate";
 import { onboardingSteps, DEFAULT_SALARY_FLOOR } from "./steps";
 
 const STEP_STORAGE_KEY = "munus-onboarding-step-v1";
@@ -233,7 +235,7 @@ export default function OnboardingPage() {
         ) : null}
 
         {step.kind === "upload" ? (
-          <div>
+          <UploadStepGate>
             <div
               className={`rounded-[18px] border px-5 py-6 text-center ${
                 uploaded
@@ -284,7 +286,7 @@ export default function OnboardingPage() {
                 I&apos;ll add it later
               </button>
             ) : null}
-          </div>
+          </UploadStepGate>
         ) : null}
       </div>
 
@@ -304,4 +306,21 @@ export default function OnboardingPage() {
       </footer>
     </section>
   );
+}
+
+/**
+ * Auth gate at the CV-upload moment (D16): guests preview everything
+ * before this step; here they sign in (Google first, Apple before beta)
+ * and the upload box appears only for an active session.
+ */
+function UploadStepGate({ children }: { children: ReactNode }) {
+  const { status } = useSession();
+
+  if (status === "loading") {
+    return <LoadingState label="Checking your session" />;
+  }
+  if (status === "signedOut" || status === "unconfigured") {
+    return <SignInGate />;
+  }
+  return <>{children}</>;
 }
