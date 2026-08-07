@@ -7,7 +7,7 @@ import type { CvFact } from "./types";
  */
 
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "gpt-oss-120b";
+const MODEL = "openai/gpt-oss-120b"; // Groq model id (D33 workhorse)
 
 const SYSTEM_PROMPT = `You extract structured facts from a job-seeker's CV.
 Return STRICT JSON only, no markdown, shaped as:
