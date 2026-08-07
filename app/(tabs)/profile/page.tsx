@@ -30,8 +30,8 @@ export default function ProfilePage() {
   if (!hydrated) return <LoadingState label="Loading profile" />;
 
   const prefFields = [
-    onboarding.role,
-    onboarding.level,
+    ...(onboarding.roles ?? []),
+    ...(onboarding.levels ?? []),
     ...(onboarding.workTypes ?? []),
     ...(onboarding.locations ?? []),
     onboarding.alerts,
@@ -54,14 +54,16 @@ export default function ProfilePage() {
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
         <div className="border-b border-line pb-[22px] pt-1">
           <div className="grid size-[68px] place-items-center rounded-[23px] bg-[#251e21] text-[21px] font-extrabold text-white">
-            {initialsFromRole(onboarding.role)}
+            {initialsFromRole((onboarding.roles ?? [])[0])}
           </div>
           <h2 className="mb-[3px] mt-3.5 text-[25px] tracking-[-0.04em]">
-            {onboarding.completed ? onboarding.role || "Profile ready" : "No profile yet"}
+            {onboarding.completed
+              ? (onboarding.roles ?? [])[0] || "Profile ready"
+              : "No profile yet"}
           </h2>
           {onboarding.completed ? (
             <p className="m-0 text-[11px] text-muted">
-              {[...(onboarding.workTypes ?? []), ...(onboarding.locations ?? []), onboarding.level]
+              {[...(onboarding.workTypes ?? []), ...(onboarding.locations ?? []), ...(onboarding.levels ?? [])]
                 .filter(Boolean)
                 .join(" · ") || "Onboarding complete"}
             </p>

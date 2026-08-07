@@ -5,7 +5,7 @@
 
 export type RoleAndLevelStep = {
   kind: "roleAndLevel";
-  key: "role" | "level";
+  key: "roles" | "levels";
   title: string;
   help: string;
   levelOptions: readonly string[];
@@ -49,9 +49,9 @@ export const WORK_TYPE_OPTIONS = ["Remote", "Hybrid", "On-site"] as const;
 export const onboardingSteps: readonly StepConfig[] = [
   {
     kind: "roleAndLevel",
-    key: "role",
+    key: "roles",
     title: "What work should we look for?",
-    help: "Search the full catalog or type your own. Pick the level that fits you in the same step.",
+    help: "Add every role you'd consider — type and pick, or type your own. Levels too.",
     levelOptions: LEVEL_OPTIONS,
   },
   {

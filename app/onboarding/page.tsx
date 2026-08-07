@@ -18,8 +18,9 @@ import { SignInGate } from "@/components/auth/SignInGate";
 import { FactPanel } from "@/components/cv/FactPanel";
 import type { CvFact, FactKind } from "@/lib/cv/types";
 import { onboardingSteps, LEVEL_OPTIONS } from "./steps";
-import { searchRoles, ROLE_GROUPS } from "@/lib/onboarding/roles";
-import { searchLocations, EUROPE_LOCATIONS } from "@/lib/onboarding/locations";
+import { TagInputBar } from "@/components/onboarding/TagInputBar";
+import { searchRoles } from "@/lib/onboarding/roles";
+import { searchLocations } from "@/lib/onboarding/locations";
 
 const STEP_STORAGE_KEY = "munus-onboarding-step-v1";
 const MAX_CV_BYTES = 8 * 1024 * 1024;
@@ -103,7 +104,7 @@ export default function OnboardingPage() {
     step.kind === "choice"
       ? Boolean(onboarding[step.key])
       : step.kind === "roleAndLevel"
-        ? Boolean(onboarding.role)
+        ? (onboarding.roles?.length ?? 0) > 0 && (onboarding.levels?.length ?? 0) > 0
         : step.kind === "workTypes"
           ? (onboarding.workTypes?.length ?? 0) > 0
           : step.kind === "locations"
@@ -127,8 +128,8 @@ export default function OnboardingPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            role: onboarding.role,
-            level: onboarding.level,
+            roles: onboarding.roles,
+            levels: onboarding.levels,
             workTypes: onboarding.workTypes,
             locations: onboarding.locations,
             alerts: onboarding.alerts,
@@ -260,10 +261,10 @@ export default function OnboardingPage() {
 
         {step.kind === "roleAndLevel" ? (
           <RoleAndLevelPicker
-            value={onboarding.role}
-            level={onboarding.level}
-            onPick={(role) => setOnboarding({ role })}
-            onLevel={(level) => setOnboarding({ level })}
+            roles={onboarding.roles ?? []}
+            levels={onboarding.levels ?? []}
+            onRoles={(roles) => setOnboarding({ roles })}
+            onLevels={(levels) => setOnboarding({ levels })}
           />
         ) : null}
 
@@ -447,185 +448,60 @@ function UploadStepGate({ children }: { children: ReactNode }) {
 }
 
 /**
- * Role + level in ONE window (founder feedback) — prototype row pattern:
- * big tappable rows, search-first, calm. Search narrows the catalog to
- * large rows; "browse all" expands groups; custom entry stays quiet until
- * asked; level sits below as four standard choice rows.
+ * Role + level in ONE window (founder direction) — LinkedIn-style tag bars:
+ * type-ahead suggestions from the catalog, Enter/tap to add, custom roles
+ * typed in when nothing matches, MULTIPLE roles per bar, levels the same.
  */
 function RoleAndLevelPicker({
-  value,
-  level,
-  onPick,
-  onLevel,
+  roles,
+  levels,
+  onRoles,
+  onLevels,
 }: {
-  value: string | undefined;
-  level: string | undefined;
-  onPick: (role: string) => void;
-  onLevel: (level: string) => void;
+  roles: string[];
+  levels: string[];
+  onRoles: (roles: string[]) => void;
+  onLevels: (levels: string[]) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [browsing, setBrowsing] = useState(false);
-  const [customOpen, setCustomOpen] = useState(false);
-  const [custom, setCustom] = useState("");
-
-  const POPULAR = [
-    "Data scientist", "Product designer", "Software engineer (general)",
-    "Data analyst", "Project manager", "Machine learning engineer",
-  ];
-
-  const groups = searchRoles(query);
-  const searching = query.trim().length > 0;
-  const showGroups = searching || browsing;
-  const visibleRoles = searching
-    ? groups.flatMap((g) => g.roles)
-    : browsing
-      ? groups.flatMap((g) => g.roles)
-      : POPULAR;
-
   return (
-    <div className="grid gap-5">
-      <input
-        type="search"
-        aria-label="Search roles"
-        placeholder="Search every role…"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          if (e.target.value.trim()) setBrowsing(false);
-        }}
-        className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
-      />
-
-      {!searching ? (
+    <div className="grid gap-6">
+      <div className="grid gap-2">
         <p className="m-0 text-[10px] font-[760] uppercase tracking-[0.1em] text-muted">
-          {browsing ? "All roles" : "Popular roles"}
+          Roles you want
         </p>
-      ) : null}
-
-      <div className="grid gap-2.5">
-        {visibleRoles.map((role) => {
-          const selected = value === role;
-          return (
-            <button
-              key={role}
-              type="button"
-              onClick={() => onPick(role)}
-              className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
-                selected
-                  ? "border-rose bg-rose-soft text-rose-ink"
-                  : "border-line bg-paper text-ink"
-              }`}
-            >
-              <span>{role}</span>
-              <span
-                aria-hidden
-                className={`grid size-[19px] shrink-0 place-items-center rounded-full ${
-                  selected
-                    ? "border-[6px] border-rose"
-                    : "border-[1.5px] border-[#c8c0c4]"
-                }`}
-              />
-            </button>
-          );
-        })}
-        {showGroups && groups.length > 1 ? (
-          <p className="m-0 px-1 text-[10px] leading-[1.4] text-muted">
-            Showing {visibleRoles.length} roles across {groups.length} groups —
-            keep typing to narrow.
-          </p>
-        ) : null}
+        <TagInputBar
+          placeholder="Add a role… e.g. data scientist"
+          value={roles}
+          onChange={onRoles}
+          maxTokens={5}
+          suggestions={(q) =>
+            q ? searchRoles(q).flatMap((g) => g.roles).slice(0, 6) : []
+          }
+        />
       </div>
-
-      {!searching ? (
-        <button
-          type="button"
-          onClick={() => setBrowsing((b) => !b)}
-          className="flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-line px-4 text-left font-[620] text-muted"
-        >
-          <span>{browsing ? "Show popular roles instead" : "Browse all roles"}</span>
-          <span aria-hidden className="text-xs">{browsing ? "−" : "+"}</span>
-        </button>
-      ) : null}
-
-      {!customOpen ? (
-        <button
-          type="button"
-          onClick={() => setCustomOpen(true)}
-          className="flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-dashed border-[#bdb4b8] px-4 text-left font-[620] text-muted"
-        >
-          <span>Not in the list? Add your own role</span>
-          <span aria-hidden className="text-xs">+</span>
-        </button>
-      ) : (
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (custom.trim()) {
-              onPick(custom.trim());
-              setCustomOpen(false);
-              setCustom("");
-            }
-          }}
-        >
-          <input
-            type="text"
-            aria-label="Custom role"
-            placeholder="Your role title"
-            autoFocus
-            value={custom}
-            onChange={(e) => setCustom(e.target.value)}
-            className="h-[55px] min-w-0 flex-1 rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
-          />
-          <button
-            type="submit"
-            disabled={!custom.trim()}
-            className="min-h-[55px] rounded-[14px] bg-ink px-5 text-[13px] font-[710] text-white disabled:opacity-40"
-          >
-            Add
-          </button>
-        </form>
-      )}
-
-      <div className="grid gap-2.5 border-t border-line pt-5">
+      <div className="grid gap-2">
         <p className="m-0 text-[10px] font-[760] uppercase tracking-[0.1em] text-muted">
-          Your level
+          Levels you'd accept
         </p>
-        {LEVEL_OPTIONS.map((option) => {
-          const selected = level === option;
-          return (
-            <button
-              key={option}
-              type="button"
-              onClick={() => onLevel(option)}
-              className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
-                selected
-                  ? "border-rose bg-rose-soft text-rose-ink"
-                  : "border-line bg-paper text-ink"
-              }`}
-            >
-              <span>{option}</span>
-              <span
-                aria-hidden
-                className={`grid size-[19px] shrink-0 place-items-center rounded-full ${
-                  selected
-                    ? "border-[6px] border-rose"
-                    : "border-[1.5px] border-[#c8c0c4]"
-                }`}
-              />
-            </button>
-          );
-        })}
+        <TagInputBar
+          placeholder="Add a level… e.g. senior"
+          value={levels}
+          onChange={onLevels}
+          maxTokens={3}
+          suggestions={(q) =>
+            LEVEL_OPTIONS.filter((l) =>
+              l.toLowerCase().includes(q.toLowerCase()),
+            ).slice(0, 4)
+          }
+        />
       </div>
     </div>
   );
 }
 
 /**
- * Europe location picker (founder feedback) — prototype row pattern:
- * search-first, big rows, quiet. "Anywhere in Europe" first; search
- * narrows to large city rows; browse-all expands the grouped catalog;
- * selections summarize in one quiet chip line.
+ * Europe location picker (founder direction) — LinkedIn-style tag bar with
+ * the whole European catalog as suggestions; "Anywhere in Europe" first.
  */
 function LocationsPicker({
   value,
@@ -634,31 +510,8 @@ function LocationsPicker({
   value: string[];
   onChange: (locations: string[]) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [browsing, setBrowsing] = useState(false);
-  const groups = searchLocations(query);
-  const searching = query.trim().length > 0;
-  const showGroups = searching || browsing;
   const anywhere = value.includes("Anywhere in Europe");
-
-  const POPULAR = [
-    "Berlin", "Amsterdam", "London", "Paris", "Madrid", "Vienna", "Lisbon", "Copenhagen",
-  ];
-  const visibleCities = searching
-    ? groups.flatMap((g) => g.cities)
-    : browsing
-      ? groups.flatMap((g) => g.cities)
-      : POPULAR;
-
-  function toggle(city: string) {
-    if (anywhere) {
-      onChange([city]);
-      return;
-    }
-    onChange(
-      value.includes(city) ? value.filter((c) => c !== city) : [...value, city],
-    );
-  }
+  const cities = value.filter((c) => c !== "Anywhere in Europe");
 
   return (
     <div className="grid gap-5">
@@ -681,69 +534,20 @@ function LocationsPicker({
           }`}
         />
       </button>
-
-      {value.length > 0 && !anywhere ? (
-        <p className="m-0 px-1 text-xs leading-[1.5] text-rose-ink">
-          Selected: {value.join(" · ")}
-        </p>
-      ) : null}
-
-      <input
-        type="search"
-        aria-label="Search locations"
-        placeholder="Search every European city…"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          if (e.target.value.trim()) setBrowsing(false);
-        }}
-        className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
-      />
-
-      {!searching ? (
+      <div className="grid gap-2">
         <p className="m-0 text-[10px] font-[760] uppercase tracking-[0.1em] text-muted">
-          {browsing ? "All locations" : "Popular in Europe"}
+          Cities you'd work in
         </p>
-      ) : null}
-
-      <div className="grid gap-2.5">
-        {visibleCities.map((city) => {
-          const selected = value.includes(city);
-          const country = EUROPE_LOCATIONS.find((g) => g.cities.includes(city))?.country;
-          return (
-            <button
-              key={city}
-              type="button"
-              onClick={() => toggle(city)}
-              className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
-                selected
-                  ? "border-rose bg-rose-soft text-rose-ink"
-                  : "border-line bg-paper text-ink"
-              }`}
-            >
-              <span>{city}</span>
-              <span aria-hidden className="text-xs text-muted">{country}</span>
-            </button>
-          );
-        })}
-        {showGroups && groups.length > 1 ? (
-          <p className="m-0 px-1 text-[10px] leading-[1.4] text-muted">
-            {visibleCities.length} cities · {groups.length} countries — keep
-            typing to narrow.
-          </p>
-        ) : null}
+        <TagInputBar
+          placeholder="Add a city… e.g. Berlin"
+          value={cities}
+          onChange={onChange}
+          maxTokens={10}
+          suggestions={(q) =>
+            q ? searchLocations(q).flatMap((g) => g.cities).slice(0, 6) : []
+          }
+        />
       </div>
-
-      {!searching ? (
-        <button
-          type="button"
-          onClick={() => setBrowsing((b) => !b)}
-          className="flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-line px-4 text-left font-[620] text-muted"
-        >
-          <span>{browsing ? "Show popular cities instead" : "Browse all of Europe"}</span>
-          <span aria-hidden className="text-xs">{browsing ? "−" : "+"}</span>
-        </button>
-      ) : null}
     </div>
   );
 }

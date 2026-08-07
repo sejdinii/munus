@@ -157,7 +157,7 @@ export default function StudioPage() {
       const cvDoc = composeCvDocument(
         mockFacts,
         acceptedSuggestions,
-        store.onboarding.role,
+        (store.onboarding.roles ?? [])[0],
       );
       downloadBlob(await renderCvPdf(cvDoc), `CV-${job.company}.pdf`);
       if (acceptedLetterCount > 0) {

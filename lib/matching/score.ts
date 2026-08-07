@@ -10,7 +10,10 @@
  */
 
 export interface MatchProfile {
+  /** Primary role target (single, back-compat). */
   role_target?: string | null;
+  /** Full list of role targets (LinkedIn-style tag bar, multi). */
+  role_targets?: string[] | null;
   level?: string | null;
   locations: string[];
   /** Work-type preference: any of "Remote" | "Hybrid" | "On-site" (or null/[] = no preference). */
@@ -94,6 +97,7 @@ export function scoreJob(profile: MatchProfile, facts: MatchFact[], job: MatchJo
 
   // ── role (35) ───────────────────────────────────────────────────────────
   const roleCandidates = [
+    ...(profile.role_targets ?? []),
     profile.role_target,
     ...facts.filter((f) => f.kind === "role").map((f) => f.content),
   ].filter((r): r is string => Boolean(r));

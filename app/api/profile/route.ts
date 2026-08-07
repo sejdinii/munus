@@ -27,15 +27,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "bad json" }, { status: 400 });
   }
   const b = (body ?? {}) as {
-    role?: unknown;
-    level?: unknown;
+    roles?: unknown;
+    levels?: unknown;
     workTypes?: unknown;
     locations?: unknown;
     alerts?: unknown;
   };
 
-  const role = typeof b.role === "string" && b.role.trim() ? b.role.trim().slice(0, 120) : null;
-  const level = typeof b.level === "string" && b.level.trim() ? b.level.trim().slice(0, 40) : null;
+  const roles = Array.isArray(b.roles)
+    ? b.roles
+        .filter((r): r is string => typeof r === "string" && r.trim().length > 0)
+        .map((r) => r.trim().slice(0, 120))
+        .slice(0, 5)
+    : null;
+  const levels = Array.isArray(b.levels)
+    ? b.levels
+        .filter((l): l is string => typeof l === "string" && l.trim().length > 0)
+        .map((l) => l.trim().slice(0, 40))
+        .slice(0, 3)
+    : null;
   const alerts = typeof b.alerts === "string" && b.alerts.trim() ? b.alerts.trim().slice(0, 40) : null;
   const workTypes = Array.isArray(b.workTypes)
     ? b.workTypes.filter((w): w is string => typeof w === "string").slice(0, 3)
@@ -47,8 +57,20 @@ export async function POST(request: Request) {
   const { error } = await supabase
     .from("profiles")
     .update({
-      ...(role !== null ? { role_target: role } : {}),
-      ...(level !== null ? { level } : {}),
+      ...(roles !== null
+        ? {
+            role_target: roles[0] ?? null,
+            role_targets: roles,
+          }
+        : {}),
+      ...(levels !== null
+        ? {
+            // Primary level: "Open to two levels" wins when selected.
+            level: levels.includes("Open to two levels")
+              ? "Open to two levels"
+              : levels[0] ?? null,
+          }
+        : {}),
       ...(alerts !== null ? { alerts } : {}),
       ...(workTypes !== null ? { work_types: workTypes } : {}),
       ...(locations !== null ? { locations } : {}),
