@@ -68,14 +68,15 @@ const STEPS: Array<{
 export default function ApplicationReceiptPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { hydrated, applications, studio, setArchived, confirmApplied } =
+  const { hydrated, applications, studio, setArchived, confirmApplied, deckCache } =
     useMunusStore();
   const { showToast } = useToast();
 
   if (!hydrated) return <LoadingState label="Loading receipt" />;
 
   const application = applications.find((a) => a.jobId === id);
-  const job = jobById(id);
+  /* Real jobs live in the deck cache (W4-live, same as preflight). */
+  const job = deckCache[id] ?? jobById(id);
 
   if (!application || !job) {
     return (

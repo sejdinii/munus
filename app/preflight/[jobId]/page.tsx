@@ -16,6 +16,8 @@ import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
 import { jobById } from "@/lib/mock/jobs";
 import { useMunusStore } from "@/lib/mock/store";
+import { useSession } from "@/lib/supabase/session";
+import { isCheckableApplyUrl, type ListingCheck } from "@/lib/apply/check";
 import { ConfirmReturnDialog } from "./ConfirmReturnDialog";
 
 export default function PreflightPage() {
@@ -23,19 +25,51 @@ export default function PreflightPage() {
   const router = useRouter();
   const store = useMunusStore();
   const { showToast } = useToast();
+  const { status } = useSession();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [popupBlocked, setPopupBlocked] = useState(false);
+  /* W4-live: "still open" check — server-side HEAD on the apply URL. */
+  const [listingCheck, setListingCheck] = useState<ListingCheck | null>(null);
+  const [checkingListing, setCheckingListing] = useState(false);
   /* Armed when the user actually leaves for the listing; only a real
      return (visibility/focus) may raise the dialog. The old
      status-change effect fired it on DEPARTURE and consumed the latch,
      so the real return prompted nothing (critic W4 #1). */
   const returnPending = useRef(false);
 
-  const job = jobById(jobId);
+  const job = store.deckCache[jobId] ?? jobById(jobId);
   const st = store.studio[jobId];
   const application = store.applications.find((a) => a.jobId === jobId);
   const generated = st?.generated ?? false;
   const acceptedCount = st?.accepted.length ?? 0;
+
+  /* W4-live: check the listing is still open when the preflight loads
+     (real apply URLs only; sample links are never claimed checked). */
+  useEffect(() => {
+    if (status !== "signedIn" || !job || !isCheckableApplyUrl(job.applyUrl)) return;
+    let cancelled = false;
+    setCheckingListing(true);
+    fetch("/api/apply/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: job.applyUrl }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("status" + r.status))))
+      .then((payload: ListingCheck) => {
+        if (!cancelled) setListingCheck(payload);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setListingCheck({ reachable: false, status: null, checkedAt: new Date().toISOString(), checkable: true });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingListing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [status, job]);
 
   /* The `prepared` record is created when the user actually commits by
      opening the listing — merely visiting this screen must not write a
@@ -170,6 +204,35 @@ export default function PreflightPage() {
           page. This is exactly what you take with you.
         </p>
 
+        {/* W4-live: honest still-open signal; never blocks, never claims
+            unverified links are fine. */}
+        {isCheckableApplyUrl(job.applyUrl) ? (
+          <p className="mb-4 flex items-center gap-2 text-[11px]">
+            {checkingListing ? (
+              <>
+                <span className="size-2 animate-pulse rounded-full bg-quiet-ink" aria-hidden />
+                <span className="text-muted">Checking the listing is still open…</span>
+              </>
+            ) : listingCheck?.reachable ? (
+              <>
+                <span className="grid size-4 place-items-center rounded-full bg-green/20 text-[9px] font-extrabold text-green" aria-hidden>
+                  ✓
+                </span>
+                <span className="text-green">Still open — checked just now</span>
+              </>
+            ) : (
+              <>
+                <span className="grid size-4 place-items-center rounded-full bg-amber-soft text-[9px] font-extrabold" aria-hidden>
+                  !
+                </span>
+                <span className="text-amber-ink">
+                  Couldn’t verify — the listing may have closed. You decide.
+                </span>
+              </>
+            )}
+          </p>
+        ) : null}
+
         <section className="border-t border-line py-[17px]">
           <h3 className="m-0 mb-3 text-[13px]">What happens next</h3>
           <ol className="m-0 grid list-none gap-2.5 p-0">
@@ -282,7 +345,7 @@ export default function PreflightPage() {
         <p className="m-0 mb-2 text-center text-[9px] text-muted">
           {confirmed
             ? "Receipt filed — this application is confirmed."
-            : "Opens the official listing in a new tab · sample URL until live feeds arrive"}
+            : "Opens the employer’s official application page in a new tab"}
         </p>
         {confirmed ? (
           <LinkButton

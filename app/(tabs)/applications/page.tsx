@@ -25,7 +25,7 @@ function PageHeader() {
 }
 
 export default function ApplicationsPage() {
-  const { hydrated, applications, setArchived } = useMunusStore();
+  const { hydrated, applications, setArchived, deckCache } = useMunusStore();
   const [showArchived, setShowArchived] = useState(false);
 
   if (!hydrated) return <LoadingState label="Loading applications" />;
@@ -37,7 +37,9 @@ export default function ApplicationsPage() {
   const rows = [...applications]
     .sort((x, y) => touchedAt(y) - touchedAt(x))
     .map((application) => {
-      const job = jobById(application.jobId);
+      /* Real jobs live in the deck cache (their ids aren't in the mock
+         catalog) — same lookup as the studio/preflight (W4-live). */
+      const job = deckCache[application.jobId] ?? jobById(application.jobId);
       return job ? { application, job } : null;
     })
     .filter(
