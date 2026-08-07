@@ -447,9 +447,10 @@ function UploadStepGate({ children }: { children: ReactNode }) {
 }
 
 /**
- * Role + level in ONE window (founder feedback): searchable catalog of every
- * role group, one tap to pick, free-text custom entry, and the level chips
- * inline. The catalog lives in lib/onboarding/roles.ts.
+ * Role + level in ONE window (founder feedback) — prototype row pattern:
+ * big tappable rows, search-first, calm. Search narrows the catalog to
+ * large rows; "browse all" expands groups; custom entry stays quiet until
+ * asked; level sits below as four standard choice rows.
  */
 function RoleAndLevelPicker({
   value,
@@ -463,118 +464,168 @@ function RoleAndLevelPicker({
   onLevel: (level: string) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [browsing, setBrowsing] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
   const [custom, setCustom] = useState("");
+
+  const POPULAR = [
+    "Data scientist", "Product designer", "Software engineer (general)",
+    "Data analyst", "Project manager", "Machine learning engineer",
+  ];
+
   const groups = searchRoles(query);
-  const showAll = query.trim().length === 0;
+  const searching = query.trim().length > 0;
+  const showGroups = searching || browsing;
+  const visibleRoles = searching
+    ? groups.flatMap((g) => g.roles)
+    : browsing
+      ? groups.flatMap((g) => g.roles)
+      : POPULAR;
 
   return (
     <div className="grid gap-5">
       <input
         type="search"
         aria-label="Search roles"
-        placeholder="Search roles… (e.g. data scientist, designer)"
+        placeholder="Search every role…"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          if (e.target.value.trim()) setBrowsing(false);
+        }}
         className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
       />
-      {value ? (
-        <button
-          type="button"
-          onClick={() => onPick(value)}
-          className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-rose bg-rose-soft px-4 text-left font-[620] text-rose-ink`}
-        >
-          <span>{value}</span>
-          <span aria-hidden className="text-xs font-[710]">change</span>
-        </button>
+
+      {!searching ? (
+        <p className="m-0 text-[10px] font-[760] uppercase tracking-[0.1em] text-muted">
+          {browsing ? "All roles" : "Popular roles"}
+        </p>
       ) : null}
-      <div className="max-h-[300px] overflow-y-auto rounded-[14px] border border-line">
-        {groups.map((group) => (
-          <div key={group.group} className="border-b border-line last:border-0">
-            <p className="m-0 bg-quiet/60 px-3.5 py-1.5 text-[10px] font-[760] uppercase tracking-[0.08em] text-muted">
-              {group.group}
-            </p>
-            <div className="flex flex-wrap gap-1.5 p-2.5">
-              {group.roles.map((role) => {
-                const selected = value === role;
-                return (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => onPick(role)}
-                    className={`rounded-full border px-3 py-1.5 text-[12.5px] font-[620] ${
-                      selected
-                        ? "border-rose bg-rose-soft text-rose-ink"
-                        : "border-line bg-paper text-ink"
-                    }`}
-                  >
-                    {role}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        {groups.length === 0 ? (
-          <p className="m-0 px-3.5 py-4 text-xs text-muted">
-            No catalog match — type your own below.
+
+      <div className="grid gap-2.5">
+        {visibleRoles.map((role) => {
+          const selected = value === role;
+          return (
+            <button
+              key={role}
+              type="button"
+              onClick={() => onPick(role)}
+              className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
+                selected
+                  ? "border-rose bg-rose-soft text-rose-ink"
+                  : "border-line bg-paper text-ink"
+              }`}
+            >
+              <span>{role}</span>
+              <span
+                aria-hidden
+                className={`grid size-[19px] shrink-0 place-items-center rounded-full ${
+                  selected
+                    ? "border-[6px] border-rose"
+                    : "border-[1.5px] border-[#c8c0c4]"
+                }`}
+              />
+            </button>
+          );
+        })}
+        {showGroups && groups.length > 1 ? (
+          <p className="m-0 px-1 text-[10px] leading-[1.4] text-muted">
+            Showing {visibleRoles.length} roles across {groups.length} groups —
+            keep typing to narrow.
           </p>
         ) : null}
       </div>
-      {!showAll ? (
+
+      {!searching ? (
+        <button
+          type="button"
+          onClick={() => setBrowsing((b) => !b)}
+          className="flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-line px-4 text-left font-[620] text-muted"
+        >
+          <span>{browsing ? "Show popular roles instead" : "Browse all roles"}</span>
+          <span aria-hidden className="text-xs">{browsing ? "−" : "+"}</span>
+        </button>
+      ) : null}
+
+      {!customOpen ? (
+        <button
+          type="button"
+          onClick={() => setCustomOpen(true)}
+          className="flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-dashed border-[#bdb4b8] px-4 text-left font-[620] text-muted"
+        >
+          <span>Not in the list? Add your own role</span>
+          <span aria-hidden className="text-xs">+</span>
+        </button>
+      ) : (
         <form
           className="flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            if (custom.trim()) onPick(custom.trim());
+            if (custom.trim()) {
+              onPick(custom.trim());
+              setCustomOpen(false);
+              setCustom("");
+            }
           }}
         >
           <input
             type="text"
             aria-label="Custom role"
-            placeholder="Not in the list? Type it here"
+            placeholder="Your role title"
+            autoFocus
             value={custom}
             onChange={(e) => setCustom(e.target.value)}
-            className="h-[48px] min-w-0 flex-1 rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
+            className="h-[55px] min-w-0 flex-1 rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
           />
           <button
             type="submit"
             disabled={!custom.trim()}
-            className="h-[48px] rounded-[14px] bg-ink px-4 text-[13px] font-[710] text-white disabled:opacity-40"
+            className="min-h-[55px] rounded-[14px] bg-ink px-5 text-[13px] font-[710] text-white disabled:opacity-40"
           >
             Add
           </button>
         </form>
-      ) : null}
-      <div>
-        <p className="m-0 mb-2 text-xs font-bold">Your level</p>
-        <div className="grid grid-cols-2 gap-2">
-          {LEVEL_OPTIONS.map((option) => {
-            const selected = level === option;
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onLevel(option)}
-                className={`min-h-[48px] rounded-[14px] border px-3 text-left text-[13px] font-[620] ${
+      )}
+
+      <div className="grid gap-2.5 border-t border-line pt-5">
+        <p className="m-0 text-[10px] font-[760] uppercase tracking-[0.1em] text-muted">
+          Your level
+        </p>
+        {LEVEL_OPTIONS.map((option) => {
+          const selected = level === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onLevel(option)}
+              className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
+                selected
+                  ? "border-rose bg-rose-soft text-rose-ink"
+                  : "border-line bg-paper text-ink"
+              }`}
+            >
+              <span>{option}</span>
+              <span
+                aria-hidden
+                className={`grid size-[19px] shrink-0 place-items-center rounded-full ${
                   selected
-                    ? "border-rose bg-rose-soft text-rose-ink"
-                    : "border-line bg-paper text-ink"
+                    ? "border-[6px] border-rose"
+                    : "border-[1.5px] border-[#c8c0c4]"
                 }`}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
+              />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 /**
- * Europe location picker (founder feedback): searchable full-European
- * catalog, multi-select chips, "Anywhere in Europe" shortcut. The catalog
- * lives in lib/onboarding/locations.ts.
+ * Europe location picker (founder feedback) — prototype row pattern:
+ * search-first, big rows, quiet. "Anywhere in Europe" first; search
+ * narrows to large city rows; browse-all expands the grouped catalog;
+ * selections summarize in one quiet chip line.
  */
 function LocationsPicker({
   value,
@@ -584,9 +635,20 @@ function LocationsPicker({
   onChange: (locations: string[]) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [browsing, setBrowsing] = useState(false);
   const groups = searchLocations(query);
-  const showAll = query.trim().length === 0;
+  const searching = query.trim().length > 0;
+  const showGroups = searching || browsing;
   const anywhere = value.includes("Anywhere in Europe");
+
+  const POPULAR = [
+    "Berlin", "Amsterdam", "London", "Paris", "Madrid", "Vienna", "Lisbon", "Copenhagen",
+  ];
+  const visibleCities = searching
+    ? groups.flatMap((g) => g.cities)
+    : browsing
+      ? groups.flatMap((g) => g.cities)
+      : POPULAR;
 
   function toggle(city: string) {
     if (anywhere) {
@@ -619,66 +681,68 @@ function LocationsPicker({
           }`}
         />
       </button>
+
       {value.length > 0 && !anywhere ? (
-        <div className="flex flex-wrap gap-1.5">
-          {value.map((city) => (
-            <button
-              key={city}
-              type="button"
-              onClick={() => toggle(city)}
-              className="rounded-full border border-rose bg-rose-soft px-3 py-1.5 text-[12.5px] font-[620] text-rose-ink"
-            >
-              {city} ✕
-            </button>
-          ))}
-        </div>
+        <p className="m-0 px-1 text-xs leading-[1.5] text-rose-ink">
+          Selected: {value.join(" · ")}
+        </p>
       ) : null}
+
       <input
         type="search"
         aria-label="Search locations"
         placeholder="Search every European city…"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          if (e.target.value.trim()) setBrowsing(false);
+        }}
         className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
       />
-      <div className="max-h-[280px] overflow-y-auto rounded-[14px] border border-line">
-        {groups.map((group) => (
-          <div key={group.country} className="border-b border-line last:border-0">
-            <p className="m-0 bg-quiet/60 px-3.5 py-1.5 text-[10px] font-[760] uppercase tracking-[0.08em] text-muted">
-              {group.country}
-            </p>
-            <div className="flex flex-wrap gap-1.5 p-2.5">
-              {group.cities.map((city) => {
-                const selected = value.includes(city);
-                return (
-                  <button
-                    key={city}
-                    type="button"
-                    onClick={() => toggle(city)}
-                    className={`rounded-full border px-3 py-1.5 text-[12.5px] font-[620] ${
-                      selected
-                        ? "border-rose bg-rose-soft text-rose-ink"
-                        : "border-line bg-paper text-ink"
-                    }`}
-                  >
-                    {city}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        {groups.length === 0 ? (
-          <p className="m-0 px-3.5 py-4 text-xs text-muted">
-            No city match — try the country name or a nearby hub.
+
+      {!searching ? (
+        <p className="m-0 text-[10px] font-[760] uppercase tracking-[0.1em] text-muted">
+          {browsing ? "All locations" : "Popular in Europe"}
+        </p>
+      ) : null}
+
+      <div className="grid gap-2.5">
+        {visibleCities.map((city) => {
+          const selected = value.includes(city);
+          const country = EUROPE_LOCATIONS.find((g) => g.cities.includes(city))?.country;
+          return (
+            <button
+              key={city}
+              type="button"
+              onClick={() => toggle(city)}
+              className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
+                selected
+                  ? "border-rose bg-rose-soft text-rose-ink"
+                  : "border-line bg-paper text-ink"
+              }`}
+            >
+              <span>{city}</span>
+              <span aria-hidden className="text-xs text-muted">{country}</span>
+            </button>
+          );
+        })}
+        {showGroups && groups.length > 1 ? (
+          <p className="m-0 px-1 text-[10px] leading-[1.4] text-muted">
+            {visibleCities.length} cities · {groups.length} countries — keep
+            typing to narrow.
           </p>
         ) : null}
       </div>
-      {showAll ? (
-        <p className="m-0 text-[10px] leading-[1.35] text-muted">
-          {EUROPE_LOCATIONS.reduce((n, g) => n + g.cities.length, 0)} cities ·{" "}
-          {EUROPE_LOCATIONS.length} countries — search to narrow.
-        </p>
+
+      {!searching ? (
+        <button
+          type="button"
+          onClick={() => setBrowsing((b) => !b)}
+          className="flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-line px-4 text-left font-[620] text-muted"
+        >
+          <span>{browsing ? "Show popular cities instead" : "Browse all of Europe"}</span>
+          <span aria-hidden className="text-xs">{browsing ? "−" : "+"}</span>
+        </button>
       ) : null}
     </div>
   );
