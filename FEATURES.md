@@ -32,7 +32,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 ## WAVE ROADMAP (from plan §4 — "Done means" is the exit criterion; nothing depends on a later phase)
 | Wave | Plan phase | Weeks | Ships | Exit criterion ("Done means") | Status |
 |---|---|---|---|---|---|
-| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — app scaffold/CI/shell DONE (see FOUNDATION); Supabase schema/auth/CV BLOCKED on user creds |
+| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — scaffold/CI/shell/schema+RLS DONE (applied to prod project 2026-08-05, EVID-102); auth + CV pending (TASK-103/104, creds in .env.local) |
 | W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | PARTIAL — adapters/normalize/dedupe DONE (fixture-tested); seed config, cron, embeddings, real-feed run BLOCKED on network policy |
 | W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | PARTIAL — deck UI + detail DONE (critic-reviewed, 12 findings fixed); matching + real jobs BLOCKED on creds/network |
 | W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | PARTIAL — exit criterion MET vs mock facts/provider (browser-verified downloads); real CV-parse + Groq provider BLOCKED on creds |
@@ -51,24 +51,24 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | State components (Loading/Empty/Error/Offline) | DONE | rendered on all tab screens | |
 | App shell: welcome + tabbar + 4 tab routes | DONE | boot + screenshots (393×852) | tab screens are honest placeholders pending slices |
 | Mock data layer (prototype jobs + persisted store) | DONE | vitest 4/4 + boot | replaced by real APIs in W2 |
-| CI workflow (typecheck/build/test) | PARTIAL | file authored; first run pending on GitHub | verify on next push |
+| CI workflow (typecheck/build/test) | DONE | gh run list: success on fix/a11y-targets-44px (2026-08-05T20:34), main (2026-07-25), claude branch (2026-07-25) | runs on push to main + all PRs (EVID-804) |
 | PWA manifest stub | PARTIAL | served at /manifest.webmanifest | icons + service worker in W6 |
 
 ## REAL-DATA READINESS (wave 5 — built ahead of credentials)
 | Item | Status | Verified how | Notes |
 |---|---|---|---|
-| Supabase schema (14 tables, migrations) | DONE | typecheck of SQL by review; runs on first `db push` | favorites is a real view over the decision log; verifier_drops audit table |
-| RLS policies on every table | DONE | written + reviewed | owner-only user data; NO client write on usage/subscriptions (D21 consequence b) |
+| Supabase schema (15 tables, migrations) | DONE | APPLIED to prod `ympwynldiykerdclwvba` (eu-west-1) 2026-08-05 via SQL editor: 0001+0002+0003 all green; verified live (EVID-102) | favorites is a real view over the decision log; verifier_drops audit table; D26/D27 columns verified |
+| RLS policies on every table | DONE | APPLIED + verified live: `profiles.rls=enabled` (EVID-102) | owner-only user data; NO client write on usage/subscriptions (D21 consequence b) |
 | Seed-list config (175 companies) | DONE | 880 per-row data guards + distribution test | Pollfish excluded (unverified slug, rule #1) |
 | Ingestion runner (all 5 ATS) | DONE | 10 behavioural tests, in-memory store | transient outage never mass-marks jobs closed |
 | Company identity bridge | DONE | 7 tests incl. no-collision across all rows + type-level runner contract | dual-ATS companies share one id |
 | Dry-run feed verifier CLI | DONE | ran against live network: correctly reported blocked egress | `npm run ingest:dry` — needs ONLY network policy, not Supabase |
-| Supabase JobStore implementation | MISSING | — | the one ingestion piece that truly needs credentials |
+| Supabase JobStore implementation | MISSING | — | UNBLOCKED: creds in .env.local (2026-08-05); W1 slice |
 
 ## CORE FLOWS (MVP-blocking)
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
-| Auth (Google/Apple via Supabase) | MISSING | — | placement in flow: see GAPS |
+| Auth (Google/Apple via Supabase) | DONE | TASK-103 complete 2026-08-07: sign-in gate (browser-verified), OAuth callback w/ open-redirect guards (5 tests), session refresh, POST signout; Google provider ENABLED in Supabase (client `178802871980-...`, test user sejdiniagent@gmail.com); localhost:4318 redirect allow-listed; 995 tests + typecheck + build green | Apple before beta (D16) |
 | Onboarding 6-question flow | DONE | wave1: implementer browser-run + integrated build/boot 2026-07-23 | mock persistence; real profile API lands W2+ |
 | CV upload → facts extraction (LLM parse) | MISSING | — | facts table = evidence store |
 | Job ingestion (all 5 ATS adapters) | PARTIAL | wave2: 50 fixture tests pass (5 adapters) | adapters+normalize+dedupe done incl. ashby/workable/smartrecruiters; cron/seed config/embeddings/real-feed run pending (network policy) |
@@ -202,6 +202,81 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D33 · 2026-08-05 · **MODEL RESEARCH COMPLETED (future-layer prep, no MVP
+  change).** Brief: `03-architecture/research/MODEL_COST_EFFICIENCY_BRIEF.md`.
+  Validates D17: Groq gpt-oss-120b is the sanctioned successor; llama-3.3-70b
+  + llama-3.1-8b shut down 2026-08-16. MVP LLM cost ≈ €3/mo at MVP volumes
+  (price is not the binding constraint; stability + quality are). Future-layer
+  recommendation (working default): dual-tier — Groq gpt-oss-120b workhorse
+  (parse/match/tailoring candidate) + OpenAI gpt-5.4-mini quality tier
+  (tailoring finalization + agentic form fill), ≈ €20–25/mo; DeepSeek
+  v4-flash as spare; pin model IDs behind an interface (Groq churned 5+
+  models in 12 mo); every model choice gated on the DE/EN harness eval set
+  (ties to TASK-104). Tool-calling reliability scores unverified by fresh
+  benchmarks — flagged in brief §5. (delegation deleg_2b8018e4)
+- D32 · 2026-08-05 · **BUILD APPROVED (founder): APPROVE_BUILD.** Frozen spec
+  (04-spec, 29 REQs / 20 tasks / 29 verification rows) accepted; transitions
+  to BUILD_MODE. W0 starts with TASK-101 (CI first run) and TASK-102
+  (Supabase EU project + migrations). Founder actions required: merge PR #3
+  (a11y fixes) before W0 waves; provide Supabase + Groq credentials (RISK-001).
+  Deployment/publishing remains a separate gate. (Discord message
+  1534668585308389546)
+- D31 · 2026-08-05 · **FUTURE AGENT SHAPE CONFIRMED (founder):** per-user
+  Hermes agent instances + one shared anonymized knowledge DB (no PII).
+  Each agent grows its own user's abilities from that user's application
+  cycles; the shared layer gives cold-start users instant regional/ATS
+  knowledge and retrieval-cache cost savings. One-big-agent rejected
+  (GDPR isolation, per-user learning validity, failure blast radius).
+  Growth-loop preview: source ranking per user, form-fill accuracy, tone
+  fit from Accept/Keep, timing patterns; anonymized aggregates shared.
+  Model cost-efficiency research = prep for this layer. (Discord message
+  1534668224699043970)
+- D30 · 2026-08-05 · **MVP SCOPE RE-CONFIRMED (founder):** MVP = job finding,
+  tailoring, redirect to the official job post to apply. NO automated applies.
+  The background Hermes harness agent + shared knowledge database are a
+  POST-MVP layer (consistent with D2/D8). Confirmed future shape: per-user
+  agent runtime (owner-only context, RLS-aligned) + one shared anonymized
+  knowledge layer (regional job sources, ATS form patterns, aggregated
+  outcomes, retrieval caches). Model cost-efficiency research runs in
+  parallel as prep for that layer. (Discord message 1534667154815844444)
+- D29 · 2026-08-05 · **ARCHITECTURE APPROVED (founder): APPROVE_ARCHITECTURE.**
+  Minimalist Architecture Brief verdict APPROVED_WITH_EXPLICIT_RISKS accepted;
+  critic REVISE findings resolved (D24–D28); remaining risks owned. Frozen
+  build specification authorized; production code remains blocked until
+  explicit build approval. (Discord message 1534664052913995996)
+- D28 · 2026-08-05 · **CONTRACTS.md synced to the decision log** (architecture
+  critic finding): §1 model ID → gpt-oss-120b (D17), Stripe marked MOCKED (D21),
+  embeddings deferred (D24), ingestion = Vercel cron (D25); §2
+  documents.status + decisions.idempotency_key (D26/D27); §3 verifier
+  server-side + swipe atomicity + mock-payments guard + GDPR delete route
+  (D27). The binding contract no longer contradicts the architecture it gates.
+- D27 · 2026-08-05 · **Architecture critic resolution (boundaries/security):**
+  verifier runs SERVER-SIDE in production (client never executes gate nor
+  writes verifier_drops); mock-checkout env-gated (`MOCK_PAYMENTS`) and
+  unreachable in production; deck decisions = single server transaction with
+  client-generated idempotency key (no double-metering); GDPR account deletion
+  via dedicated service-role route (RLS cannot self-delete); Supabase region
+  EU-Frankfurt; Groq transfer basis (SCCs) in privacy policy; durable PDF
+  uploads to Storage land at W4 (receipts), not W5.
+- D26 · 2026-08-05 · **Durable generation state:** `documents.status`
+  (queued|generating|needs_review|ready) with server-side transitions —
+  generation state survives refresh/disconnect without a queue. Schema delta.
+- D25 · 2026-08-05 · **Ingestion host:** Vercel cron (Pro) + API routes with
+  parallelized bounded pulls (idempotent upsert) in MVP; always-on VPS worker
+  deferred until volume exceeds function windows. Replaces "Supabase cron /
+  small VPS" (pg_cron is not a TS-worker runtime). Alert digest (D16) lands
+  W5a; until then dry-run CLI + manual checks.
+- D24 · 2026-08-05 · **No embeddings in MVP:** corpus evidence (175-company
+  seed, <1k jobs) sits below the in-process-cosine threshold; matching =
+  deterministic rule layer + cached LLM reasons for above-threshold jobs.
+  pgvector + bge-small return only at corpus >5k AND a match-quality
+  evaluation checkpoint. Removes hidden embedding-runtime dependency and cost
+  line.
+- D23 · 2026-08-05 · **DESIGN APPROVED (founder): APPROVE_DESIGN.** Munus is the
+  approved design base; product-design gate closed; architecture stage
+  authorized. PWA-first (D7) confirmed; Munus pink identity confirmed.
+  Production implementation remains blocked until explicit build approval.
+  (Discord message 1534661167329574943)
 - D22 · 2026-08-05 · **OPERATING MODEL (founder): MERGED.** Munus's in-repo
   build machinery executes the build; Hermes owns product gates and independent
   verification; one canonical repo ledger; standing independent audit at every

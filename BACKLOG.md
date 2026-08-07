@@ -571,3 +571,13 @@ cites a source found this run.
 
 ## REJECTED (with reasons - do not re-propose without new evidence)
 -
+
+## PROPOSED FEATURES (2026-08-05 checkpoint)
+- **Automated submission (Pro tier) — SUPERVISED autonomy ladder only.** Founder
+  discussion 2026-08-05: fully unattended submission, CAPTCHA/anti-bot
+  circumvention, and auto-answering screening questions were requested and
+  REJECTED (legal exposure on founder + users; verifier moat must stand).
+  Accepted shape: ladder of (1) agent fills structured ATS forms with approved
+  docs, human submits → (2) per-application pre-approval queue → (3) unattended
+  only after trust earned and ToS-compliant sources. D2/D3/D8 unchanged.
+  Roadmap: post-MVP Pro, after Plus revenue (D8).
