@@ -57,10 +57,11 @@ function formatSalary(min: number | null, max: number | null, currency: string |
   // 0 from a feed means "not listed" — never display 0k.
   const lo = min != null && min > 0 ? min : null;
   const hi = max != null && max > 0 ? max : null;
-  const k = (n: number) => `${Math.round(n / 1000)}k`;
-  if (lo != null && hi != null) return `${cur}${k(lo)}–${k(hi)}`;
-  if (lo != null) return `${cur}${k(lo)}+`;
-  if (hi != null) return `up to ${cur}${k(hi)}`;
+  // Values below 1000 are hourly/daily rates — show them raw, never "0k".
+  const fmt = (n: number) => (n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
+  if (lo != null && hi != null) return `${cur}${fmt(lo)}–${fmt(hi)}`;
+  if (lo != null) return `${cur}${fmt(lo)}+`;
+  if (hi != null) return `up to ${cur}${fmt(hi)}`;
   return "Not listed";
 }
 
@@ -131,7 +132,13 @@ export default function DiscoverPage() {
       .then((payload) => {
         if (cancelled) return;
         const rows = (payload?.jobs ?? []) as RealDeckJob[];
-        if (rows.length > 0) setRealDeck(rows.map(toJobShape));
+        if (rows.length > 0) {
+          const mapped = rows.map(toJobShape);
+          setRealDeck(mapped);
+          /* Real jobs must open in the studio (their ids aren't in the
+             mock catalog) — cache them in the store for lookup. */
+          store.setDeckCache(mapped);
+        }
       })
       .catch(() => {
         /* network/API failure: fall back to the mock catalog silently */

@@ -28,6 +28,7 @@ import {
 } from "@/components/studio";
 import { jobById } from "@/lib/mock/jobs";
 import { useMunusStore } from "@/lib/mock/store";
+import { useSession } from "@/lib/supabase/session";
 import { mockFacts } from "@/lib/studio/facts";
 import { mockTailorProvider } from "@/lib/studio/mockProvider";
 import { generateKit } from "@/lib/studio/pipeline";
@@ -37,7 +38,7 @@ import {
   LETTER_CLOSING,
   letterGreeting,
 } from "@/lib/studio/compose";
-import type { VerifiedResult } from "@/lib/studio/types";
+import type { Fact, VerifiedResult } from "@/lib/studio/types";
 
 const TONES = ["Shorter", "More formal", "More direct", "Warmer"];
 const TABS = [
@@ -49,6 +50,7 @@ export default function StudioPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const store = useMunusStore();
   const { showToast } = useToast();
+  const { status } = useSession();
 
   const [tab, setTab] = useState<"cv" | "letter">("cv");
   const [generating, setGenerating] = useState(false);
@@ -57,14 +59,39 @@ export default function StudioPage() {
   const [pendingTone, setPendingTone] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [generateError, setGenerateError] = useState(false);
+  /* W3-live: real CV facts when signed in; mock facts for preview. */
+  const [facts, setFacts] = useState<Fact[] | null>(null);
+  const [provider, setProvider] = useState<"groq" | "mock">("mock");
   const regenerated = useRef(false);
   const generatingRef = useRef(false);
 
-  const job = jobById(jobId);
+  const job = store.deckCache[jobId] ?? jobById(jobId);
   const st = store.studio[jobId];
   const accepted = st?.accepted ?? [];
   const generated = st?.generated ?? false;
   const tone = st?.tone ?? null;
+
+  /* W3-live: load the caller's real CV facts once signed in. */
+  useEffect(() => {
+    if (status !== "signedIn") return;
+    let cancelled = false;
+    fetch("/api/facts")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("facts" + r.status))))
+      .then((payload) => {
+        if (cancelled) return;
+        const rows = (payload?.facts ?? []) as Fact[];
+        if (rows.length > 0) setFacts(rows);
+      })
+      .catch(() => {
+        /* fall back to mock facts silently */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
+
+  const evidenceFacts = facts ?? mockFacts;
+  const usingRealFacts = facts !== null;
 
   const runGenerate = useCallback(
     async (nextTone: string | null, announce?: string) => {
@@ -79,13 +106,30 @@ export default function StudioPage() {
         store.decide(job.id, "save", { meter: false });
       }
       try {
-        const result = await generateKit(
-          mockTailorProvider,
-          job,
-          mockFacts,
-          nextTone,
-        );
-        setKit(result);
+        if (status === "signedIn") {
+          /* Real path: server-side tailoring (facts from the DB, Groq
+             provider, verifier gate) — the key never reaches the client. */
+          const response = await fetch("/api/studio/tailor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ job, tone: nextTone }),
+          });
+          const payload = (await response.json().catch(() => null)) as
+            | (VerifiedResult & { provider?: "groq" | "mock" })
+            | null;
+          if (!response.ok || !payload) throw new Error("tailor failed");
+          setKit({ suggestions: payload.suggestions ?? [], dropped: payload.dropped ?? [] });
+          if (payload.provider === "groq") setProvider("groq");
+        } else {
+          /* Signed-out preview: deterministic mock path (same gate). */
+          const result = await generateKit(
+            mockTailorProvider,
+            job,
+            evidenceFacts,
+            nextTone,
+          );
+          setKit(result);
+        }
         store.setStudio(job.id, { generated: true, tone: nextTone });
         if (announce) showToast(announce);
       } catch {
@@ -95,7 +139,7 @@ export default function StudioPage() {
         setGenerating(false);
       }
     },
-    [job, store, showToast],
+    [job, store, showToast, status, evidenceFacts],
   );
 
   /* Returning to an already-generated kit (deterministic mock): rebuild it
@@ -155,7 +199,7 @@ export default function StudioPage() {
         "@/lib/pdf/render"
       );
       const cvDoc = composeCvDocument(
-        mockFacts,
+        evidenceFacts,
         acceptedSuggestions,
         (store.onboarding.roles ?? [])[0],
       );
@@ -219,7 +263,7 @@ export default function StudioPage() {
         >
           <h3 className="m-0 text-lg">Your career profile</h3>
           <span className="text-[9px] text-muted">
-            {mockFacts.length} verified facts · sample data
+            {evidenceFacts.length} verified facts · {usingRealFacts ? "your CV" : "sample data"}
           </span>
           <DocLines count={3} />
           <DocLines count={3} className="mt-[25px]" />
@@ -249,13 +293,13 @@ export default function StudioPage() {
         >
           <h3 className="m-0 text-lg">Your career profile</h3>
           <span className="text-[9px] text-muted">
-            {mockFacts.length} verified facts · sample data
+            {evidenceFacts.length} verified facts · {usingRealFacts ? "your CV" : "sample data"}
           </span>
           {cvSuggestions.length === 0 ? (
             <p className="mt-4 text-[11px] leading-[1.45] text-muted">
-              Nothing to suggest for this role — your profile already covers
-              its requirements as written. The verifier dropped anything it
-              could not trace to your CV.
+              Nothing to suggest for this role — either your profile already
+              covers it as written, or the AI could not draft changes it could
+              prove. Anything unverifiable is always dropped.
             </p>
           ) : (
             cvSuggestions.map((s) => (
@@ -314,6 +358,11 @@ export default function StudioPage() {
       <header className="px-5 pb-4">
         <p className="m-0 mb-[5px] text-[11px] font-[760] uppercase tracking-[0.1em] text-rose-ink">
           {job.company}
+          {provider === "groq" ? (
+            <span className="ml-2 rounded-full bg-rose-soft px-2 py-0.5 text-[9px] font-[760] text-rose-ink">
+              AI TAILOR
+            </span>
+          ) : null}
         </p>
         <h2 className="m-0 text-[27px] leading-[1.05] tracking-[-0.045em]">
           {job.title}

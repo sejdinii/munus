@@ -14,6 +14,7 @@ import {
   type Application,
   type ApplicationStatus,
 } from "./transitions";
+import type { Job } from "./jobs";
 import {
   createContext,
   useCallback,
@@ -57,6 +58,8 @@ type MunusState = {
   swipesUsed: number;
   onboarding: OnboardingAnswers;
   coached: boolean;
+  /** Real deck jobs (W2) keyed by id — lets the studio open real listings. */
+  deckCache: Record<string, Job>;
 };
 
 /* northstar starts favorited — prototype parity for the demo. */
@@ -69,6 +72,7 @@ const initialState: MunusState = {
   swipesUsed: 0,
   onboarding: {},
   coached: false,
+  deckCache: {},
 };
 
 export const FREE_SWIPES = 20;
@@ -94,6 +98,8 @@ type Store = MunusState & {
   setArchived: (jobId: string, archived: boolean) => void;
   setOnboarding: (patch: Partial<OnboardingAnswers>) => void;
   setCoached: () => void;
+  setDeckCache: (jobs: Job[]) => void;
+  deckCache: Record<string, Job>;
   swipesLeft: number;
   reset: () => void;
 };
@@ -285,6 +291,14 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, coached: true }));
   }, []);
 
+  const setDeckCache = useCallback((jobs: Job[]) => {
+    setState((s) => {
+      const deckCache = { ...s.deckCache };
+      for (const job of jobs) deckCache[job.id] = job;
+      return { ...s, deckCache };
+    });
+  }, []);
+
   const reset = useCallback(() => setState(initialState), []);
 
   const value = useMemo<Store>(
@@ -304,6 +318,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       setArchived,
       setOnboarding,
       setCoached,
+      setDeckCache,
       swipesLeft: Math.max(0, FREE_SWIPES - state.swipesUsed),
       reset,
     }),
@@ -323,6 +338,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       setArchived,
       setOnboarding,
       setCoached,
+      setDeckCache,
       reset,
     ],
   );
