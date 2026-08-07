@@ -31,9 +31,9 @@ export default function ProfilePage() {
 
   const prefFields = [
     onboarding.role,
-    onboarding.location,
     onboarding.level,
-    onboarding.salaryFloor,
+    ...(onboarding.workTypes ?? []),
+    ...(onboarding.locations ?? []),
     onboarding.alerts,
   ];
   const answered = prefFields.filter(Boolean).length;
@@ -61,7 +61,7 @@ export default function ProfilePage() {
           </h2>
           {onboarding.completed ? (
             <p className="m-0 text-[11px] text-muted">
-              {[onboarding.location, onboarding.level]
+              {[...(onboarding.workTypes ?? []), ...(onboarding.locations ?? []), onboarding.level]
                 .filter(Boolean)
                 .join(" · ") || "Onboarding complete"}
             </p>

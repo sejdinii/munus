@@ -5,7 +5,7 @@ const PROFILE: MatchProfile = {
   role_target: "Data Scientist",
   level: "Mid-level",
   locations: ["Berlin"],
-  remote_ok: true,
+  workTypes: ["Remote", "Hybrid", "On-site"],
   salary_min: 60000,
 };
 
@@ -85,9 +85,16 @@ describe("scoreJob", () => {
   });
 
   it("handles a profile with no preferences neutrally", () => {
-    const bare: MatchProfile = { locations: [], remote_ok: false, salary_min: null };
+    const bare: MatchProfile = { locations: [], workTypes: [], salary_min: null };
     const result = scoreJob(bare, [], job());
     expect(Number.isFinite(result.score)).toBe(true);
     expect(result.score).toBeGreaterThanOrEqual(0);
+  });
+
+  it("scores remote postings neutrally when the user excluded remote work", () => {
+    const onsiteOnly: MatchProfile = { locations: [], workTypes: ["On-site"], salary_min: null };
+    const result = scoreJob(onsiteOnly, [], job({ remote: true, location: "Remote" }));
+    expect(result.reasons.some((r) => r.includes("didn't select remote"))).toBe(true);
+    expect(result.score).toBeLessThan(60);
   });
 });

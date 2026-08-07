@@ -1,93 +1,83 @@
-/* Onboarding step config — verbatim copy of prototypes/scout-pink-v2.html's
-   `onboardingSteps` array (binding visual spec, CONTRACTS §4). Keys map to
-   lib/mock/store.tsx OnboardingAnswers fields. */
+/* Onboarding step config — updated per founder feedback (2026-08-07):
+   role + level in ONE window (wide searchable catalog + custom entry),
+   work type as Remote/Hybrid/On-site preference, full Europe location
+   catalog (multi-select), salary question REMOVED, CV MANDATORY. */
 
-interface StepBase {
+export type RoleAndLevelStep = {
+  kind: "roleAndLevel";
+  key: "role" | "level";
   title: string;
   help: string;
-}
+  levelOptions: readonly string[];
+};
 
-export type ChoiceStep = StepBase & {
-  kind: "choice";
-  key: "role" | "location" | "level" | "alerts";
+export type WorkTypesStep = {
+  kind: "workTypes";
+  key: "workTypes";
+  title: string;
+  help: string;
   options: readonly string[];
 };
 
-export type FieldStep = StepBase & {
-  kind: "field";
-  key: "salaryFloor";
-  fieldLabel: string;
-  fieldNote: string;
-  defaultValue: string;
+export type LocationsStep = {
+  kind: "locations";
+  key: "locations";
+  title: string;
+  help: string;
 };
 
-export type UploadStep = StepBase & {
+export type UploadStep = {
   kind: "upload";
   key: "cvUploaded";
+  title: string;
+  help: string;
 };
 
-export type StepConfig = ChoiceStep | FieldStep | UploadStep;
+export type ChoiceStep = {
+  kind: "choice";
+  key: "alerts";
+  title: string;
+  help: string;
+  options: readonly string[];
+};
 
-export const DEFAULT_SALARY_FLOOR = "€65,000";
+export type StepConfig = RoleAndLevelStep | WorkTypesStep | LocationsStep | UploadStep | ChoiceStep;
+
+export const LEVEL_OPTIONS = ["Mid-level", "Senior", "Lead", "Open to two levels"] as const;
+export const WORK_TYPE_OPTIONS = ["Remote", "Hybrid", "On-site"] as const;
 
 export const onboardingSteps: readonly StepConfig[] = [
   {
-    kind: "choice",
+    kind: "roleAndLevel",
     key: "role",
     title: "What work should we look for?",
-    help: "Choose the closest role. You can add adjacent titles later.",
-    options: [
-      "Product designer",
-      "UX/UI designer",
-      "Design lead",
-      "Product manager",
-    ],
+    help: "Search the full catalog or type your own. Pick the level that fits you in the same step.",
+    levelOptions: LEVEL_OPTIONS,
   },
   {
-    kind: "choice",
-    key: "location",
-    title: "Where do you want to work?",
-    help: "We use this to rank roles, not to exclude good exceptions.",
-    options: [
-      "Remote in Europe",
-      "Berlin · hybrid",
-      "London · hybrid",
-      "Relocation possible",
-    ],
+    kind: "workTypes",
+    key: "workTypes",
+    title: "How do you want to work?",
+    help: "Choose every format you'd accept — we rank roles, we don't exclude.",
+    options: WORK_TYPE_OPTIONS,
   },
   {
-    kind: "choice",
-    key: "level",
-    title: "What level fits you now?",
-    help: "This helps avoid junior roles and unrealistic stretches.",
-    options: ["Mid-level", "Senior", "Lead", "Open to two levels"],
-  },
-  {
-    kind: "field",
-    key: "salaryFloor",
-    title: "Set your salary floor",
-    help: "You will not see this number shared with employers.",
-    fieldLabel: "Minimum annual salary",
-    fieldNote:
-      "We still show exceptional roles slightly below this, clearly labeled.",
-    defaultValue: DEFAULT_SALARY_FLOOR,
+    kind: "locations",
+    key: "locations",
+    title: "Where in Europe?",
+    help: "Pick every city you'd work in. We use this to rank, not to exclude good exceptions.",
   },
   {
     kind: "upload",
     key: "cvUploaded",
     title: "Give AI your real career history",
-    help: "Your CV becomes the evidence source for matching and tailoring. Nothing is sent to employers yet.",
+    help: "Your CV is required — it's the evidence source for matching and tailoring. Nothing is sent to employers yet.",
   },
   {
     kind: "choice",
     key: "alerts",
     title: "How quickly should we alert you?",
     help: "Fresh company listings often have the smallest applicant pools.",
-    options: [
-      "Immediately",
-      "Morning and evening",
-      "Daily digest",
-      "No notifications",
-    ],
+    options: ["Immediately", "Morning and evening", "Daily digest", "No notifications"],
   },
 ] as const;

@@ -13,7 +13,10 @@ export interface MatchProfile {
   role_target?: string | null;
   level?: string | null;
   locations: string[];
-  remote_ok: boolean;
+  /** Work-type preference: any of "Remote" | "Hybrid" | "On-site" (or null/[] = no preference). */
+  workTypes?: string[] | null;
+  /** Deprecated — kept for callers that haven't migrated to workTypes. */
+  remote_ok?: boolean;
   salary_min?: number | null;
 }
 
@@ -134,13 +137,26 @@ export function scoreJob(profile: MatchProfile, facts: MatchFact[], job: MatchJo
 
   // ── location (15) ───────────────────────────────────────────────────────
   const location = job.location ?? "";
-  if (job.remote && profile.remote_ok) {
+  const wantsRemote = (profile.workTypes ?? []).includes("Remote");
+  const wantsHybridOnsite =
+    (profile.workTypes ?? []).includes("Hybrid") ||
+    (profile.workTypes ?? []).includes("On-site");
+  // Fallback for callers still using remote_ok (deprecated path).
+  const wantsRemoteLegacy = wantsRemote || profile.remote_ok === true;
+  const cityHit = profile.locations.find((loc) =>
+    location.toLowerCase().includes(loc.toLowerCase()),
+  );
+  if (job.remote && wantsRemoteLegacy) {
     score += 15;
     reasons.push("Remote — you asked for remote");
-  } else if (profile.locations.some((loc) => location.toLowerCase().includes(loc.toLowerCase()))) {
+  } else if (cityHit) {
     score += 15;
-    const hit = profile.locations.find((loc) => location.toLowerCase().includes(loc.toLowerCase()))!;
-    reasons.push(`In your area: ${hit}`);
+    reasons.push(`In your area: ${cityHit}`);
+  } else if (job.remote && !wantsRemote && wantsHybridOnsite) {
+    // The user excluded remote-only work; a remote posting gets no
+    // location points but is not excluded either (rank, don't exclude).
+    score += 0;
+    reasons.push("Remote posting — you didn't select remote work");
   } else if (profile.locations.length === 0) {
     score += 8; // no preference expressed — neutral
   } else {

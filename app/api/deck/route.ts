@@ -43,7 +43,7 @@ export async function GET() {
   // 1. Profile + facts (the user's evidence).
   const { data: profileRow } = await supabase
     .from("profiles")
-    .select("role_target, level, locations, remote_ok, salary_min")
+    .select("role_target, level, locations, work_types, salary_min")
     .eq("id", user.id)
     .single();
   const { data: factRows } = await supabase
@@ -54,7 +54,7 @@ export async function GET() {
     role_target: profileRow?.role_target ?? null,
     level: profileRow?.level ?? null,
     locations: profileRow?.locations ?? [],
-    remote_ok: profileRow?.remote_ok ?? true,
+    workTypes: profileRow?.work_types ?? ["Remote", "Hybrid", "On-site"],
     salary_min: profileRow?.salary_min ?? null,
   };
   const facts: MatchFact[] = (factRows ?? []).map((f) => ({

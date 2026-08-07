@@ -89,7 +89,13 @@ function toJobShape(job: RealDeckJob): Job {
     match: job.score,
     reasons: (job.reasons.length >= 2 ? job.reasons : [...job.reasons, "Verified listing from the company's board"]).slice(0, 2) as [string, string],
     concern: job.concern ?? "",
-    about: (job.description ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 400),
+    // FULL job specification, verbatim from the company's feed (founder
+    // feedback: the swipe cards must reflect the full spec). HTML stripped,
+    // whitespace preserved; never truncated.
+    about: (job.description ?? "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
   };
 }
 

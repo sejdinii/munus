@@ -17,7 +17,9 @@ import { useSession } from "@/lib/supabase/session";
 import { SignInGate } from "@/components/auth/SignInGate";
 import { FactPanel } from "@/components/cv/FactPanel";
 import type { CvFact, FactKind } from "@/lib/cv/types";
-import { onboardingSteps, DEFAULT_SALARY_FLOOR } from "./steps";
+import { onboardingSteps, LEVEL_OPTIONS } from "./steps";
+import { searchRoles, ROLE_GROUPS } from "@/lib/onboarding/roles";
+import { searchLocations, EUROPE_LOCATIONS } from "@/lib/onboarding/locations";
 
 const STEP_STORAGE_KEY = "munus-onboarding-step-v1";
 const MAX_CV_BYTES = 8 * 1024 * 1024;
@@ -84,15 +86,6 @@ export default function OnboardingPage() {
 
   const step = onboardingSteps[stepIndex];
 
-  // The salary field arrives prefilled per the prototype; persist that
-  // default the first time this step is reached so it is a real answer,
-  // not just a placeholder.
-  useEffect(() => {
-    if (step?.kind === "field" && onboarding.salaryFloor === undefined) {
-      setOnboarding({ salaryFloor: step.defaultValue });
-    }
-  }, [step, onboarding.salaryFloor, setOnboarding]);
-
   useEffect(() => {
     setUploadError(null);
   }, [stepIndex]);
@@ -109,9 +102,13 @@ export default function OnboardingPage() {
   const canContinue =
     step.kind === "choice"
       ? Boolean(onboarding[step.key])
-      : step.kind === "field"
-        ? true
-        : Boolean(cvFile) || onboarding.cvUploaded !== undefined;
+      : step.kind === "roleAndLevel"
+        ? Boolean(onboarding.role)
+        : step.kind === "workTypes"
+          ? (onboarding.workTypes?.length ?? 0) > 0
+          : step.kind === "locations"
+            ? (onboarding.locations?.length ?? 0) > 0
+            : Boolean(cvFile) || onboarding.cvUploaded === true;
 
   function goBack() {
     if (isFirst) {
@@ -123,6 +120,23 @@ export default function OnboardingPage() {
 
   function goNext() {
     if (isLast) {
+      // Persist the answers to the profile (server-side, auth-bound) so the
+      // deck ranks with them; then complete locally and move to ready.
+      if (HAS_BACKEND) {
+        void fetch("/api/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            role: onboarding.role,
+            level: onboarding.level,
+            workTypes: onboarding.workTypes,
+            locations: onboarding.locations,
+            alerts: onboarding.alerts,
+          }),
+        }).catch(() => {
+          /* profile save is best-effort — the deck still works from facts */
+        });
+      }
       setOnboarding({ completed: true });
       try {
         window.localStorage.removeItem(STEP_STORAGE_KEY);
@@ -214,15 +228,6 @@ export default function OnboardingPage() {
     }
   }
 
-  function skipUpload() {
-    setUploadError(null);
-    setCvFile(null);
-    setFacts([]);
-    setFactsAccepted(false);
-    setOnboarding({ cvUploaded: false });
-    goNext();
-  }
-
   return (
     <section className="screen-in flex flex-1 flex-col bg-paper px-6 pb-7 pt-2">
       <div className="-mx-2 grid grid-cols-[42px_1fr_42px] items-center">
@@ -252,6 +257,58 @@ export default function OnboardingPage() {
         <p className="mb-7 mt-3 text-sm leading-[1.45] text-muted">
           {step.help}
         </p>
+
+        {step.kind === "roleAndLevel" ? (
+          <RoleAndLevelPicker
+            value={onboarding.role}
+            level={onboarding.level}
+            onPick={(role) => setOnboarding({ role })}
+            onLevel={(level) => setOnboarding({ level })}
+          />
+        ) : null}
+
+        {step.kind === "workTypes" ? (
+          <div className="grid gap-2.5">
+            {step.options.map((option) => {
+              const selected = (onboarding.workTypes ?? []).includes(option);
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    setOnboarding({
+                      workTypes: selected
+                        ? (onboarding.workTypes ?? []).filter((w) => w !== option)
+                        : [...(onboarding.workTypes ?? []), option],
+                    })
+                  }
+                  className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
+                    selected
+                      ? "border-rose bg-rose-soft text-rose-ink"
+                      : "border-line bg-paper text-ink"
+                  }`}
+                >
+                  <span>{option}</span>
+                  <span
+                    aria-hidden
+                    className={`grid size-[19px] shrink-0 place-items-center rounded-full ${
+                      selected
+                        ? "border-[6px] border-rose"
+                        : "border-[1.5px] border-[#c8c0c4]"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {step.kind === "locations" ? (
+          <LocationsPicker
+            value={onboarding.locations ?? []}
+            onChange={(locations) => setOnboarding({ locations })}
+          />
+        ) : null}
 
         {step.kind === "choice" ? (
           <div className="grid gap-2.5">
@@ -284,27 +341,6 @@ export default function OnboardingPage() {
                 </button>
               );
             })}
-          </div>
-        ) : null}
-
-        {step.kind === "field" ? (
-          <div>
-            <label htmlFor="salary" className="mb-2 block text-xs font-bold">
-              {step.fieldLabel}
-            </label>
-            <input
-              id="salary"
-              inputMode="numeric"
-              aria-label={step.fieldLabel}
-              value={onboarding.salaryFloor ?? DEFAULT_SALARY_FLOOR}
-              onChange={(event) =>
-                setOnboarding({ salaryFloor: event.target.value })
-              }
-              className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
-            />
-            <p className="mt-[9px] text-left text-[10px] leading-[1.35] text-muted">
-              {step.fieldNote}
-            </p>
           </div>
         ) : null}
 
@@ -371,16 +407,7 @@ export default function OnboardingPage() {
                 onDone={() => setFactsAccepted(true)}
               />
             ) : null}
-            {!uploaded ? (
-              <button
-                type="button"
-                onClick={skipUpload}
-                className="mx-auto mt-3 block bg-transparent text-xs font-[650] text-muted underline-offset-2 hover:underline"
-              >
-                I&apos;ll add it later
-              </button>
-            ) : null}
-          </UploadStepGate>
+        </UploadStepGate>
         ) : null}
       </div>
 
@@ -417,4 +444,242 @@ function UploadStepGate({ children }: { children: ReactNode }) {
     return <SignInGate />;
   }
   return <>{children}</>;
+}
+
+/**
+ * Role + level in ONE window (founder feedback): searchable catalog of every
+ * role group, one tap to pick, free-text custom entry, and the level chips
+ * inline. The catalog lives in lib/onboarding/roles.ts.
+ */
+function RoleAndLevelPicker({
+  value,
+  level,
+  onPick,
+  onLevel,
+}: {
+  value: string | undefined;
+  level: string | undefined;
+  onPick: (role: string) => void;
+  onLevel: (level: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [custom, setCustom] = useState("");
+  const groups = searchRoles(query);
+  const showAll = query.trim().length === 0;
+
+  return (
+    <div className="grid gap-5">
+      <input
+        type="search"
+        aria-label="Search roles"
+        placeholder="Search roles… (e.g. data scientist, designer)"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={() => onPick(value)}
+          className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border border-rose bg-rose-soft px-4 text-left font-[620] text-rose-ink`}
+        >
+          <span>{value}</span>
+          <span aria-hidden className="text-xs font-[710]">change</span>
+        </button>
+      ) : null}
+      <div className="max-h-[300px] overflow-y-auto rounded-[14px] border border-line">
+        {groups.map((group) => (
+          <div key={group.group} className="border-b border-line last:border-0">
+            <p className="m-0 bg-quiet/60 px-3.5 py-1.5 text-[10px] font-[760] uppercase tracking-[0.08em] text-muted">
+              {group.group}
+            </p>
+            <div className="flex flex-wrap gap-1.5 p-2.5">
+              {group.roles.map((role) => {
+                const selected = value === role;
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => onPick(role)}
+                    className={`rounded-full border px-3 py-1.5 text-[12.5px] font-[620] ${
+                      selected
+                        ? "border-rose bg-rose-soft text-rose-ink"
+                        : "border-line bg-paper text-ink"
+                    }`}
+                  >
+                    {role}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {groups.length === 0 ? (
+          <p className="m-0 px-3.5 py-4 text-xs text-muted">
+            No catalog match — type your own below.
+          </p>
+        ) : null}
+      </div>
+      {!showAll ? (
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (custom.trim()) onPick(custom.trim());
+          }}
+        >
+          <input
+            type="text"
+            aria-label="Custom role"
+            placeholder="Not in the list? Type it here"
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            className="h-[48px] min-w-0 flex-1 rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
+          />
+          <button
+            type="submit"
+            disabled={!custom.trim()}
+            className="h-[48px] rounded-[14px] bg-ink px-4 text-[13px] font-[710] text-white disabled:opacity-40"
+          >
+            Add
+          </button>
+        </form>
+      ) : null}
+      <div>
+        <p className="m-0 mb-2 text-xs font-bold">Your level</p>
+        <div className="grid grid-cols-2 gap-2">
+          {LEVEL_OPTIONS.map((option) => {
+            const selected = level === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onLevel(option)}
+                className={`min-h-[48px] rounded-[14px] border px-3 text-left text-[13px] font-[620] ${
+                  selected
+                    ? "border-rose bg-rose-soft text-rose-ink"
+                    : "border-line bg-paper text-ink"
+                }`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Europe location picker (founder feedback): searchable full-European
+ * catalog, multi-select chips, "Anywhere in Europe" shortcut. The catalog
+ * lives in lib/onboarding/locations.ts.
+ */
+function LocationsPicker({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (locations: string[]) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const groups = searchLocations(query);
+  const showAll = query.trim().length === 0;
+  const anywhere = value.includes("Anywhere in Europe");
+
+  function toggle(city: string) {
+    if (anywhere) {
+      onChange([city]);
+      return;
+    }
+    onChange(
+      value.includes(city) ? value.filter((c) => c !== city) : [...value, city],
+    );
+  }
+
+  return (
+    <div className="grid gap-5">
+      <button
+        type="button"
+        onClick={() => onChange(anywhere ? [] : ["Anywhere in Europe"])}
+        className={`flex min-h-[55px] items-center justify-between gap-3 rounded-[14px] border px-4 text-left font-[620] ${
+          anywhere
+            ? "border-rose bg-rose-soft text-rose-ink"
+            : "border-line bg-paper text-ink"
+        }`}
+      >
+        <span>Anywhere in Europe</span>
+        <span
+          aria-hidden
+          className={`grid size-[19px] shrink-0 place-items-center rounded-full ${
+            anywhere
+              ? "border-[6px] border-rose"
+              : "border-[1.5px] border-[#c8c0c4]"
+          }`}
+        />
+      </button>
+      {value.length > 0 && !anywhere ? (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((city) => (
+            <button
+              key={city}
+              type="button"
+              onClick={() => toggle(city)}
+              className="rounded-full border border-rose bg-rose-soft px-3 py-1.5 text-[12.5px] font-[620] text-rose-ink"
+            >
+              {city} ✕
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <input
+        type="search"
+        aria-label="Search locations"
+        placeholder="Search every European city…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="h-[55px] w-full rounded-[14px] border border-line bg-paper px-[15px] text-ink outline-none focus:border-rose focus:ring-[3px] focus:ring-rose-soft"
+      />
+      <div className="max-h-[280px] overflow-y-auto rounded-[14px] border border-line">
+        {groups.map((group) => (
+          <div key={group.country} className="border-b border-line last:border-0">
+            <p className="m-0 bg-quiet/60 px-3.5 py-1.5 text-[10px] font-[760] uppercase tracking-[0.08em] text-muted">
+              {group.country}
+            </p>
+            <div className="flex flex-wrap gap-1.5 p-2.5">
+              {group.cities.map((city) => {
+                const selected = value.includes(city);
+                return (
+                  <button
+                    key={city}
+                    type="button"
+                    onClick={() => toggle(city)}
+                    className={`rounded-full border px-3 py-1.5 text-[12.5px] font-[620] ${
+                      selected
+                        ? "border-rose bg-rose-soft text-rose-ink"
+                        : "border-line bg-paper text-ink"
+                    }`}
+                  >
+                    {city}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {groups.length === 0 ? (
+          <p className="m-0 px-3.5 py-4 text-xs text-muted">
+            No city match — try the country name or a nearby hub.
+          </p>
+        ) : null}
+      </div>
+      {showAll ? (
+        <p className="m-0 text-[10px] leading-[1.35] text-muted">
+          {EUROPE_LOCATIONS.reduce((n, g) => n + g.cities.length, 0)} cities ·{" "}
+          {EUROPE_LOCATIONS.length} countries — search to narrow.
+        </p>
+      ) : null}
+    </div>
+  );
 }

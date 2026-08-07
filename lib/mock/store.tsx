@@ -40,9 +40,9 @@ export type StudioState = {
 
 export type OnboardingAnswers = {
   role?: string;
-  location?: string;
   level?: string;
-  salaryFloor?: string;
+  workTypes?: string[];
+  locations?: string[];
   cvUploaded?: boolean;
   alerts?: string;
   completed?: boolean;
