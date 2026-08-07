@@ -10,6 +10,8 @@ export type CvSection = {
 export type CvDocument = {
   name: string;
   headline: string;
+  /** Header lines under the name: location, email, phone, links. */
+  contact?: string[];
   sections: CvSection[];
 };
 

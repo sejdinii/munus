@@ -20,6 +20,15 @@ export function texEscape(input: string): string {
     .replace(/([&%$#_{}])/g, "\\$1")
     .replace(/~/g, "\\textasciitilde{}")
     .replace(/\^/g, "\\textasciicircum{}")
+    /* Typographic chars not covered by T1 fonts (missing-glyph warnings
+       from the compile) — map to TeX equivalents. */
+    .replace(/\u2019/g, "'")
+    .replace(/\u2018/g, "'")
+    .replace(/\u201c/g, "\"")
+    .replace(/\u201d/g, "\"")
+    .replace(/\u2013/g, "--")
+    .replace(/\u2014/g, "---")
+    .replace(/\u2026/g, "\\ldots{}")
     .replace(new RegExp(PLACEHOLDER, "g"), "\\textbackslash{}");
 }
 
@@ -40,6 +49,16 @@ const CV_PREAMBLE = `\\documentclass[10pt,a4paper]{article}
 const CV_CLOSING = `\\end{document}`;
 
 export function cvToLatex(doc: CvDocument): string {
+  const contactLines = (doc.contact ?? [])
+    .filter((line) => line.trim().length > 0)
+    .map((line) => texEscape(line))
+    .join("  \\textbullet{}  ");
+  const contactBlock = contactLines
+    ? `\\begin{center}
+  {\\small ${contactLines}}
+\\end{center}`
+    : "";
+
   const sections = doc.sections
     .map((section) => {
       const bullets = section.bullets
@@ -55,7 +74,8 @@ ${bullets}
   return `${CV_PREAMBLE}
 \\begin{center}
   {\\LARGE\\bfseries ${texEscape(doc.name)}}\\\\[3pt]
-  {\\small\\itshape ${texEscape(doc.headline)}}
+  {\\small\\itshape ${texEscape(doc.headline)}}\\\\[4pt]
+  ${contactBlock ? `{\\footnotesize ${contactLines}}\\\\[2pt]` : ""}
 \\end{center}
 \\vspace{4pt}
 ${sections}

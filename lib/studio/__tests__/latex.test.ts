@@ -17,6 +17,13 @@ describe("texEscape", () => {
     expect(out).not.toContain("\\textbackslash\\{");
   });
 
+  it("maps typographic quotes and dashes to T1-safe forms", () => {
+    expect(texEscape("Master’s — 2018–2022 … done")).toBe(
+      "Master's --- 2018--2022 \\ldots{} done",
+    );
+    expect(texEscape("“quoted” ‘single’")).toBe('"quoted" \'single\'');
+  });
+
   it("leaves plain text untouched", () => {
     expect(texEscape("Senior ML Engineer at Clera")).toBe(
       "Senior ML Engineer at Clera",

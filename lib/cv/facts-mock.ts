@@ -112,7 +112,7 @@ const OUTCOME_MARKERS = [
 ] as const;
 
 const LINE_LIMIT = 400;
-const MAX_FACTS = { role: 10, skill: 40, outcome: 15, education: 10 } as const;
+const MAX_FACTS = { role: 10, skill: 40, outcome: 15, education: 10, profile: 1, contact: 8 } as const;
 
 function pushUnique(
   facts: CvFact[],

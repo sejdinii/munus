@@ -19,6 +19,7 @@ export function composeCvDocument(
   facts: Fact[],
   accepted: Suggestion[],
   headline: string | undefined,
+  meta?: CvMeta,
 ): CvDocument {
   const acceptedCv = accepted.filter((s) => s.docKind === "cv");
   const contentCv = acceptedCv.filter((s) => s.kind === "content");
@@ -51,6 +52,12 @@ export function composeCvDocument(
     }
   }
 
+  /* Section order mirrors the source CV convention (founder: exported CV
+     ignored the input): Profile → Education → Skills → Experience. The
+     tailored highlights lead only when the user accepted changes. */
+  const profile = facts.filter((f) => f.kind === "profile").map((f) => f.content);
+  const contact = facts.filter((f) => f.kind === "contact").map((f) => f.content);
+
   const sections: CvDocument["sections"] = [];
   if (contentCv.length > 0) {
     sections.push({
@@ -58,16 +65,25 @@ export function composeCvDocument(
       bullets: contentCv.map((s) => s.text),
     });
   }
-  if (experience.length) sections.push({ heading: "Experience", bullets: experience });
-  if (skills.length) sections.push({ heading: "Skills", bullets: skills });
+  if (profile.length) sections.push({ heading: "Profile", bullets: profile });
   if (education.length) sections.push({ heading: "Education", bullets: education });
+  if (skills.length) sections.push({ heading: "Skills", bullets: skills });
+  if (experience.length) sections.push({ heading: "Experience", bullets: experience });
 
   return {
-    name: PLACEHOLDER_NAME,
+    name: meta?.name ?? PLACEHOLDER_NAME,
     headline: headline ?? "Product designer",
+    contact: meta?.contact ?? contact,
     sections,
   };
 }
+
+export type CvMeta = {
+  /** Real name from the authenticated identity (Google profile). */
+  name?: string;
+  /** Header lines that didn't come from the CV facts (e.g. location). */
+  contact?: string[];
+};
 
 /** Fixed letter frame — app templates, not provider output (critic W3 #3). */
 export function letterGreeting(job: Job): string {
@@ -79,6 +95,7 @@ export const LETTER_CLOSING =
 export function composeLetterDocument(
   job: Job,
   accepted: Suggestion[],
+  name?: string,
 ): LetterDocument {
   const body = accepted
     .filter((s) => s.docKind === "letter" && s.kind === "content")
@@ -87,6 +104,6 @@ export function composeLetterDocument(
   return {
     recipientCompany: job.company,
     paragraphs: [letterGreeting(job), ...body, LETTER_CLOSING],
-    signoffName: PLACEHOLDER_NAME,
+    signoffName: name ?? PLACEHOLDER_NAME,
   };
 }

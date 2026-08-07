@@ -6,8 +6,16 @@ import { FACT_KINDS, isFactKind, type CvFact } from "./types";
  * keeps the `facts` table honest (and keeps the prompt cheap to write).
  */
 
-const MAX_FACTS = { role: 10, skill: 40, outcome: 15, education: 10 } as const;
-const MAX_CONTENT = 280;
+const MAX_FACTS = { role: 10, skill: 40, outcome: 15, education: 10, profile: 1, contact: 8 } as const;
+const MAX_CONTENT: Record<string, number> = {
+  role: 280,
+  skill: 280,
+  outcome: 280,
+  education: 280,
+  contact: 280,
+  /* The CV summary paragraph is prose — allow a full paragraph. */
+  profile: 600,
+};
 const MAX_SOURCE = 160;
 
 export function cleanFacts(raw: unknown): CvFact[] {
@@ -22,7 +30,7 @@ export function cleanFacts(raw: unknown): CvFact[] {
     const record = entry as Record<string, unknown>;
     const kind = record.kind;
     const content = typeof record.content === "string" ? record.content.trim() : "";
-    if (!isFactKind(kind) || content.length < 2 || content.length > MAX_CONTENT) {
+    if (!isFactKind(kind) || content.length < 2 || content.length > (MAX_CONTENT[kind] ?? 280)) {
       continue;
     }
     const key = `${kind}:${content.toLowerCase()}`;

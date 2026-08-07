@@ -11,14 +11,16 @@ const MODEL = "openai/gpt-oss-120b"; // Groq model id (D33 workhorse)
 
 const SYSTEM_PROMPT = `You extract structured facts from a job-seeker's CV.
 Return STRICT JSON only, no markdown, shaped as:
-{"facts":[{"kind":"role|skill|outcome|education","content":"<fact text>","source_span":"<short verbatim excerpt from the CV>"}]}
+{"facts":[{"kind":"role|skill|outcome|education|profile|contact","content":"<fact text>","source_span":"<short verbatim excerpt from the CV>"}]}
 
 Rules:
 - kind=role: the professional roles the person has held or targets (max 10).
 - kind=skill: concrete skills/tools/technologies (max 40, keep canonical casing, dedupe).
 - kind=outcome: achievements with measurable impact (max 15; prefer ones with numbers).
 - kind=education: degrees, institutions, certifications (max 10).
-- content: 2-280 chars, plain text, no bullets, no quotes.
+- kind=profile: the CV's summary/profile paragraph, verbatim-ish (max 1, up to 600 chars).
+- kind=contact: contact details, one fact per item — email, phone, website, LinkedIn, GitHub, location (max 8). Content like "Email: name@example.com".
+- content: 2-280 chars (profile up to 600), plain text, no bullets, no quotes.
 - source_span: 10-160 chars, verbatim from the CV.
 - If the CV text is unreadable or empty, return {"facts":[]}.`;
 

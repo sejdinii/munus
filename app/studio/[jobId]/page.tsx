@@ -50,7 +50,7 @@ export default function StudioPage() {
   const { jobId } = useParams<{ jobId: string }>();
   const store = useMunusStore();
   const { showToast } = useToast();
-  const { status } = useSession();
+  const { status, user } = useSession();
 
   const [tab, setTab] = useState<"cv" | "letter">("cv");
   const [generating, setGenerating] = useState(false);
@@ -210,17 +210,22 @@ export default function StudioPage() {
     setExporting(true);
     try {
       const { downloadBlob } = await import("@/lib/pdf/render");
+      const realName =
+        typeof user?.user_metadata?.full_name === "string"
+          ? user.user_metadata.full_name
+          : undefined;
       const cvDoc = composeCvDocument(
         evidenceFacts,
         acceptedSuggestions,
         (store.onboarding.roles ?? [])[0],
+        { name: realName },
       );
       downloadBlob(await exportDoc("cv", cvDoc), `CV-${job.company}.pdf`);
       if (acceptedLetterCount > 0) {
         /* Sequential with a gap — simultaneous programmatic downloads trip
            the multiple-download permission outside automation (W3 #13). */
         await new Promise((r) => setTimeout(r, 500));
-        const letterDoc = composeLetterDocument(job, acceptedSuggestions);
+        const letterDoc = composeLetterDocument(job, acceptedSuggestions, realName);
         downloadBlob(
           await exportDoc("letter", letterDoc),
           `Letter-${job.company}.pdf`,

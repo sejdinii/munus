@@ -7,7 +7,7 @@
 import type { Job } from "@/lib/mock/jobs";
 
 /** CONTRACTS §2 `facts` table: the evidence store extracted from the CV. */
-export type FactKind = "role" | "skill" | "outcome" | "education";
+export type FactKind = "role" | "skill" | "outcome" | "education" | "profile" | "contact";
 
 export type Fact = {
   id: string;

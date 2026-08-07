@@ -8,6 +8,8 @@ const KIND_LABELS: Record<FactKind, string> = {
   skill: "Skills",
   outcome: "Outcomes",
   education: "Education",
+  profile: "Profile",
+  contact: "Contact",
 };
 
 const KIND_HINTS: Record<FactKind, string> = {
@@ -15,6 +17,8 @@ const KIND_HINTS: Record<FactKind, string> = {
   skill: "e.g. Figma, TypeScript, user testing",
   outcome: "e.g. Cut onboarding time by 30%",
   education: "e.g. MSc Data Science, Lancaster University",
+  profile: "Your CV summary paragraph",
+  contact: "e.g. Email, phone, LinkedIn",
 };
 
 /**
