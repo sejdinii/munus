@@ -10,18 +10,19 @@
 ## 1. Stack (verbatim from plan §2)
 
 ```
-Next.js 16 (Vercel) ──► Supabase (Auth · Postgres + pgvector · Storage)
-   │                        ▲
+Next.js 16 (Vercel Pro) ──► Supabase (Auth · Postgres + pgvector* · Storage)
+   │                        ▲   *pgvector DEFERRED per D24 (rule-layer matching in MVP)
    │ API routes             │
    ▼                        │
-LLM: Groq llama-3.3-70b (parse · reasons · tailoring · verifier)
-Embeddings: MiniLM/bge-small (job + profile vectors)
+LLM: Groq gpt-oss-120b (parse · reasons · tailoring · verifier) [D17]
+Embeddings: DEFERRED per D24 — MiniLM/bge-small returns at corpus >5k + quality eval
    ▲
-   │ every 30–60 min
-Ingestion worker (Supabase cron / small VPS):
+   │ every 30–60 min (Vercel cron per D25; always-on worker deferred)
+Ingestion API routes (Vercel cron Pro):
   Greenhouse boards API · Lever postings API · Ashby · Workable · SmartRecruiters
-Payments: Stripe (checkout + customer portal + webhooks)
-Analytics: PostHog (EU cloud)
+Payments: Stripe — MOCKED per D21 (checkout UI only, no live keys,
+          env-guarded so the mock can never reach a public deployment)
+Analytics: PostHog (EU cloud, W6)
 ```
 
 - TypeScript strict. Tailwind + shadcn/ui primitives restyled to the token set below.
@@ -39,11 +40,13 @@ companies       (id, name, slug, ats greenhouse|lever|ashby|…, feed_url, activ
 jobs            (id, company_id, external_id, title, location, remote, salary_min,
                  salary_max, currency, description, apply_url, posted_at,
                  verified_at, open bool, embedding vector)
-decisions       (id, profile_id, job_id, type save|pass|star, at)   -- swipe log
+decisions       (id, profile_id, job_id, type save|pass|star|unsave, at,
+                 idempotency_key unique)          -- swipe log [D27: server tx + idempotency]
 favorites       (profile_id, job_id, saved_at)                       -- view over decisions
 job_matches     (profile_id, job_id, score, reasons jsonb, concern, cached_at)
 documents       (id, profile_id, job_id, kind cv|letter, content jsonb,
-                 accepted jsonb, tone, pdf_path, updated_at)
+                 accepted jsonb, tone, status queued|generating|needs_review|ready
+                 [D26], pdf_path, updated_at)     -- pdf_path populated from W4 receipts [D27]
 applications    (id, profile_id, job_id, status prepared|opened|confirmed,
                  confirmed_at, receipt jsonb)                        -- docs snapshot
 usage           (profile_id, week_start, swipes int, gens_today int, day date)
@@ -99,6 +102,19 @@ subscriptions   (profile_id, stripe_sub_id, plan, period, status, renews_at)
 4. **Never estimate salary silently.** Parse when present; otherwise show
    "not listed" (plan §7).
 5. **Pro is a waitlist button** until Plus revenue exists (plan §7).
+6. **Verifier is server-side in production** (D27): the client never executes
+   the gate and never writes `verifier_drops`; client-side verifier usage is
+   mock-phase-only.
+7. **Deck decisions are atomic** (D27): one server route inserts the decision
+   and increments usage in a single transaction, keyed by a client-generated
+   `idempotency_key` — a retried swipe can never double-count the meter.
+8. **Mock payments are env-guarded** (D27): the mocked checkout path is
+   unreachable in production builds (`MOCK_PAYMENTS` gate) — D21's mock can
+   never reach a public deployment.
+9. **GDPR account deletion** (D27) uses a dedicated service-role server route
+   (profile, facts, documents, storage objects, usage) — RLS alone cannot
+   self-delete. Supabase region: EU (Frankfurt); Groq transfer basis (SCCs)
+   stated in the privacy policy.
 
 ## 4. Binding visual spec
 **`prototypes/scout-pink-v2.html` is the binding visual spec for all UI.**

@@ -6,18 +6,25 @@
    Answers persist through lib/mock/store's setOnboarding as the user
    progresses (W2+ this becomes POST /api/profile). */
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { BackIcon, UploadIcon } from "@/components/ui/icons";
 import { useMunusStore, type OnboardingAnswers } from "@/lib/mock/store";
+import { useSession } from "@/lib/supabase/session";
+import { SignInGate } from "@/components/auth/SignInGate";
+import { FactPanel } from "@/components/cv/FactPanel";
+import type { CvFact, FactKind } from "@/lib/cv/types";
 import { onboardingSteps, DEFAULT_SALARY_FLOOR } from "./steps";
 
 const STEP_STORAGE_KEY = "munus-onboarding-step-v1";
 const MAX_CV_BYTES = 8 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const HAS_BACKEND = Boolean(
+  typeof process !== "undefined" && process.env.NEXT_PUBLIC_SUPABASE_URL,
+);
 
 function readStoredStep(max: number): number {
   if (typeof window === "undefined") return 0;
@@ -48,6 +55,11 @@ export default function OnboardingPage() {
   const [stepRestored, setStepRestored] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [facts, setFacts] = useState<CvFact[]>([]);
+  const [factsProvider, setFactsProvider] = useState<"mock" | "groq">("mock");
+  const [factsAccepted, setFactsAccepted] = useState(false);
+  const [manualFailed, setManualFailed] = useState(false);
 
   // Resume mid-flow on refresh (own localStorage key — the step position
   // isn't part of the shared OnboardingAnswers contract). A completed
@@ -137,12 +149,76 @@ export default function OnboardingPage() {
     }
     setUploadError(null);
     setCvFile(file);
-    setOnboarding({ cvUploaded: true });
+    if (HAS_BACKEND) {
+      void parseCv(file);
+    } else {
+      // No backend configured (mock/CI mode): the prototype behavior
+      // stands — file name recorded, parse comes with the real backend.
+      setOnboarding({ cvUploaded: true });
+    }
+  }
+
+  /** TASK-104: upload → extract → facts (server-side, auth-bound). */
+  async function parseCv(file: File) {
+    setParsing(true);
+    setFacts([]);
+    setFactsAccepted(false);
+    setManualFailed(false);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/cv", { method: "POST", body: form });
+      const payload = (await response.json().catch(() => null)) as
+        | { facts?: CvFact[]; provider?: "mock" | "groq"; error?: string }
+        | null;
+      if (!response.ok) {
+        setUploadError(payload?.error ?? "Could not parse that file.");
+        setManualFailed(true);
+        setOnboarding({ cvUploaded: true });
+        return;
+      }
+      setFacts(payload?.facts ?? []);
+      setFactsProvider(payload?.provider ?? "mock");
+      if ((payload?.facts?.length ?? 0) > 0) {
+        setFactsAccepted(true);
+      } else {
+        setManualFailed(true);
+      }
+      setOnboarding({ cvUploaded: true });
+    } catch {
+      setUploadError("Network error while parsing your CV — try again.");
+      setManualFailed(true);
+      setOnboarding({ cvUploaded: true });
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  /** Manual fallback: POST a single fact to /api/cv/facts. */
+  async function addManualFact(kind: FactKind, content: string): Promise<boolean> {
+    try {
+      const response = await fetch("/api/cv/facts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ facts: [{ kind, content }] }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { facts?: CvFact[] }
+        | null;
+      if (!response.ok) return false;
+      setFacts((prev) => [...prev, ...(payload?.facts ?? [])]);
+      setFactsAccepted(true);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function skipUpload() {
     setUploadError(null);
     setCvFile(null);
+    setFacts([]);
+    setFactsAccepted(false);
     setOnboarding({ cvUploaded: false });
     goNext();
   }
@@ -233,7 +309,7 @@ export default function OnboardingPage() {
         ) : null}
 
         {step.kind === "upload" ? (
-          <div>
+          <UploadStepGate>
             <div
               className={`rounded-[18px] border px-5 py-6 text-center ${
                 uploaded
@@ -275,6 +351,26 @@ export default function OnboardingPage() {
                 {uploadError}
               </p>
             ) : null}
+            {parsing ? (
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs font-[650] text-muted">
+                <span
+                  aria-hidden
+                  className="size-3.5 animate-spin rounded-full border-2 border-rose-soft border-t-rose"
+                />
+                Parsing your CV…
+              </div>
+            ) : null}
+            {!parsing && (factsAccepted || manualFailed) ? (
+              <FactPanel
+                facts={facts}
+                provider={factsProvider}
+                onRemove={(index) =>
+                  setFacts((prev) => prev.filter((_, i) => i !== index))
+                }
+                onManualAdd={addManualFact}
+                onDone={() => setFactsAccepted(true)}
+              />
+            ) : null}
             {!uploaded ? (
               <button
                 type="button"
@@ -284,7 +380,7 @@ export default function OnboardingPage() {
                 I&apos;ll add it later
               </button>
             ) : null}
-          </div>
+          </UploadStepGate>
         ) : null}
       </div>
 
@@ -304,4 +400,21 @@ export default function OnboardingPage() {
       </footer>
     </section>
   );
+}
+
+/**
+ * Auth gate at the CV-upload moment (D16): guests preview everything
+ * before this step; here they sign in (Google first, Apple before beta)
+ * and the upload box appears only for an active session.
+ */
+function UploadStepGate({ children }: { children: ReactNode }) {
+  const { status } = useSession();
+
+  if (status === "loading") {
+    return <LoadingState label="Checking your session" />;
+  }
+  if (status === "signedOut" || status === "unconfigured") {
+    return <SignInGate />;
+  }
+  return <>{children}</>;
 }
