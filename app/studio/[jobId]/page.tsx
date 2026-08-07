@@ -191,26 +191,38 @@ export default function StudioPage() {
     showToast(accept ? "Change accepted" : "Original wording kept");
   };
 
+  /* W3 finish (founder direction): LaTeX + Tectonic PDF export server-side.
+     The composed documents (verifier-gated, accepted suggestions only)
+     go to /api/studio/export which renders LaTeX, compiles and returns
+     the PDF. */
+  const exportDoc = async (kind: "cv" | "letter", doc: unknown) => {
+    const response = await fetch("/api/studio/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, doc }),
+    });
+    if (!response.ok) throw new Error("export failed");
+    return response.blob();
+  };
+
   const downloadKit = async () => {
     if (!kit || exporting || generating) return;
     setExporting(true);
     try {
-      const { renderCvPdf, renderLetterPdf, downloadBlob } = await import(
-        "@/lib/pdf/render"
-      );
+      const { downloadBlob } = await import("@/lib/pdf/render");
       const cvDoc = composeCvDocument(
         evidenceFacts,
         acceptedSuggestions,
         (store.onboarding.roles ?? [])[0],
       );
-      downloadBlob(await renderCvPdf(cvDoc), `CV-${job.company}.pdf`);
+      downloadBlob(await exportDoc("cv", cvDoc), `CV-${job.company}.pdf`);
       if (acceptedLetterCount > 0) {
         /* Sequential with a gap — simultaneous programmatic downloads trip
            the multiple-download permission outside automation (W3 #13). */
         await new Promise((r) => setTimeout(r, 500));
         const letterDoc = composeLetterDocument(job, acceptedSuggestions);
         downloadBlob(
-          await renderLetterPdf(letterDoc),
+          await exportDoc("letter", letterDoc),
           `Letter-${job.company}.pdf`,
         );
         showToast("PDF kit downloaded — every claim evidence-checked");
