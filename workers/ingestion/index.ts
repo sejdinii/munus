@@ -74,18 +74,45 @@ function parseArgs(argv: string[]) {
 export async function main(argv: string[] = process.argv.slice(2)) {
   const args = parseArgs(argv);
 
-  if (!args.dryRun) {
-    console.error(
-      "Refusing to run: the live mode needs a Supabase-backed JobStore, which\n" +
-        "lands with credentials. Use --dry-run to verify feeds without a database.",
-    );
-    process.exitCode = 1;
-    return;
-  }
-
   let companies: RunnerCompany[] = runnerCompanies();
   if (args.ats) companies = companies.filter((c) => c.ats === args.ats);
   if (args.limit) companies = companies.slice(0, args.limit);
+
+  if (!args.dryRun) {
+    // Live mode (W1): requires Supabase credentials in the environment.
+    const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      console.error(
+        "Live ingestion needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.\n" +
+          "Use --dry-run to verify feeds without a database.",
+      );
+      process.exitCode = 1;
+      return;
+    }
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(url, key);
+    const { SupabaseJobStore } = await import("./runner/supabase-store");
+    const store = new SupabaseJobStore(supabase);
+
+    console.log(`Live run · ${companies.length} feeds · Supabase\n`);
+    const summary = await runIngestion(companies, {
+      fetchJson: httpFetchJson,
+      now: () => Date.now(),
+      log: () => {},
+      store,
+    });
+    console.log(`companies ok   ${summary.ok}`);
+    console.log(`companies bad  ${summary.failed}`);
+    console.log(`jobs upserted  ${summary.jobsUpserted}`);
+    console.log(`jobs closed    ${summary.jobsMarkedMissing}`);
+    console.log(`took           ${summary.durationMs}ms`);
+    if (summary.failures.length) {
+      console.log("\nFailed feeds:");
+      for (const f of summary.failures) console.log(`  ✗ ${f.company} — ${f.error}`);
+    }
+    return { summary };
+  }
 
   console.log(`Dry run · ${companies.length} feeds · no writes\n`);
 
@@ -132,7 +159,6 @@ export async function main(argv: string[] = process.argv.slice(2)) {
 }
 
 /* Only self-execute as a script, never on import (tests import this file). */
-const isDirectRun =
-  typeof process !== "undefined" &&
-  process.argv[1]?.includes("workers/ingestion/index");
+const scriptPath = (process.argv[1] ?? "").replace(/\\/g, "/");
+const isDirectRun = scriptPath.includes("workers/ingestion/index");
 if (isDirectRun) void main();

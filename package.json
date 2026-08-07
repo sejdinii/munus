@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "ingest:dry": "tsx workers/ingestion/index.ts --dry-run"
+    "ingest:dry": "tsx workers/ingestion/index.ts --dry-run",
+    "ingest:live": "tsx workers/ingestion/index.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",

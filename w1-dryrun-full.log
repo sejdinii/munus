@@ -1,0 +1,37 @@
+npm notice run munus@0.1.0 npx
+npm notice run tsx workers/ingestion/index.ts --dry-run
+Dry run · 175 feeds · no writes
+
+live      135
+quiet     15  (200 with zero postings — healthy)
+broken    25
+jobs seen 11159
+took      26779ms
+
+Feeds needing a slug re-check before ingestion trusts them:
+  ✗ Snyk (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Bolt (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Choco (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Taxfix (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Depop (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ TIER Mobility (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ sennder (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Freetrade (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Cleo AI (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Spendesk (lever) — unexpected status 404
+  ✗ Back Market (lever) — unexpected status 404
+  ✗ Pleo (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Glovo (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ TravelPerk (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Babbel (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Deliveroo (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Templafy (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Darktrace (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Livi (Kry) (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Tourlane (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Huspy (greenhouse) — 404 on primary host and status 0 on EU host
+  ✗ Dealfront (workable) — unexpected status 404
+  ✗ MultiversX (fka Elrond) (lever) — unexpected status 404
+  ✗ Bondora (greenhouse) — unexpected status 0
+  ✗ GoHenry (workable) — unexpected status 404
+EXIT: 0
