@@ -54,10 +54,13 @@ function paletteFor(company: string) {
 
 function formatSalary(min: number | null, max: number | null, currency: string | null): string {
   const cur = currency ?? "€";
-  const k = (n: number) => (n % 1000 === 0 ? `${Math.round(n / 1000)}k` : `${Math.round(n / 1000)}k`);
-  if (min != null && max != null) return `${cur}${k(min)}–${k(max)}`;
-  if (min != null) return `${cur}${k(min)}+`;
-  if (max != null) return `up to ${cur}${k(max)}`;
+  // 0 from a feed means "not listed" — never display 0k.
+  const lo = min != null && min > 0 ? min : null;
+  const hi = max != null && max > 0 ? max : null;
+  const k = (n: number) => `${Math.round(n / 1000)}k`;
+  if (lo != null && hi != null) return `${cur}${k(lo)}–${k(hi)}`;
+  if (lo != null) return `${cur}${k(lo)}+`;
+  if (hi != null) return `up to ${cur}${k(hi)}`;
   return "Not listed";
 }
 

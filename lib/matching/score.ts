@@ -169,12 +169,15 @@ export function scoreJob(profile: MatchProfile, facts: MatchFact[], job: MatchJo
   }
 
   // ── salary (10) ─────────────────────────────────────────────────────────
-  if (job.salary_min == null) {
+  // Feeds sometimes emit 0/0 for "unlisted" — treat non-positive as absent.
+  const salaryMin = job.salary_min != null && job.salary_min > 0 ? job.salary_min : null;
+  const salaryMax = job.salary_max != null && job.salary_max > 0 ? job.salary_max : null;
+  if (salaryMin == null) {
     score += 5; // not listed — never estimated (contract)
-  } else if (profile.salary_min != null && job.salary_min < profile.salary_min) {
+  } else if (profile.salary_min != null && salaryMin < profile.salary_min) {
     score += 5;
     reasons.push(
-      `Salary (${job.currency ?? "€"}${job.salary_min}) below your ${job.currency ?? "€"}${profile.salary_min} floor`,
+      `Salary (${job.currency ?? "€"}${salaryMin}) below your ${job.currency ?? "€"}${profile.salary_min} floor`,
     );
   } else {
     score += 10;
