@@ -43,7 +43,13 @@ export type ChoiceStep = {
 
 export type StepConfig = RoleAndLevelStep | WorkTypesStep | LocationsStep | UploadStep | ChoiceStep;
 
-export const LEVEL_OPTIONS = ["Mid-level", "Senior", "Lead", "Open to two levels"] as const;
+export const LEVEL_OPTIONS = [
+  "Intern / Junior",
+  "Mid-level",
+  "Senior",
+  "Lead",
+  "Open to two levels",
+] as const;
 export const WORK_TYPE_OPTIONS = ["Remote", "Hybrid", "On-site"] as const;
 
 export const onboardingSteps: readonly StepConfig[] = [

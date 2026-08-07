@@ -97,4 +97,51 @@ describe("scoreJob", () => {
     expect(result.reasons.some((r) => r.includes("didn't select remote"))).toBe(true);
     expect(result.score).toBeLessThan(60);
   });
+
+  describe("level honesty (founder Q: intern user got senior roles)", () => {
+    const internProfile: MatchProfile = {
+      role_target: "Machine Learning Engineer",
+      level: "Intern / Junior",
+      locations: [],
+      workTypes: [],
+      salary_min: null,
+    };
+
+    it("gives an intern profile full level points for intern/junior roles", () => {
+      const result = scoreJob(internProfile, FACTS, job({ title: "Machine Learning Intern" }));
+      expect(result.reasons.some((r) => r.includes("matches your target level"))).toBe(true);
+      expect(result.concern).toBeUndefined();
+    });
+
+    it("flags senior roles as a level concern for an intern profile", () => {
+      const result = scoreJob(
+        internProfile,
+        FACTS,
+        job({ title: "Senior Machine Learning Engineer" }),
+      );
+      expect(result.concern).toContain("senior posting");
+      expect(result.concern).toContain("Intern / Junior");
+    });
+
+    it("flags intern roles as a concern for a senior profile", () => {
+      const seniorProfile: MatchProfile = {
+        role_target: "Machine Learning Engineer",
+        level: "Senior",
+        locations: [],
+        workTypes: [],
+        salary_min: null,
+      };
+      const result = scoreJob(seniorProfile, FACTS, job({ title: "ML Intern" }));
+      expect(result.concern).toContain("intern/junior posting");
+    });
+
+    it("detects working-student and werkstudent titles as junior-level", () => {
+      const junior = scoreJob(internProfile, FACTS, job({ title: "Working Student Data Science" }));
+      const werk = scoreJob(internProfile, FACTS, job({ title: "WerkstudentIn Data" }));
+      expect(junior.concern).toBeUndefined();
+      expect(werk.concern).toBeUndefined();
+      expect(junior.reasons.some((r) => r.includes("target level"))).toBe(true);
+      expect(werk.reasons.some((r) => r.includes("target level"))).toBe(true);
+    });
+  });
 });

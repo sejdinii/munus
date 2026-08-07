@@ -80,7 +80,7 @@ function roleOverlap(titleTokens: Set<string>, candidates: string[]): string | n
 function seniorityOf(title: string): "junior" | "mid" | "senior" | null {
   const t = title.toLowerCase();
   if (/(senior|sr\.|lead|principal|staff|head)\b/.test(t)) return "senior";
-  if (/(junior|jr\.|intern|entry)/.test(t)) return "junior";
+  if (/(junior|jr\.|intern|internship|working student|werkstudent|trainee|graduate|apprentice|entry|student)/.test(t)) return "junior";
   return null;
 }
 
@@ -124,17 +124,42 @@ export function scoreJob(profile: MatchProfile, facts: MatchFact[], job: MatchJo
     reasons.push(`Uses your skills: ${matchedSkills.slice(0, 4).join(", ")}`);
   }
 
-  // ── level (10) ──────────────────────────────────────────────────────────
+  // ── level (10) — intern-aware + honest concerns (2026-08-07, founder Q:
+  //     an intern-level user got senior roles with no warning because the
+  //     level signal was 10 points and silent). Concerns label mismatch;
+  //     rank-don't-exclude: nothing is filtered, only labeled + scored.
   const jobLevel = seniorityOf(job.title);
   const level = (profile.level ?? "").toLowerCase();
-  if (jobLevel === "junior" && level !== "open to two levels") {
-    score += 0; // junior role for a non-junior profile: no points, no drama
-  } else if (jobLevel === "senior" && (level.includes("senior") || level.includes("lead") || level.includes("open"))) {
-    score += 10;
-  } else if (jobLevel === null && (level.includes("mid") || level.includes("open"))) {
+  const levelLabel = profile.level || "no level set";
+  let levelConcern: string | undefined;
+  const isEntry = level.includes("intern") || level.includes("junior");
+  const isMid = level.includes("mid");
+  const isSenior = level.includes("senior") || level.includes("lead");
+  const isOpen = level.includes("open");
+
+  if (jobLevel === "junior") {
+    if (isEntry || isOpen) {
+      score += 10;
+      reasons.push("Intern/junior role — matches your target level");
+    } else {
+      score += isMid ? 6 : 2;
+      levelConcern = `Level: intern/junior posting — you target ${levelLabel}`;
+    }
+  } else if (jobLevel === "senior") {
+    if (isSenior || isOpen) {
+      score += 10;
+      reasons.push("Senior role — matches your target level");
+    } else if (isMid) {
+      score += 4;
+      levelConcern = `Level: senior posting — a stretch for ${levelLabel}`;
+    } else if (isEntry) {
+      score += 0;
+      levelConcern = `Level: senior posting — you target ${levelLabel}`;
+    } else {
+      score += 6;
+    }
+  } else if (isOpen) {
     score += 8; // unmarked roles are usually mid-weight
-  } else if (jobLevel === "senior" && level.includes("mid")) {
-    score += 4; // stretch — allowed, but honestly partial
   } else {
     score += 6;
   }
@@ -197,6 +222,7 @@ export function scoreJob(profile: MatchProfile, facts: MatchFact[], job: MatchJo
     reasons: reasons.slice(0, 4),
     // Only NEGATIVE flags are concerns — never the positive salary line.
     concern:
+      levelConcern ??
       reasons.find(
         (r) => r.startsWith("Location is outside") || r.includes("below your"),
       ) ?? undefined,
