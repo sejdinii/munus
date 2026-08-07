@@ -32,7 +32,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 ## WAVE ROADMAP (from plan §4 — "Done means" is the exit criterion; nothing depends on a later phase)
 | Wave | Plan phase | Weeks | Ships | Exit criterion ("Done means") | Status |
 |---|---|---|---|---|---|
-| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — scaffold/CI/shell/schema+RLS DONE (applied to prod project 2026-08-05, EVID-102); auth + CV pending (TASK-103/104, creds in .env.local) |
+| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | **DONE (2026-08-07)** — schema+RLS applied (EVID-102); Google auth E2E verified real account (EVID-103); CV→facts pipeline live: upload→storage→pdfjs text→facts→DB→editable panel (EVID-104, mock provider; Groq swaps in with GROQ_API_KEY) |
 | W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | PARTIAL — adapters/normalize/dedupe DONE (fixture-tested); seed config, cron, embeddings, real-feed run BLOCKED on network policy |
 | W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | PARTIAL — deck UI + detail DONE (critic-reviewed, 12 findings fixed); matching + real jobs BLOCKED on creds/network |
 | W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | PARTIAL — exit criterion MET vs mock facts/provider (browser-verified downloads); real CV-parse + Groq provider BLOCKED on creds |
@@ -70,7 +70,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 |---|---|---|---|
 | Auth (Google/Apple via Supabase) | DONE | TASK-103 complete 2026-08-07: sign-in gate (browser-verified), OAuth callback w/ open-redirect guards (5 tests), session refresh, POST signout; Google provider ENABLED in Supabase (client `178802871980-...`, test user sejdiniagent@gmail.com); localhost:4318 redirect allow-listed; 995 tests + typecheck + build green | Apple before beta (D16) |
 | Onboarding 6-question flow | DONE | wave1: implementer browser-run + integrated build/boot 2026-07-23 | mock persistence; real profile API lands W2+ |
-| CV upload → facts extraction (LLM parse) | MISSING | — | facts table = evidence store |
+| CV upload → facts extraction (LLM parse) | **DONE** (mock provider; Groq live when key lands) | facts table = evidence store; /api/cv + /api/cv/facts; manual fallback |
 | Job ingestion (all 5 ATS adapters) | PARTIAL | wave2: 50 fixture tests pass (5 adapters) | adapters+normalize+dedupe done incl. ashby/workable/smartrecruiters; cron/seed config/embeddings/real-feed run pending (network policy) |
 | Matching (embeddings + rule layer, cached reasons) | MISSING | — | LLM only above threshold, top 30/day polish |
 | Discover swipe deck (physics, star, undo, coach) | DONE | wave2: Playwright-driven swipes/undo/buttons/limit/caught-up 2026-07-25 | mock data by design until W1 feeds + matching; star toasts pending studio (see GAPS) |

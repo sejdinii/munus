@@ -1,0 +1,67 @@
+import { parseFactsJson } from "./validate";
+import type { CvFact } from "./types";
+
+/**
+ * Groq-backed extraction (D33: gpt-oss-120b is the MVP workhorse —
+ * $0.15/$0.60 per 1M tokens, 131k ctx). Pure fetch, no SDK needed.
+ */
+
+const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
+const MODEL = "gpt-oss-120b";
+
+const SYSTEM_PROMPT = `You extract structured facts from a job-seeker's CV.
+Return STRICT JSON only, no markdown, shaped as:
+{"facts":[{"kind":"role|skill|outcome|education","content":"<fact text>","source_span":"<short verbatim excerpt from the CV>"}]}
+
+Rules:
+- kind=role: the professional roles the person has held or targets (max 10).
+- kind=skill: concrete skills/tools/technologies (max 40, keep canonical casing, dedupe).
+- kind=outcome: achievements with measurable impact (max 15; prefer ones with numbers).
+- kind=education: degrees, institutions, certifications (max 10).
+- content: 2-280 chars, plain text, no bullets, no quotes.
+- source_span: 10-160 chars, verbatim from the CV.
+- If the CV text is unreadable or empty, return {"facts":[]}.`;
+
+export async function extractFactsGroq(
+  text: string,
+  apiKey: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<CvFact[]> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45_000);
+  try {
+    const response = await fetchImpl(GROQ_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        temperature: 0,
+        max_tokens: 2000,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Extract facts from this CV:\n\n${text.slice(0, 24_000)}`,
+          },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Groq API ${response.status}: ${await response.text().catch(() => "")}`);
+    }
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) return [];
+    return parseFactsJson(content);
+  } finally {
+    clearTimeout(timer);
+  }
+}
