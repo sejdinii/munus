@@ -24,7 +24,7 @@ const baseClasses =
 
 function sizeClasses(small: boolean) {
   return small
-    ? "min-h-10 rounded-[12px] px-3.5 text-[13px]"
+    ? "min-h-11 rounded-[12px] px-3.5 text-[13px]"
     : "min-h-[52px] rounded-[15px] px-[18px]";
 }
 

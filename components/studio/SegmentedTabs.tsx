@@ -46,7 +46,7 @@ export function SegmentedTabs<T extends string>({
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(tab.value)}
-            className={`h-[34px] rounded-[9px] border-0 text-[11px] font-bold ${
+            className={`h-11 rounded-[9px] border-0 text-[11px] font-bold ${
               active
                 ? "bg-paper text-ink shadow-[0_2px_7px_rgba(31,32,38,0.08)]"
                 : "bg-transparent text-muted"
