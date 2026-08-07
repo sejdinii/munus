@@ -57,11 +57,11 @@ export default function OnboardingReadyPage() {
           Your evidence store is set.
         </h1>
         <p className="mb-7 mt-3 text-sm leading-[1.45] text-muted">
-          Real matches build the moment live jobs arrive — the deck ships in
-          the next wave. You can preview the app with sample data now.
+          Your profile is live against 8,000+ real jobs from 150 companies —
+          ranked for you and refreshed daily. Swipe through your matches now.
         </p>
         <LinkButton href="/discover" variant="primary" className="w-full">
-          Preview with sample data
+          Start swiping
         </LinkButton>
       </div>
     </section>
