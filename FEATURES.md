@@ -70,7 +70,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 |---|---|---|---|
 | Auth (Google/Apple via Supabase) | DONE | TASK-103 complete 2026-08-07: sign-in gate (browser-verified), OAuth callback w/ open-redirect guards (5 tests), session refresh, POST signout; Google provider ENABLED in Supabase (client `178802871980-...`, test user sejdiniagent@gmail.com); localhost:4318 redirect allow-listed; 995 tests + typecheck + build green | Apple before beta (D16) |
 | Onboarding 6-question flow | DONE | wave1: implementer browser-run + integrated build/boot 2026-07-23 | mock persistence; real profile API lands W2+ |
-| CV upload → facts extraction (LLM parse) | **DONE** (mock provider; Groq live when key lands) | facts table = evidence store; /api/cv + /api/cv/facts; manual fallback |
+| CV upload → facts extraction (LLM parse) | **DONE — LIVE with Groq (gpt-oss-120b, 2026-08-07)** | facts table = evidence store; /api/cv + /api/cv/facts; manual fallback; mock fallback if Groq errors |
 | Job ingestion (all 5 ATS adapters) | PARTIAL | wave2: 50 fixture tests pass (5 adapters) | adapters+normalize+dedupe done incl. ashby/workable/smartrecruiters; cron/seed config/embeddings/real-feed run pending (network policy) |
 | Matching (embeddings + rule layer, cached reasons) | MISSING | — | LLM only above threshold, top 30/day polish |
 | Discover swipe deck (physics, star, undo, coach) | DONE | wave2: Playwright-driven swipes/undo/buttons/limit/caught-up 2026-07-25 | mock data by design until W1 feeds + matching; star toasts pending studio (see GAPS) |
