@@ -101,7 +101,7 @@ describe("scoreJob", () => {
   describe("level honesty (founder Q: intern user got senior roles)", () => {
     const internProfile: MatchProfile = {
       role_target: "Machine Learning Engineer",
-      level: "Intern / Junior",
+      level: "Intern",
       locations: [],
       workTypes: [],
       salary_min: null,
@@ -113,6 +113,19 @@ describe("scoreJob", () => {
       expect(result.concern).toBeUndefined();
     });
 
+    it("treats Junior as a separate entry-level option", () => {
+      const juniorProfile: MatchProfile = {
+        role_target: "Machine Learning Engineer",
+        level: "Junior",
+        locations: [],
+        workTypes: [],
+        salary_min: null,
+      };
+      const result = scoreJob(juniorProfile, FACTS, job({ title: "Junior Data Scientist" }));
+      expect(result.concern).toBeUndefined();
+      expect(result.reasons.some((r) => r.includes("target level"))).toBe(true);
+    });
+
     it("flags senior roles as a level concern for an intern profile", () => {
       const result = scoreJob(
         internProfile,
@@ -120,7 +133,7 @@ describe("scoreJob", () => {
         job({ title: "Senior Machine Learning Engineer" }),
       );
       expect(result.concern).toContain("senior posting");
-      expect(result.concern).toContain("Intern / Junior");
+      expect(result.concern).toContain("Intern");
     });
 
     it("flags intern roles as a concern for a senior profile", () => {

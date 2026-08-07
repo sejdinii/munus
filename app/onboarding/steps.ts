@@ -44,7 +44,8 @@ export type ChoiceStep = {
 export type StepConfig = RoleAndLevelStep | WorkTypesStep | LocationsStep | UploadStep | ChoiceStep;
 
 export const LEVEL_OPTIONS = [
-  "Intern / Junior",
+  "Intern",
+  "Junior",
   "Mid-level",
   "Senior",
   "Lead",
