@@ -6,7 +6,8 @@ export type Profile = {
   id: string;
   name: string | null;
   email: string;
-  roleTarget: string | null;
+  /** Every title the user is hunting — free-form, multiple allowed. */
+  roleTargets: string[];
   level: string | null;
   locations: string[];
   remoteOk: boolean;

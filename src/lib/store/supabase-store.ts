@@ -9,7 +9,7 @@ type ProfileRow = {
   id: string;
   name: string | null;
   email: string;
-  role_target: string | null;
+  role_targets: string[];
   level: string | null;
   locations: string[];
   remote_ok: boolean;
@@ -27,7 +27,7 @@ function toProfile(row: ProfileRow): Profile {
     id: row.id,
     name: row.name,
     email: row.email,
-    roleTarget: row.role_target,
+    roleTargets: row.role_targets ?? [],
     level: row.level,
     locations: row.locations,
     remoteOk: row.remote_ok,
@@ -61,7 +61,7 @@ export const supabaseStore: Store = {
         id: userId,
         email,
         name,
-        role_target: answers.roleTarget,
+        role_targets: answers.roleTargets,
         level: answers.level,
         locations: [answers.location],
         remote_ok: /remote/i.test(answers.location),

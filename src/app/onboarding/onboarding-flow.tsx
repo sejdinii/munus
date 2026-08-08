@@ -12,7 +12,7 @@ import { Icon } from "@/components/ui/icons";
 import { Choice, Progress, TextField } from "@/components/ui/inputs";
 import { Overline, Screen } from "@/components/ui/screen";
 
-type StepKey = "roleTarget" | "location" | "level" | "salary" | "cv" | "alerts";
+type StepKey = "roles" | "location" | "level" | "salary" | "cv" | "alerts";
 
 type Step = {
   key: StepKey;
@@ -21,12 +21,21 @@ type Step = {
   options?: string[];
 };
 
+// Quick picks only — any title can be typed, and several can be selected.
+// The set matches the beachhead vertical so most users tap, not type.
+const SUGGESTED_ROLES = [
+  "Product designer",
+  "UX/UI designer",
+  "Design lead",
+  "Product manager",
+];
+const MAX_ROLES = 10;
+
 const STEPS: Step[] = [
   {
-    key: "roleTarget",
+    key: "roles",
     title: "What work should we look for?",
-    help: "Choose the closest role. You can add adjacent titles later.",
-    options: ["Product designer", "UX/UI designer", "Design lead", "Product manager"],
+    help: "Pick every role you'd take — and type your own if it's not here. We rank by fit, we don't exclude.",
   },
   {
     key: "location",
@@ -77,12 +86,16 @@ function parseSalary(raw: string): number | null {
   return value >= 1000 && value <= 2_000_000 ? value : null;
 }
 
+function normalizeRole(raw: string): string {
+  return raw.replace(/\s+/g, " ").trim();
+}
+
 export function OnboardingFlow({
   initialAnswers,
   initialCv,
 }: {
   initialAnswers: {
-    roleTarget: string | null;
+    roleTargets: string[];
     location: string | null;
     level: string | null;
     salaryMin: number | null;
@@ -93,8 +106,9 @@ export function OnboardingFlow({
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(0);
+  const [roleTargets, setRoleTargets] = useState<string[]>(initialAnswers.roleTargets);
+  const [roleDraft, setRoleDraft] = useState("");
   const [choices, setChoices] = useState<Record<string, string | null>>({
-    roleTarget: initialAnswers.roleTarget,
     location: initialAnswers.location,
     level: initialAnswers.level,
     alerts: initialAnswers.alerts,
@@ -114,10 +128,30 @@ export function OnboardingFlow({
   const isLast = step === STEPS.length - 1;
 
   const stepComplete = (() => {
+    if (current.key === "roles") return roleTargets.length > 0;
     if (current.options) return Boolean(choices[current.key]);
     if (current.key === "salary") return parseSalary(salaryText) !== null;
     return cv.status === "uploaded";
   })();
+
+  function toggleRole(role: string) {
+    setRoleTargets((prev) =>
+      prev.some((r) => r.toLowerCase() === role.toLowerCase())
+        ? prev.filter((r) => r.toLowerCase() !== role.toLowerCase())
+        : prev.length < MAX_ROLES
+          ? [...prev, role]
+          : prev,
+    );
+  }
+
+  function addDraftRole() {
+    const role = normalizeRole(roleDraft);
+    if (role.length < 2 || role.length > 80) return;
+    setRoleDraft("");
+    if (!roleTargets.some((r) => r.toLowerCase() === role.toLowerCase())) {
+      toggleRole(role);
+    }
+  }
 
   async function uploadFile(file: File) {
     setCv({ status: "uploading", fileName: file.name });
@@ -160,7 +194,7 @@ export function OnboardingFlow({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          roleTarget: choices.roleTarget,
+          roleTargets,
           location: choices.location,
           level: choices.level,
           salaryMin: parseSalary(salaryText),
@@ -207,6 +241,81 @@ export function OnboardingFlow({
         </Overline>
         <h1>{current.title}</h1>
         <p className="lead">{current.help}</p>
+
+        {current.key === "roles" ? (
+          <div>
+            <div className="guide-chips" role="group" aria-label="Roles you want">
+              {SUGGESTED_ROLES.map((role) => {
+                const selected = roleTargets.some(
+                  (r) => r.toLowerCase() === role.toLowerCase(),
+                );
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    className={selected ? "guide-chip selected" : "guide-chip"}
+                    aria-pressed={selected}
+                    onClick={() => toggleRole(role)}
+                  >
+                    {role}
+                  </button>
+                );
+              })}
+              {roleTargets
+                .filter(
+                  (r) =>
+                    !SUGGESTED_ROLES.some(
+                      (s) => s.toLowerCase() === r.toLowerCase(),
+                    ),
+                )
+                .map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    className="guide-chip selected"
+                    aria-pressed="true"
+                    aria-label={`Remove ${role}`}
+                    onClick={() => toggleRole(role)}
+                  >
+                    {role}
+                    <span className="chip-x" aria-hidden="true">
+                      ×
+                    </span>
+                  </button>
+                ))}
+            </div>
+            <div className="role-add">
+              <input
+                className="text-field"
+                placeholder="Add another role — anything"
+                aria-label="Add another role"
+                value={roleDraft}
+                maxLength={80}
+                disabled={roleTargets.length >= MAX_ROLES}
+                onChange={(event) => setRoleDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addDraftRole();
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                variant="dark"
+                disabled={normalizeRole(roleDraft).length < 2 || roleTargets.length >= MAX_ROLES}
+                onClick={addDraftRole}
+              >
+                Add
+              </Button>
+            </div>
+            {roleTargets.length >= MAX_ROLES ? (
+              <p className="privacy" style={{ textAlign: "left", marginTop: 9 }}>
+                Ten roles is the cap — a sharper list ranks better.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {current.options ? (
           <div className="choices">

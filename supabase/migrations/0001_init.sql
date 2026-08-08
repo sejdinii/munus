@@ -10,7 +10,7 @@ create table profiles (
   id                 uuid primary key references auth.users (id) on delete cascade,
   name               text,
   email              text not null,
-  role_target        text,
+  role_targets       text[] not null default '{}',   -- any titles, any count
   level              text,
   locations          text[] not null default '{}',
   remote_ok          boolean not null default true,

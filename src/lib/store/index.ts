@@ -9,7 +9,7 @@ import { devStore } from "./dev-store";
 import { supabaseStore } from "./supabase-store";
 
 export type OnboardingAnswers = {
-  roleTarget: string;
+  roleTargets: string[];
   location: string;
   level: string;
   salaryMin: number | null;

@@ -81,10 +81,21 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
   hand-rolled; screen-scroll bottom padding 40 vs prototype 116 (no tabbar
   yet — revisit when the tabbar ships in the deck wave).
 
+- 2026-08-08 · (user-flagged, FIXED same session) Onboarding Q1 hardcoded four
+  designer titles, single-select — conflated the supply-side beachhead (which
+  jobs we ingest) with the demand side (what users may ask for). Now: multi-
+  select chips + free-text add, any title, up to 10; schema role_target →
+  role_targets text[]. REMAINING for phase 2: when a user's roles fall outside
+  beachhead catalog coverage, the deck must say so honestly (+ waitlist), not
+  serve a thin deck silently. Location (Q2) is still single-select — same
+  critique may apply; decide at the deck wave.
+
 ## DECISIONS LOG
 - 2026-08-08 · Scope + architecture locked per docs/SCOUT_MVP_PLAN.md (approved before this session): discovery + favorites + evidence-only AI docs + redirect apply; auto-apply Pro is architected-for, not built. Stack: Next.js + Supabase + Groq + Stripe, PWA-first.
 - 2026-08-08 · Prototype `scout-pink-v2.html` is the design spec, PINK theme (body[data-theme="pink"] overrides). Pixel-exact port is the bar; deviations need written reasons.
-- 2026-08-08 · Beachhead vertical: product/UX designers in Europe.
+- 2026-08-08 · Beachhead vertical: product/UX designers in Europe. USER
+  CLARIFIED same day: beachhead constrains ingestion/marketing only — role
+  input is never restricted; users select multiple titles and type any job.
 - 2026-08-08 · bw0 default (agent, standing until user overrides): every external service sits behind an adapter interface with a keyless dev mode (dev session, file store, heuristic CV parser). Real keys activate real adapters via env only — no code changes.
 - 2026-08-08 · Environment discovery: Supabase project env vars ARE present, but the container cannot reach supabase.co (network policy) — so in-session verification runs the dev adapters against a build made without those vars, and Supabase-path rows cap at PARTIAL until verified from a network-permitted context.
 - 2026-08-08 · Verification bar for bw0: prod build + curl E2E (happy path, 401, 422, guards, sign-out) + headless-Chromium screenshots. Headless Chromium clamps window width to ~500px, so phone-width shots clip on the right — screenshot at 900px where the frame centers instead.

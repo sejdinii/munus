@@ -15,7 +15,7 @@ export default async function OnboardingPage() {
   return (
     <OnboardingFlow
       initialAnswers={{
-        roleTarget: profile?.roleTarget ?? null,
+        roleTargets: profile?.roleTargets ?? [],
         location: profile?.locations[0] ?? null,
         level: profile?.level ?? null,
         salaryMin: profile?.salaryMin ?? null,

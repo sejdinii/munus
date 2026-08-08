@@ -16,7 +16,17 @@ export async function POST(request: NextRequest) {
     typeof value === "string" && value.trim().length > 0 && value.trim().length <= maxLength
       ? value.trim()
       : "";
-  const roleTarget = text(body?.roleTarget);
+  // Any titles, any count (within sanity): dedupe, trim, cap at 10.
+  const roleTargets = Array.isArray(body?.roleTargets)
+    ? [
+        ...new Set(
+          body.roleTargets
+            .filter((v): v is string => typeof v === "string")
+            .map((v) => v.replace(/\s+/g, " ").trim())
+            .filter((v) => v.length >= 2 && v.length <= 80),
+        ),
+      ].slice(0, 10)
+    : [];
   const location = text(body?.location);
   const level = text(body?.level);
   const alerts = text(body?.alerts);
@@ -28,7 +38,7 @@ export async function POST(request: NextRequest) {
       ? Math.round(body.salaryMin)
       : null;
 
-  if (!roleTarget || !location || !level || !alerts) {
+  if (roleTargets.length === 0 || !location || !level || !alerts) {
     return NextResponse.json(
       { error: "Answer every question before finishing." },
       { status: 400 },
@@ -37,7 +47,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const profile = await store.saveOnboarding(user.id, user.email, user.name, {
-      roleTarget,
+      roleTargets,
       location,
       level,
       salaryMin,

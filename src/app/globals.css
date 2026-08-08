@@ -330,6 +330,38 @@ button {
 }
 .choice.selected::after { border: 6px solid var(--rose); }
 
+.guide-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.guide-chip {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.guide-chip.selected {
+  border-color: var(--rose);
+  background: var(--rose-soft);
+  color: var(--rose-ink);
+}
+.guide-chip .chip-x {
+  margin-left: 6px;
+  font-weight: 800;
+  opacity: 0.7;
+}
+.role-add {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+.role-add .text-field { height: 46px; }
+
 .field-label {
   display: block;
   margin-bottom: 8px;
