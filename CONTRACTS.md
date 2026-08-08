@@ -28,12 +28,15 @@ Shadows: page card `0 13px 34px rgba(31,32,38,.09)`; sheet `0 -12px 40px rgba(24
 Font: system stack `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif`, antialiased.
 
 Type scale (size / weight / letter-spacing):
-- Display XL 49/850/-.065em (welcome) · Display 38/850/-.055em (ready) · Question 35/850/-.05em
-- Page title 34/850/-.055em · Card job title 29/850/-.05em · Section h2 27/850/-.045em
-- Empty h2 26/850/-.045em · Screen h1 (topbar) 16/720
+- Display XL 49/700/-.065em (welcome) · Display 38/700/-.055em (ready) · Question 35/700/-.05em
+- Page title 34/700/-.055em · Card job title 29/700/-.05em · Section h2 27/700/-.045em
+- Empty h2 26/700/-.045em · Screen h1 (topbar) 16/720
 - Body 13/400-620 · Support 11-12/650 · Fine print 9-10/650-750
 - Overline: 11/760, letter-spacing .1em, uppercase, --rose-ink
-Weights are non-standard on purpose (620/650/720/750/760/800/850) — keep exact.
+Display headings use the browser-default 700 — the prototype declares no weight
+on them. The non-standard weights (620/650/710/720/750/760/790/800/850) belong
+to UI elements (buttons, chips, labels, monograms) where the prototype declares
+them explicitly — keep those exact.
 
 Radii: chips 7-9 · buttons/fields/choices 12-15 · tiles 17-22 · cards 25-28 · circles 50%.
 Buttons: min-height 52 (md) / 40 (sm); radius 15/12; weight 710.
@@ -69,29 +72,37 @@ type Usage = { profileId: string; weekStart: string; swipes: number; gensToday: 
 ## 3. Service adapters (every external dependency sits behind one)
 
 ```
-src/lib/auth/      AuthProvider   = supabase | dev      (env: NEXT_PUBLIC_SUPABASE_URL set → supabase)
-src/lib/facts/     FactsExtractor = groq | heuristic    (env: GROQ_API_KEY set → groq)
-src/lib/storage/   CvStorage      = supabase | local    (dev: scratchpad/base64 in cookie-backed store)
+src/lib/auth/      AuthProvider   = supabase | dev        (env: NEXT_PUBLIC_SUPABASE_URL set → supabase)
+src/lib/facts/     FactsExtractor = groq | heuristic      (env: GROQ_API_KEY set → groq)
+src/lib/store/     Store          = supabase | dev-file   (profile+facts+CV storage live together;
+                                                           a separate CvStorage seam was folded in — bw0)
 ```
-Rule: UI code imports the interface, never a concrete adapter. Adapter selection
-happens in one place per service (`index.ts` of that lib). Dev adapters must
-exercise the SAME screens/states as real ones — no dev-only UI branches.
+Rules: UI code imports the interface, never a concrete adapter. Adapter
+selection happens in one place per service (`index.ts` of that lib). Dev
+adapters must exercise the SAME screens/states as real ones — no dev-only UI
+branches that alter behavior; a short informational label telling the user
+they're on a simulated session is allowed (honesty beats invisibility), but a
+dev path may never fake a success the real adapter wouldn't produce. The dev
+session refuses to mint on production builds unless SCOUT_ALLOW_DEV_AUTH=1.
 
 ## 4. Component inventory (src/components/ui — orchestrator-owned)
 
-| Component | API | Prototype source |
-|---|---|---|
-| Button | variant: primary·dark·outline·plain, size: md·sm, loading | .btn* |
-| Choice | selected, onSelect, children | .choice |
-| TextField | label, error, inputMode | .text-field + .field-label |
-| UploadBox | state: idle·uploaded·error, fileMeta, onPick | .upload-box |
-| Progress | value 0-1 | .progress |
-| Overline | children | .overline |
-| EmptyState | symbol, title, body, actions | .empty-state |
-| Spinner / Generating | label, sublabel | .generating |
-| Toast | useToast(): show(msg, action?) | .toast |
-| Screen / TopBar | title, back href | .screen, .topbar |
-| MetaChip · ReadyChip · SourcePill | text (+ tone for ReadyChip) | .meta-chip etc. |
+Status column: BUILT (bw0) or PLANNED (build in the wave that first needs it;
+CSS may already exist).
+
+| Component | API | Prototype source | Status |
+|---|---|---|---|
+| Button / ButtonLink | variant: primary·dark·outline·plain, size: md·sm, loading | .btn* | BUILT |
+| Choice | selected, onSelect, children | .choice | BUILT |
+| TextField | label, error, hint, inputMode | .text-field + .field-label | BUILT |
+| Progress | value 0-1 | .progress | BUILT |
+| Overline / Wordmark | children | .overline, .wordmark | BUILT |
+| EmptyState | symbol, title, body, actions | .empty-state | BUILT |
+| Generating | label, sublabel | .generating | BUILT |
+| Screen / TopBar | title, backHref | .screen, .topbar | BUILT |
+| UploadBox | currently inline in onboarding-flow; extract when a second screen needs it | .upload-box | PLANNED |
+| Toast | useToast(): show(msg, action?) — CSS shipped, hook not | .toast | PLANNED (deck wave) |
+| MetaChip · ReadyChip · SourcePill | text (+ tone) — .meta-chip CSS shipped, used raw | .meta-chip etc. | PLANNED (deck wave) |
 
 ## 5. Folder structure & FILE OWNERSHIP
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import { CvFileError, extractCvText, factsExtractor } from "@/lib/facts";
-import { store } from "@/lib/store";
+import { safeFileName, store } from "@/lib/store";
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
@@ -30,11 +30,11 @@ export async function POST(request: NextRequest) {
       );
     }
     const meta = {
-      fileName: file.name,
+      fileName: safeFileName(file.name),
       fileSize: body.byteLength,
       uploadedAt: new Date().toISOString(),
     };
-    const { facts } = await store.saveCv(user.id, meta, body, extracted);
+    const { facts } = await store.saveCv(user, meta, body, extracted);
     return NextResponse.json({
       fileName: meta.fileName,
       fileSize: meta.fileSize,

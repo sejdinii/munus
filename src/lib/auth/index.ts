@@ -2,7 +2,7 @@
 // session otherwise. Screens and routes import ONLY from this module.
 
 import { cookies } from "next/headers";
-import { hasSupabase } from "@/lib/env";
+import { devAuthAllowed, hasSupabase } from "@/lib/env";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type SessionUser = {
@@ -38,6 +38,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       provider: user.app_metadata?.provider === "apple" ? "apple" : "google",
     };
   }
+  // Read cookies BEFORE the dev-auth guard: cookies() is what marks these
+  // routes dynamic. Guarding first lets the build statically prerender
+  // session pages as their signed-out redirect (devAuthAllowed is false at
+  // build time), which then ships to every real user.
   const jar = await cookies();
+  if (!devAuthAllowed) return null;
   return jar.get(DEV_SESSION_COOKIE)?.value === DEV_USER.id ? DEV_USER : null;
 }

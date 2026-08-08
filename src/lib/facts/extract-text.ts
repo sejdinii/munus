@@ -1,7 +1,9 @@
 // CV file → plain text. PDF and DOCX per the prototype's upload copy;
 // plain text accepted as a convenience.
 
-export const MAX_CV_BYTES = 5 * 1024 * 1024;
+// Stay under Vercel's 4.5MB request-body cap so oversized files get our
+// message instead of a masked transport error.
+export const MAX_CV_BYTES = 4 * 1024 * 1024;
 
 export class CvFileError extends Error {}
 
@@ -12,7 +14,7 @@ export async function extractCvText(
 ): Promise<string> {
   if (body.byteLength === 0) throw new CvFileError("The file is empty.");
   if (body.byteLength > MAX_CV_BYTES) {
-    throw new CvFileError("That file is over 5 MB. Export a lighter PDF and try again.");
+    throw new CvFileError("That file is over 4 MB. Export a lighter PDF and try again.");
   }
 
   const ext = fileName.toLowerCase().split(".").pop() ?? "";

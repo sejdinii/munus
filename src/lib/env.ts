@@ -12,3 +12,14 @@ export const hasSupabase = Boolean(env.supabaseUrl && env.supabaseAnonKey);
 
 /** Groq key configured → LLM facts extraction; otherwise heuristic parser. */
 export const hasGroq = Boolean(env.groqApiKey);
+
+/**
+ * The keyless dev session is for local development and explicit demos only.
+ * A production build without Supabase refuses to mint sessions unless the
+ * operator opts in — an accidental keyless deploy must fail loudly, not
+ * become an authentication-less app.
+ */
+export const devAuthAllowed =
+  !hasSupabase &&
+  (process.env.NODE_ENV !== "production" ||
+    process.env.SCOUT_ALLOW_DEV_AUTH === "1");

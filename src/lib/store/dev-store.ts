@@ -5,7 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Fact, Profile } from "@/lib/types";
-import type { CvMeta, OnboardingAnswers, Store } from "./index";
+import { safeFileName, type CvMeta, type OnboardingAnswers, type Store } from "./index";
 
 const DATA_DIR = path.join(process.cwd(), ".dev-data");
 const DATA_FILE = path.join(DATA_DIR, "store.json");
@@ -59,23 +59,43 @@ export const devStore: Store = {
     return profile;
   },
 
-  async saveCv(userId, meta, fileBody, extracted) {
+  async saveCv(user, meta, fileBody, extracted) {
     const data = await load();
     await mkdir(path.join(DATA_DIR, "cvs"), { recursive: true });
-    const filePath = path.join(DATA_DIR, "cvs", `${userId}-${meta.fileName}`);
+    const storedName = safeFileName(meta.fileName);
+    const filePath = path.join(DATA_DIR, "cvs", `${user.id}-${storedName}`);
     await writeFile(filePath, fileBody);
     const now = new Date().toISOString();
     const facts: Fact[] = extracted.map((f) => ({
       id: randomUUID(),
-      profileId: userId,
+      profileId: user.id,
       kind: f.kind,
       content: f.content,
       sourceSpan: f.sourceSpan ?? null,
       createdAt: now,
     }));
-    data.facts[userId] = facts;
-    data.cvMeta[userId] = meta;
-    if (data.profiles[userId]) data.profiles[userId].cvPath = filePath;
+    data.facts[user.id] = facts;
+    data.cvMeta[user.id] = { ...meta, fileName: storedName };
+    // CV can land before onboarding finishes — make sure a profile row exists.
+    const existing = data.profiles[user.id];
+    data.profiles[user.id] = existing
+      ? { ...existing, cvPath: filePath }
+      : {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          roleTarget: null,
+          level: null,
+          locations: [],
+          remoteOk: true,
+          salaryMin: null,
+          currency: "EUR",
+          alerts: null,
+          cvPath: filePath,
+          plan: "free",
+          stripeCustomerId: null,
+          createdAt: now,
+        };
     await save(data);
     return { facts };
   },

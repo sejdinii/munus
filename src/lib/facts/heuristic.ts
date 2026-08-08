@@ -27,7 +27,7 @@ const DEGREE =
 
 const SKILL_DICTIONARY = [
   "figma", "sketch", "adobe xd", "framer", "principle", "protopie", "webflow",
-  "prototyping", "wireframing", "design systems", "design system", "design tokens",
+  "prototyping", "wireframing", "design systems", "design tokens",
   "user research", "usability testing", "user interviews", "a/b testing",
   "information architecture", "interaction design", "visual design", "ui design",
   "ux design", "service design", "journey mapping", "personas", "accessibility",

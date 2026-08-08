@@ -11,12 +11,20 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Partial<
     Record<keyof OnboardingAnswers, unknown>
   > | null;
-  const roleTarget = typeof body?.roleTarget === "string" ? body.roleTarget.trim() : "";
-  const location = typeof body?.location === "string" ? body.location.trim() : "";
-  const level = typeof body?.level === "string" ? body.level.trim() : "";
-  const alerts = typeof body?.alerts === "string" ? body.alerts.trim() : "";
+  // The server is the trust boundary — never rely on client-side validation.
+  const text = (value: unknown, maxLength = 80) =>
+    typeof value === "string" && value.trim().length > 0 && value.trim().length <= maxLength
+      ? value.trim()
+      : "";
+  const roleTarget = text(body?.roleTarget);
+  const location = text(body?.location);
+  const level = text(body?.level);
+  const alerts = text(body?.alerts);
   const salaryMin =
-    typeof body?.salaryMin === "number" && Number.isFinite(body.salaryMin)
+    typeof body?.salaryMin === "number" &&
+    Number.isFinite(body.salaryMin) &&
+    body.salaryMin >= 1000 &&
+    body.salaryMin <= 2_000_000
       ? Math.round(body.salaryMin)
       : null;
 

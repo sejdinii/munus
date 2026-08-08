@@ -238,7 +238,7 @@ button {
   font-size: 49px;
   line-height: 0.98;
   letter-spacing: -0.065em;
-  font-weight: 850;
+  font-weight: 700;
 }
 .welcome h1 em { color: var(--rose); font-style: normal; }
 .welcome .lead {
@@ -292,7 +292,7 @@ button {
   font-size: 35px;
   line-height: 1.04;
   letter-spacing: -0.05em;
-  font-weight: 850;
+  font-weight: 700;
 }
 .question .lead {
   margin: 12px 0 28px;
@@ -410,7 +410,7 @@ button {
   margin: 0;
   font-size: 34px;
   letter-spacing: -0.055em;
-  font-weight: 850;
+  font-weight: 700;
 }
 .page-title p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
 
@@ -436,7 +436,7 @@ button {
   margin: 0;
   font-size: 26px;
   letter-spacing: -0.045em;
-  font-weight: 850;
+  font-weight: 700;
 }
 .empty-state p { color: var(--muted); font-size: 13px; line-height: 1.45; }
 

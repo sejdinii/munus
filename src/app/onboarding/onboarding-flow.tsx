@@ -269,7 +269,7 @@ export function OnboardingFlow({
             </h3>
             <p role={cv.status === "error" ? "alert" : undefined}>
               {cv.status === "uploaded"
-                ? `${cv.fileName} · ${formatSize(cv.fileSize)}${
+                ? `${cv.fileName}${cv.fileSize > 0 ? ` · ${formatSize(cv.fileSize)}` : ""}${
                     cv.factCount ? ` · ${cv.factCount} facts extracted` : ""
                   }`
                 : cv.status === "uploading"

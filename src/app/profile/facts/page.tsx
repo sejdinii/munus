@@ -63,7 +63,7 @@ export default async function FactsPage() {
 
   return (
     <Screen>
-      <TopBar title="Career profile" backHref="/" />
+      <TopBar title="Career profile" backHref="/onboarding" />
       <div className="page-title" style={{ paddingTop: 0 }}>
         <h1>Your evidence</h1>
         <p>

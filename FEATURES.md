@@ -18,7 +18,7 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
 | Repo scaffold (Next.js, TS strict, Tailwind, tokens) | DONE | prod build boots; screens screenshot-verified at 430/900px | Next 16.3, Tailwind v4, tokens from pink prototype |
 | CI (lint + typecheck + build) | DONE | GitHub Actions run #69 green on this branch | .github/workflows/ci.yml |
 | Supabase schema + migrations + RLS | PARTIAL | SQL written+reviewed; NOT applied — container network policy blocks supabase.co | apply with `supabase db push` from a permitted machine |
-| Auth: Google/Apple sign-in | PARTIAL | dev-session flow E2E-verified (guards, sign-in/out, returning-user routing); OAuth wiring typechecked only | needs: migration applied + Google/Apple providers enabled in Supabase dashboard |
+| Auth: Google/Apple sign-in | PARTIAL | dev-session flow E2E-verified (guards, sign-in/out, returning-user routing); OAuth wiring typechecked only | needs: migration applied + Google/Apple providers enabled in Supabase dashboard; keyless prod builds refuse dev sessions unless SCOUT_ALLOW_DEV_AUTH=1 |
 | CV upload → parsed facts store (evidence source) | PARTIAL | E2E on prod build: PDF+TXT upload, 422/401 paths, facts render, screenshots | heuristic extractor verified; Groq extractor + Supabase storage adapter unverified (no key / network) |
 | Onboarding (6 questions → profile) | DONE | prod-build E2E + screenshots; salary validation, required CV, prefill on return | prototype screens 02, pixel-faithful |
 | Job ingestion (Greenhouse/Lever pullers, dedupe, freshness) | MISSING | — | phase 1; make-or-break |
@@ -67,6 +67,19 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
 - 2026-08-08 · sign-in/onboarding/facts currently render inside the 430px
   app-frame on desktop; real marketing/responsive desktop layouts are a
   post-MVP concern (PWA-first per plan).
+- 2026-08-08 · (critic, FIXED same session) CV upload at Q5 preceded profile
+  creation at Q6 → FK violation on the real stack. Fixed threefold: DB trigger
+  creates profiles on auth signup (migration), supabase-store upserts a minimal
+  row before saving facts, dev-store creates a profile stub. Ordering bugs like
+  this only surface on the real stack — re-test there once network allows.
+- 2026-08-08 · (critic) Keyless dev store writes .dev-data/ under cwd — fails
+  on read-only serverless filesystems. Dev-mode demos run locally/tunneled
+  only; a keyless production deploy now fails loudly at sign-in unless
+  SCOUT_ALLOW_DEV_AUTH=1 is set deliberately.
+- 2026-08-08 · (critic, deferred as nitpicks) UploadBox still inline in
+  onboarding-flow; spinner size re-specified at 3 call sites; facts file-row
+  hand-rolled; screen-scroll bottom padding 40 vs prototype 116 (no tabbar
+  yet — revisit when the tabbar ships in the deck wave).
 
 ## DECISIONS LOG
 - 2026-08-08 · Scope + architecture locked per docs/SCOUT_MVP_PLAN.md (approved before this session): discovery + favorites + evidence-only AI docs + redirect apply; auto-apply Pro is architected-for, not built. Stack: Next.js + Supabase + Groq + Stripe, PWA-first.

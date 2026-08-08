@@ -28,6 +28,25 @@ create policy "own profile: select" on profiles for select using (id = auth.uid(
 create policy "own profile: insert" on profiles for insert with check (id = auth.uid());
 create policy "own profile: update" on profiles for update using (id = auth.uid());
 
+-- A profiles row must exist the moment a user signs up — CV upload (and its
+-- facts FK) happens before onboarding finishes, so don't rely on the app.
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email)
+  values (new.id, coalesce(new.email, ''))
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
 -- ------------------------------------------------------------------- facts
 -- The evidence store: every AI claim must trace back to a row here.
 create table facts (

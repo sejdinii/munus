@@ -26,22 +26,30 @@ const KINDS: FactKind[] = ["role", "skill", "outcome", "education"];
 
 export const groqExtractor: FactsExtractor = {
   async extract(cvText: string): Promise<ExtractedFact[]> {
-    const response = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.groqApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        temperature: 0,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: cvText.slice(0, MAX_INPUT_CHARS) },
-        ],
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${env.groqApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: cvText.slice(0, MAX_INPUT_CHARS) },
+          ],
+        }),
+        // A stalled LLM call must degrade to the heuristic, not hang the upload.
+        signal: AbortSignal.timeout(25_000),
+      });
+    } catch (error) {
+      console.error(`groq extract unreachable (${String(error)}); using heuristic parser`);
+      return heuristicExtractor.extract(cvText);
+    }
 
     if (!response.ok) {
       console.error(`groq extract failed (${response.status}); using heuristic parser`);

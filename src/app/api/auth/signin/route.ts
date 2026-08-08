@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasSupabase } from "@/lib/env";
+import { devAuthAllowed, hasSupabase } from "@/lib/env";
 import { DEV_SESSION_COOKIE, DEV_USER } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/auth/supabase-server";
+import { store } from "@/lib/store";
 
 export async function GET(request: NextRequest) {
   const provider = request.nextUrl.searchParams.get("provider");
@@ -10,8 +11,17 @@ export async function GET(request: NextRequest) {
   }
 
   if (!hasSupabase) {
-    // Keyless dev mode: create the local dev session, same downstream flow.
-    const response = NextResponse.redirect(new URL("/onboarding", request.url));
+    // Keyless dev mode — but never silently on a production deploy.
+    if (!devAuthAllowed) {
+      return NextResponse.redirect(new URL("/sign-in?error=no-auth-config", request.url));
+    }
+    let destination = "/onboarding";
+    try {
+      if (await store.getCvMeta(DEV_USER.id)) destination = "/profile/facts";
+    } catch {
+      // fall through to onboarding
+    }
+    const response = NextResponse.redirect(new URL(destination, request.url));
     response.cookies.set(DEV_SESSION_COOKIE, DEV_USER.id, {
       httpOnly: true,
       sameSite: "lax",

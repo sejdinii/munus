@@ -15,11 +15,13 @@ const ERRORS: Record<string, string> = {
   "oauth-start": "We couldn't reach the sign-in provider. Check your connection and try again.",
   "oauth-denied": "Sign-in was cancelled. Nothing was shared with us.",
   "oauth-exchange": "Sign-in didn't complete. Please try again.",
+  "no-auth-config": "Sign-in isn't configured on this deployment yet. If you run Scout, set the Supabase environment variables.",
 };
 
 function GoogleLogo() {
+  // stroke:none blocks the .btn svg icon stroke from outlining the brand mark.
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 18, height: 18 }}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 18, height: 18, stroke: "none" }}>
       <path
         fill="#4285F4"
         d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.16 3.57-8.81Z"
@@ -42,7 +44,7 @@ function GoogleLogo() {
 
 function AppleLogo() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 18, height: 18 }}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 18, height: 18, stroke: "none" }}>
       <path
         fill="currentColor"
         d="M16.7 12.94c.03 3.02 2.65 4.02 2.68 4.03-.02.07-.42 1.44-1.38 2.85-.83 1.22-1.7 2.43-3.06 2.46-1.34.02-1.77-.8-3.3-.8-1.53 0-2 .77-3.27.82-1.31.05-2.32-1.32-3.16-2.53-1.71-2.48-3.02-7-1.26-10.06a4.9 4.9 0 0 1 4.14-2.51c1.29-.03 2.51.87 3.3.87.79 0 2.27-1.07 3.83-.92.65.03 2.48.26 3.66 1.99-.1.06-2.19 1.28-2.16 3.8ZM14.18 5.5c.7-.85 1.17-2.02 1.04-3.19-1.01.04-2.22.67-2.95 1.51-.65.75-1.21 1.95-1.06 3.1 1.12.09 2.27-.57 2.97-1.42Z"
@@ -58,7 +60,9 @@ export default async function SignInPage({
 }) {
   const user = await getSessionUser();
   if (user) {
-    const cvMeta = await store.getCvMeta(user.id);
+    // A store failure (e.g. schema not applied yet) must not crash the very
+    // first screen — fall back to onboarding and let deeper screens report.
+    const cvMeta = await store.getCvMeta(user.id).catch(() => null);
     redirect(cvMeta ? "/profile/facts" : "/onboarding");
   }
   const { error } = await searchParams;
