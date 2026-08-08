@@ -229,6 +229,19 @@ export default function DiscoverPage() {
     );
   }
 
+  /* W5b: while the ranked deck is being prepared (LLM polish takes a few
+     seconds), show an honest loading screen — never "no jobs". */
+  if (!realDeck && !loadFailed) {
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <div className="px-5 pb-2 pt-2.5">
+          <h1 className="m-0 text-2xl tracking-[-0.04em]">Fresh roles</h1>
+        </div>
+        <LoadingState label="Ranking your matches — a few seconds" />
+      </section>
+    );
+  }
+
   if (store.storageError && store.decisions.length === 0) {
     return (
       <section className="screen-in flex flex-1 flex-col">

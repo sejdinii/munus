@@ -13,12 +13,15 @@ export async function extractFacts(
   onUsage?: (usage: GroqUsage) => void,
 ): Promise<{ facts: CvFact[]; provider: "mock" | "groq" }> {
   if (options.groqApiKey) {
-    try {
-      const facts = await extractFactsGroq(text, options.groqApiKey, undefined, onUsage);
-      if (facts.length > 0) return { facts, provider: "groq" };
-    } catch {
-      // Fall through to the mock extractor — parsing must never block
-      // the user's onboarding (manual fallback is the last resort).
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const facts = await extractFactsGroq(text, options.groqApiKey, undefined, onUsage);
+        if (facts.length > 0) return { facts, provider: "groq" };
+      } catch {
+        // Retry once for transient failures, then fall through to the
+        // mock extractor — parsing must never block onboarding, but a
+        // silent contact-only degrade (W5b) deserves a second chance.
+      }
     }
   }
   return { facts: extractFactsMock(text), provider: "mock" };

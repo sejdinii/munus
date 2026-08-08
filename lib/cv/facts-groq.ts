@@ -44,7 +44,11 @@ export async function extractFactsGroq(
       body: JSON.stringify({
         model: MODEL,
         temperature: 0,
-        max_tokens: 2000,
+        /* W5b fix: 2000 was truncating full-CV fact JSON mid-response; the
+           truncated JSON then failed parsing and silently fell back to the
+           contact-only mock extractor (user saw "only name and email").
+           gpt-oss-120b supports long outputs; 4096 leaves ample room. */
+        max_tokens: 4096,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: SYSTEM_PROMPT },

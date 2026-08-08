@@ -100,47 +100,59 @@ export async function GET() {
   );
 
   const groqKey = process.env.GROQ_API_KEY;
+  /* W5b perf fix: the polish loop was sequential — 8 Groq calls × 2-6s =
+     16-48s per deck request, so users on a fresh profile stared at an
+     empty deck ("no jobs!") while it ground. Run the uncached polish
+     calls in parallel; cost is identical, latency drops to ~seconds. */
+  /* Apply cached reasons first (the parallel pass below only handles
+     uncached entries). */
   for (const entry of scored.slice(0, LLM_POLISH_N)) {
-    if (cachedByJob.has(entry.job.id)) {
-      const llm = cachedByJob.get(entry.job.id);
-      if (llm && llm.length > 0) entry.reasons = llm;
-      continue;
-    }
-    if (!groqKey) continue;
-    const llm = await polishReasons(
-      {
-        jobTitle: entry.job.title,
-        jobDescription: entry.job.description ?? "",
-        provenFacts: facts.slice(0, 30).map((f) => `${f.kind}: ${f.content}`),
-      },
-      groqKey,
-      undefined,
-      (usage) => {
-        if (!usage) return;
-        void recordUsage(supabase, {
-          profileId: user.id,
-          endpoint: "reasons",
-          model: "openai/gpt-oss-120b",
-          promptTokens: usage.promptTokens,
-          completionTokens: usage.completionTokens,
-          costEur: costOf("openai/gpt-oss-120b", usage.promptTokens, usage.completionTokens),
-        });
-      },
-    );
-    if (llm.length > 0) {
-      entry.reasons = llm;
-      await supabase.from("job_matches").upsert(
-        {
-          profile_id: user.id,
-          job_id: entry.job.id,
-          score: entry.score,
-          reasons: llm,
-          concern: entry.concern ?? null,
-        },
-        { onConflict: "profile_id,job_id" },
-      );
-    }
+    const llm = cachedByJob.get(entry.job.id);
+    if (llm && llm.length > 0) entry.reasons = llm;
   }
+  const polishTasks = scored
+    .slice(0, LLM_POLISH_N)
+    .filter((entry) => !cachedByJob.has(entry.job.id) && groqKey)
+    .map(async (entry) => {
+      try {
+        const llm = await polishReasons(
+          {
+            jobTitle: entry.job.title,
+            jobDescription: entry.job.description ?? "",
+            provenFacts: facts.slice(0, 30).map((f) => `${f.kind}: ${f.content}`),
+          },
+          groqKey!,
+          undefined,
+          (usage) => {
+            if (!usage) return;
+            void recordUsage(supabase, {
+              profileId: user.id,
+              endpoint: "reasons",
+              model: "openai/gpt-oss-120b",
+              promptTokens: usage.promptTokens,
+              completionTokens: usage.completionTokens,
+              costEur: costOf("openai/gpt-oss-120b", usage.promptTokens, usage.completionTokens),
+            });
+          },
+        );
+        if (llm.length > 0) {
+          entry.reasons = llm;
+          await supabase.from("job_matches").upsert(
+            {
+              profile_id: user.id,
+              job_id: entry.job.id,
+              score: entry.score,
+              reasons: llm,
+              concern: entry.concern ?? null,
+            },
+            { onConflict: "profile_id,job_id" },
+          );
+        }
+      } catch {
+        /* keep the rule-based reasons on polish failure */
+      }
+    });
+  await Promise.all(polishTasks);
 
   // 5. Respond (company name + reasons pre-joined).
   const deck = scored.map((entry) => {
