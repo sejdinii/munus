@@ -116,6 +116,23 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | "I got hired" pause flow | MISSING | — | BACKLOG; later |
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
+- 2026-08-08 (quality research, full evidence in docs/QUALITY_BAR.md): the
+  category leaders ship things no Munus wave currently builds —
+  (a) match-reason chips ON the deck card + a "why this ranked" explainer
+  behind every score (a bare match % is now banned);
+  (b) one-tap skill/fact prompts inside the deck that FEED THE EVIDENCE
+  STORE — the profile builds itself, the verifier gains citable facts;
+  (c) CV health score with next-action deep links;
+  (d) Today's Picks (small daily curated shelf + refresh countdown) and an
+  HONEST deck-exhaustion state — deck-end is currently an afterthought;
+  (e) delta-since-last-visit counts ("12 new since Tuesday") which double
+  as the email digest content — closes the alert-delivery gap's design;
+  (f) value-before-signup onboarding (first matched deck BEFORE account
+  ask) — makes guest preview (D16) load-bearing, auth stays at save moment;
+  (g) a celebration moment at Confirmed applied — receipts are win screens;
+  (h) matcher golden-set + tailoring eval harnesses — without them
+  "perfect job suggestions" is unfalsifiable. None of these are in W0–W6
+  exit criteria yet; QUALITY_BAR.md §5 sequences them as QW0–QW5.
 - 2026-07-25 (wave2): deck star fast-track toasts instead of opening the
   studio — RESOLVED in wave3: star → save → studio restored.
 - 2026-07-25 (wave2/auditor): vitest was double-counting suites from agent
@@ -217,6 +234,23 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D23 · 2026-08-08 · **USER DIRECTIVE: the quality bar is the product.**
+  The app must match the design + engineering standard of today's top apps
+  ("same as asking an IT agency or an Apple engineer") — this bar is WHY the
+  founder rejected the external DeepSeek/Hermes build. Priorities ordered by
+  the founder: (1) perfect job suggestions, (2) CV + cover-letter tailoring,
+  (3) automate every process as far as honesty allows — automated submission
+  stays post-MVP (D8/D22). Mobbin research ran 2026-08-08; the standard,
+  evidence links, gap analysis, and quality-wave build order now live in
+  **docs/QUALITY_BAR.md** — that doc governs design/engineering quality the
+  way CONTRACTS.md governs honesty. Headline adoptions: match-reason chips
+  on deck cards (Tinder), "why this ranked" sheet behind every score
+  (Credit Karma), one-tap fact chips feeding the evidence store (Glassdoor),
+  CV health score (Wellfound), Today's Picks daily shelf + honest deck-end
+  (Hinge), value-before-signup onboarding (Duolingo), matcher golden-set
+  eval harness (falsifies "perfect suggestions"). Justified refusals of
+  leader patterns: no salary estimates, no applicant counts — unverifiable
+  numbers stay banned.
 - D22 · 2026-07-26 · **USER DIRECTION: Pro = sustained human-pace applying.**
   The goal is removing the ENDURANCE limit, not the quality limit: ~50
   tailored applications/day, every day, at human pace (~1 per 10 min).
