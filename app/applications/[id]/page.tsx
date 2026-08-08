@@ -6,8 +6,10 @@
    listing → Confirmed applied. No "Submitted"/"Viewed by a human" direct-
    submit copy from the prototype — MVP never auto-submits (CONTRACTS §3.3). */
 
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ErrorState, SkeletonDetail } from "@/components/states";
+import { Celebration, consumeCelebration } from "@/components/ui/Celebration";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
@@ -71,6 +73,12 @@ export default function ApplicationReceiptPage() {
   const { hydrated, applications, studio, setArchived, confirmApplied } =
     useMunusStore();
   const { showToast } = useToast();
+  /* The win moment. Fires from the confirm button below, or on arrival
+     when preflight just confirmed and handed off (armCelebration). */
+  const [burst, setBurst] = useState(0);
+  useEffect(() => {
+    if (id && consumeCelebration(id)) setBurst((b) => b + 1);
+  }, [id]);
 
   if (!hydrated) return <SkeletonDetail label="Loading receipt" />;
 
@@ -105,6 +113,7 @@ export default function ApplicationReceiptPage() {
 
   return (
     <section className="screen-in flex flex-1 flex-col">
+      <Celebration burst={burst} />
       <Topbar title="Application receipt" backHref="/applications" />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-10">
         <div className="mb-[23px] mt-[3px]">
@@ -266,6 +275,7 @@ export default function ApplicationReceiptPage() {
                 className="w-full"
                 onClick={() => {
                   confirmApplied(job.id);
+                  setBurst((b) => b + 1);
                   showToast("Receipt filed — congratulations");
                 }}
               >

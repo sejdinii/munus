@@ -91,6 +91,31 @@
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+/* Confetti burst (components/ui/Celebration). A timed one-shot like the
+   stamp flash; the component itself skips rendering under
+   prefers-reduced-motion, so no frozen pieces can appear. */
+@keyframes confetti {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+.confetti-piece {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  border-radius: 2px;
+  animation: confetti 1.05s var(--ease-out-soft) both;
+}
+
 /* BACK stamp flash after undo — prototype's stampFlash: fade in, hold, out.
    Base opacity is 1 so prefers-reduced-motion (animation: none) shows a
    STATIC stamp instead of nothing; the deck clears it via timeout. With

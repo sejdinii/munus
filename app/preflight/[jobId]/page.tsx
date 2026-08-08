@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { ErrorState, SkeletonDetail } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
+import { armCelebration } from "@/components/ui/Celebration";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
 import { jobById } from "@/lib/mock/jobs";
@@ -150,6 +151,9 @@ export default function PreflightPage() {
     store.confirmApplied(job.id);
     setConfirmOpen(false);
     showToast("Receipt filed — congratulations");
+    /* The receipt is the win screen — arm its one-shot celebration so
+       the moment survives the navigation (Celebration handoff). */
+    armCelebration(job.id);
     router.push(`/applications/${job.id}`);
   };
 
