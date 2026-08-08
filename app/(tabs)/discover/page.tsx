@@ -254,12 +254,19 @@ export default function DiscoverPage() {
           body={
             realDeck
               ? "You've swiped through every ranked role. Fresh listings arrive with the next daily refresh — undo a decision or revisit your favorites."
-              : "You've been through every sample role. Real, fresh jobs arrive when the live feeds switch on. Undo a decision or revisit your favorites."
+              : status === "signedIn"
+                ? "Live listings couldn't be loaded right now — check back in a moment."
+                : "You're browsing the sample catalog as a guest. Sign in to see live listings ranked for you."
           }
         >
           <LinkButton href="/favorites" variant="primary" className="w-full">
             Open favorites
           </LinkButton>
+          {status !== "signedIn" ? (
+            <LinkButton href="/onboarding" variant="secondary" className="w-full">
+              Sign in for live listings
+            </LinkButton>
+          ) : null}
           {canUndo ? (
             <button
               type="button"
@@ -282,7 +289,9 @@ export default function DiscoverPage() {
           <p className="m-0 mt-0.5 text-[11px] text-muted">
             {realDeck
               ? `${deck.length} ranked roles · refreshed daily from company feeds`
-              : `${deck.length} sample roles · live listings coming soon`}
+              : status === "signedIn"
+                ? `${deck.length} sample roles · live listings unavailable right now`
+                : `${deck.length} sample roles · sign in for live listings`}
           </p>
         </div>
       </div>
