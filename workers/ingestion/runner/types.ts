@@ -79,9 +79,13 @@ export interface JobStore {
   upsertJobs(jobs: IngestedJob[]): Promise<UpsertResult>;
   /** Reports the full set of external_ids seen THIS run for `companyId`
    * (post-dedupe). The store is responsible for diffing against what it
-   * already has stored and flipping the difference to `open=false`; it
-   * returns how many rows it marked missing. Only called when the company
-   * had at least one healthy feed result this run — see run.ts for why. */
+   * already has stored and flipping the difference to status='closed'
+   * (schema: job_status enum); it returns how many rows it marked. Only
+   * called when the company had at least one healthy feed result this
+   * run — see run.ts for why. The store must ALSO apply the plausibility
+   * guard (BACKEND_BAR §5.8): a seen-set that would close >80% of a
+   * company's open jobs in one sweep flips them to 'unknown', not
+   * 'closed' — one weird payload must never mass-close a board. */
   markMissing(companyId: string, seenExternalIds: string[]): Promise<number>;
   recordFeedHealth(record: FeedHealth): Promise<void>;
 }

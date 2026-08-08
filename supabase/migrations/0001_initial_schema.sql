@@ -23,6 +23,10 @@ create type document_kind as enum ('cv', 'letter');
 -- no 'submitted' state. Confirmed = the USER told us they applied.
 create type application_status as enum ('prepared', 'opened', 'confirmed');
 create type plan_tier as enum ('free', 'plus');
+-- Three states, not a boolean: a feed that returned N jobs yesterday and
+-- zero today is SUSPICIOUS, not a mass closure. `unknown` lets ingestion
+-- park a job instead of lying in either direction (BACKEND_BAR §5.8).
+create type job_status as enum ('open', 'closed', 'unknown');
 
 -- ── profiles ─────────────────────────────────────────────────────────────
 create table profiles (
@@ -83,14 +87,24 @@ create table jobs (
   description text,
   apply_url   text not null,
   posted_at   timestamptz,
-  -- Powers the honest freshness pill.
+  -- Powers the honest freshness pill: when a sweep last CONFIRMED this
+  -- job was still present in its feed (not when it was last edited).
   verified_at timestamptz not null default now(),
-  open        boolean not null default true,
+  status      job_status not null default 'open',
+  closed_at   timestamptz,
+  -- sha256 over the content fields; the upsert's DO UPDATE carries
+  -- `where jobs.content_hash is distinct from excluded.content_hash`
+  -- so an unchanged posting costs zero heap writes (no WAL/bloat churn).
+  content_hash text,
   embedding   extensions.vector(384),
+  -- Embedding spaces are incompatible across models: rank only over rows
+  -- whose version matches the current one; upgrades re-embed fully
+  -- before cutover (BACKEND_BAR R1/R2 — multilingual-e5-small, 384d).
+  embedding_version text,
   -- The dedupe key from the plan.
   unique (source, external_id)
 );
-create index jobs_open_verified_idx on jobs (open, verified_at desc);
+create index jobs_status_verified_idx on jobs (status, verified_at desc);
 create index jobs_company_idx on jobs (company_id);
 
 -- Feed health per run: an empty-but-200 feed is healthy, not an error (#3).
