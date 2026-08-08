@@ -86,6 +86,44 @@ export default function DiscoverPage() {
     if (top && decidingRef.current !== top.id) decidingRef.current = null;
   }, [top]);
 
+  /* Keyboard deck (QUALITY_BAR §4, a11y): ← pass · → save · U undo ·
+     Enter detail. Global while this screen is mounted, but it must
+     never fight the page: modifiers pass through, typing surfaces are
+     exempt (none exist here today — belt and braces), the coach overlay
+     keeps the deck inert for keys exactly as it does for pointers, and
+     Enter defers to any focused control so a tabbed-to button doesn't
+     double-fire. Results announce through the toast's role=status. */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.isContentEditable)
+      )
+        return;
+      if (!store.coached) return;
+      const id = topIdRef.current;
+      if (e.key === "ArrowLeft" && id) {
+        e.preventDefault();
+        decide("pass");
+      } else if (e.key === "ArrowRight" && id) {
+        e.preventDefault();
+        decide("save");
+      } else if ((e.key === "u" || e.key === "U") && canUndo) {
+        e.preventDefault();
+        runUndo();
+      } else if (e.key === "Enter" && id && !t?.closest("button, a")) {
+        e.preventDefault();
+        router.push(`/jobs/${id}`);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   if (!store.hydrated) return <SkeletonDeck label="Preparing your deck" />;
 
   if (store.storageError && store.decisions.length === 0) {
@@ -164,6 +202,10 @@ export default function DiscoverPage() {
           <h1 className="m-0 text-2xl tracking-[-0.04em]">Fresh roles</h1>
           <p className="m-0 mt-0.5 text-[11px] text-muted">
             {deck.length} sample roles · live listings coming soon
+          </p>
+          <p className="sr-only">
+            Keyboard: left arrow passes, right arrow saves, U undoes the
+            last decision, Enter opens the role details.
           </p>
         </div>
       </div>
