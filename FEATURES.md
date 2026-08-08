@@ -16,7 +16,7 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
 | Repo scaffold (Next.js, TS strict, Tailwind, tokens) | DONE | prod build boots; screens screenshot-verified at 430/900px | Next 16.3, Tailwind v4, tokens from pink prototype |
-| CI (lint + typecheck + build) | PARTIAL | steps pass locally; first Actions run pending push | .github/workflows/ci.yml |
+| CI (lint + typecheck + build) | DONE | GitHub Actions run #69 green on this branch | .github/workflows/ci.yml |
 | Supabase schema + migrations + RLS | PARTIAL | SQL written+reviewed; NOT applied — container network policy blocks supabase.co | apply with `supabase db push` from a permitted machine |
 | Auth: Google/Apple sign-in | PARTIAL | dev-session flow E2E-verified (guards, sign-in/out, returning-user routing); OAuth wiring typechecked only | needs: migration applied + Google/Apple providers enabled in Supabase dashboard |
 | CV upload → parsed facts store (evidence source) | PARTIAL | E2E on prod build: PDF+TXT upload, 422/401 paths, facts render, screenshots | heuristic extractor verified; Groq extractor + Supabase storage adapter unverified (no key / network) |
