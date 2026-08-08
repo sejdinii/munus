@@ -202,6 +202,26 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D22 · 2026-07-26 · **USER DIRECTION: Pro = sustained human-pace applying.**
+  The goal is removing the ENDURANCE limit, not the quality limit: ~50
+  tailored applications/day, every day, at human pace (~1 per 10 min).
+  Explicitly NOT mass-blasting. Design agreed:
+  (a) the agent PREPARES the batch overnight (tailored CV + letter +
+      answers, all drawn from the evidence store);
+  (b) the user approves the BATCH ONCE — consent is preserved, the grind
+      is not; approving 50 individually would defeat the purpose;
+  (c) the agent then submits at human pace across the day and files a
+      receipt per application;
+  (d) screening questions may ONLY be answered from verified facts —
+      anything ungroundable escalates to a "needs you" pile, never a
+      guess. The verifier discipline extends to application answers.
+  Engineering reality recorded so it is not rediscovered: submission is
+  browser automation (no third-party apply API exists), portals redesign
+  often so this needs ongoing maintenance, bot detection is the real
+  technical wall, and the collateral for a flagged submission is the
+  USER's account — human pacing is a safety feature, not a nicety.
+  Still post-MVP (D8: Pro stays a waitlist until Plus revenue exists);
+  this records the target design, not a build order.
 - D21 · 2026-07-26 · **USER SCOPE DIRECTIVE: everything real except payments.**
   Real accounts + onboarding, real job ingestion, fully functional app;
   Stripe/checkout stays a mock. Consequences recorded now so they are not
