@@ -207,6 +207,10 @@ The gap analysis, same spirit as QUALITY_BAR §3. Each lands in a wave
 26. Supabase DB backups don't back up Storage: the CV files themselves
     need a separate scheduled sync, and the Free tier backs up NOTHING
     — Pro before real data. (§5.7.)
+27. A feed that suddenly returns zero jobs is suspicious, not a mass
+    closure — `jobs.open` becomes a three-state status with an
+    `unknown` guard, or one ATS hiccup "closes" a company's whole
+    board and users watch saved jobs vanish. (§5.8; schema migration.)
 19. Sentry with an aggressive beforeSend scrubber (breadcrumbs happily
     capture CV text from a parse error). Free tier is US-hosted;
     scrubbing is the safeguard we can afford — an explicit, recorded
@@ -419,10 +423,69 @@ The gap analysis, same spirit as QUALITY_BAR §3. Each lands in a wave
   branching-as-staging assumption; §5.6 and §6 updated accordingly.)
 
 ### 5.8 Ingestion (production wrapper around the existing runner)
-*[Pending: researcher re-run in flight — scheduler choice + chunking,
-ATS documented rate limits, conditional-request support, cross-ATS
-dedup detail, freshness SLA numbers. The runner contract in §2 and
-CONTRACTS.md's 7 rules stand regardless.]*
+- Upsert: natural key `unique (ats, company_id, external_id)`;
+  `on conflict … do update … where jobs.content_hash is distinct from
+  excluded.content_hash` — the hash guard means an unchanged posting
+  costs ZERO heap writes (the always-update variant slowly bloats a
+  small Postgres via WAL/autovacuum pressure and shows up weeks later
+  as mystery latency). Batches of ~500-1000 rows per statement.
+- **Schema amendment discovered:** `jobs.open boolean` can't express
+  the required lifecycle. Migration: `status open|closed|unknown` +
+  `closed_at`. `unknown` exists for the single most-cited failure in
+  this category: a feed that returned 40 jobs yesterday and 0 today is
+  SUSPICIOUS, not a mass closure — mark `unknown`, alert, retry; never
+  flip N jobs to closed off one weird fetch. (The runner already skips
+  mark-missing on failed fetches; this extends the guard to
+  "successful but implausible" payloads.) Never hard-delete — swipe
+  history and receipts point at these rows.
+- **Scheduler ruling (second genuine researcher disagreement):** the
+  ingestion researcher prefers Vercel Cron Pro (300s, chunked
+  dispatcher) and notes GitHub Actions cron fires with 5-30 min jitter
+  at peak — real, but irrelevant to OUR freshness SLA, which is hours
+  (below). Ruling stands: **GitHub Actions primary** (6h ceiling = no
+  chunking at all, $0, no Vercel plan dependency, open egress), runner
+  stays scheduler-agnostic (it's already a CLI), heartbeat catches any
+  skipped run, and Vercel-Cron-with-chunks is the recorded fallback if
+  GH Actions reliability ever misses the SLA in practice. QStash and
+  queue infra stay refused (§6) until chunk management is real.
+- Politeness & protection, per ATS HOST (not just per company —
+  concurrency 4 across many companies on one host is still one host):
+  ≥250-500ms spacing per host; descriptive User-Agent with a contact
+  URL; full-jitter backoff, ≤2-3 attempts, retry volume capped at
+  ~10-20% of normal; a rolling circuit breaker per host (~50% failures
+  → 5-10 min cooldown, companies marked `skipped_circuit_open`, budget
+  preserved). Documented hard limits to honor: **SmartRecruiters 10
+  req/s (8 concurrent max), Workable 10 req/10s with X-Rate-Limit +
+  Retry-After headers** — these two WILL 429 and can IP-block, which
+  takes out every company on that ATS at once. Greenhouse job-board API
+  is "heavily cached, no hard limit"; Lever GETs unlimited (the 2 req/s
+  figure is application-POSTs only); Ashby publishes nothing — poll
+  conservatively. Conditional GETs (ETag/304) are NOT confirmed
+  supported on these feeds — the content-hash at the DB layer is the
+  real unchanged-row optimization, budget for full payloads.
+- feed_health grows: run_id, duration_ms, outcome enum
+  (success|http_error|timeout|parse_error|circuit_open), upserted/
+  closed counts. Four alert rules for one founder: 3 consecutive fails
+  on a company → feed-URL check (rot detection — the "silently 404 for
+  weeks" failure); run success < 90% → systemic, page now; per-company
+  count drop > 80% with a "successful" fetch → unknown + alert; run
+  duration trending toward the ceiling → capacity warning BEFORE the
+  tail of the list silently drops.
+- Cross-ATS dedup: NO fuzzy matching (false merges hide real jobs).
+  The seed list maps each company to one canonical feed (dual-ATS
+  migration handling already exists in the runner); a daily collision
+  query on (company_id, normalized title+location) across ATSes FLAGS
+  for curation, never auto-merges. Fuzzy dedup is refused until the
+  seed list outgrows hand-verification.
+- Freshness SLA: poll everything hourly-ish now (175 companies fit one
+  run trivially); tiering by observed churn is designed but not built
+  (thousands-scale). User-facing semantics: "verified live [X] ago"
+  derives from the last successful CONFIRM sweep, not the row's
+  updated_at — it answers "is this still open," which is the product's
+  trust promise (market context: ~27-30% of listings on major boards
+  are reportedly ghost jobs — our verified-live discipline is a
+  differentiator, surface it per QUALITY_BAR). Jobs unconfirmed for
+  48-72h get labeled/deprioritized, never shown as fresh.
 
 ---
 
@@ -497,5 +560,5 @@ QW0 (design foundation) remains independent and can start any time.
 ---
 
 *Maintenance: like QUALITY_BAR.md — this document changes only with new
-dated evidence or a founder decision. §5.8 (ingestion practice detail)
-is the one sanctioned TODO — researcher in flight as of 2026-08-08.*
+dated evidence or a founder decision. Complete as of 2026-08-08; no
+pending sections.*

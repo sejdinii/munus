@@ -116,6 +116,26 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | "I got hired" pause flow | MISSING | — | BACKLOG; later |
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
+- 2026-08-08 (backend research, full evidence in docs/BACKEND_BAR.md): gaps
+  no wave currently covers, now sequenced as BW0-BW5 —
+  (a) SCHEMA AMENDMENT REQUIRED: `jobs.open boolean` → `status
+  open|closed|unknown` + `closed_at` (the anti-mass-closure guard needs a
+  third state); embedding rows also need a model-version column;
+  (b) LAUNCH-BLOCKING CONFIGS, all external: Groq zero-data-retention toggle
+  + DPA (default retains prompts 30 days — GDPR deletion story is false
+  without it), Groq Developer-tier unlock (free tier is a 30 RPM throughput
+  wall), Supabase Pro (Free tier has NO backups), custom SMTP (built-in
+  sender: 2 emails/hour), separate Storage backup sync (DB backups do NOT
+  cover CV files);
+  (c) ingestion scheduler = GitHub Actions workflow — which also means the
+  175-feed dry-run can run in CI TODAY, no sandbox network change needed
+  (partially retires the long-standing WebFetch-403 blocker);
+  (d) missing engineering: idempotency keys on generation endpoints, per-
+  ATS-host circuit breakers + politeness budget (SmartRecruiters/Workable
+  have hard 429 limits), golden-set nDCG CI gate, position-bias logging on
+  swipes, cost kill switch, heartbeat (not uptime) monitoring, expand/
+  contract migrations, restore drills, breach runbook, retention windows,
+  anonymous-account upgrade test, deletion cascade across 4 systems.
 - 2026-08-08 (quality research, full evidence in docs/QUALITY_BAR.md): the
   category leaders ship things no Munus wave currently builds —
   (a) match-reason chips ON the deck card + a "why this ranked" explainer
