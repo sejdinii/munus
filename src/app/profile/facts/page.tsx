@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { store } from "@/lib/store";
 import type { Fact, FactKind } from "@/lib/types";
 import { ButtonLink } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icons";
 import { Screen, TopBar } from "@/components/ui/screen";
 import { EmptyState, GroundingNote } from "@/components/ui/states";
 
@@ -45,7 +46,7 @@ export default async function FactsPage() {
       <Screen>
         <TopBar title="Career profile" backHref="/" />
         <EmptyState
-          symbol="⌁"
+          symbol={<Icon name="spark" size={27} />}
           title="No verified facts yet"
           body="Upload your CV and we'll turn it into the evidence store that powers matching and tailoring."
         >
@@ -81,38 +82,13 @@ export default async function FactsPage() {
         </GroundingNote>
 
         {cvMeta ? (
-          <div
-            className="file-row"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "36px 1fr auto",
-              gap: 9,
-              alignItems: "center",
-              marginBottom: 6,
-              border: "1px solid var(--line)",
-              borderRadius: 18,
-              background: "var(--paper)",
-              padding: "12px 13px",
-              boxShadow: "var(--card-shadow)",
-            }}
-          >
-            <span
-              style={{
-                display: "grid",
-                placeItems: "center",
-                width: 36,
-                height: 42,
-                borderRadius: 8,
-                background: "var(--quiet)",
-                fontSize: 9,
-                fontWeight: 800,
-              }}
-            >
+          <div className="file-card">
+            <span className="file-badge">
               {(cvMeta.fileName.split(".").pop() ?? "cv").toUpperCase().slice(0, 4)}
             </span>
             <div>
-              <strong style={{ display: "block", fontSize: 11 }}>{cvMeta.fileName}</strong>
-              <span style={{ color: "var(--muted)", fontSize: 9 }}>
+              <strong>{cvMeta.fileName}</strong>
+              <span>
                 {cvMeta.fileSize > 0 ? `${formatSize(cvMeta.fileSize)} · ` : ""}source of truth
               </span>
             </div>
@@ -143,7 +119,7 @@ export default async function FactsPage() {
                 rows.map((fact) => (
                   <div key={fact.id} className="fact-row">
                     <span className="fact-dot" aria-hidden="true">
-                      ✓
+                      <Icon name="check" size={11} />
                     </span>
                     <span>
                       {fact.content}

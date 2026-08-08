@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icons";
 import { Screen, TopBar } from "@/components/ui/screen";
 import { EmptyState } from "@/components/ui/states";
 
@@ -9,7 +10,7 @@ export default function FactsError({ reset }: { error: Error; reset: () => void 
     <Screen>
       <TopBar title="Career profile" backHref="/" />
       <EmptyState
-        symbol="!"
+        symbol={<Icon name="alert" size={26} />}
         title="Couldn't load your profile"
         body="Your facts are safe — we just couldn't fetch them right now. Try again in a moment."
       >

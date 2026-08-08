@@ -4,7 +4,7 @@ export function EmptyState({
   body,
   children,
 }: {
-  symbol: string;
+  symbol: React.ReactNode;
   title: string;
   body: string;
   children?: React.ReactNode;
@@ -49,10 +49,14 @@ export function Generating({
   );
 }
 
+import { Icon } from "./icons";
+
 export function GroundingNote({ children }: { children: React.ReactNode }) {
   return (
     <div className="grounding-note">
-      <span aria-hidden="true">✓</span>
+      <span aria-hidden="true" style={{ display: "grid", placeItems: "center" }}>
+        <Icon name="check" size={13} />
+      </span>
       <span>{children}</span>
     </div>
   );

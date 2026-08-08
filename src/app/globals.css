@@ -76,6 +76,27 @@ button {
   outline-offset: 2px;
 }
 
+/* Browser surfaces carry the design too (impeccable craft floor): selection,
+   caret, form accents, placeholders, scrollbars, underlines — themed, never
+   left at browser defaults. */
+::selection {
+  background: var(--rose);
+  color: white;
+}
+:root {
+  accent-color: var(--rose);
+  caret-color: var(--rose);
+  scrollbar-color: #d9d2d6 transparent;
+  scrollbar-width: thin;
+}
+::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+a {
+  text-underline-offset: 3px;
+}
+
 /* App frame: full-viewport on mobile, centered phone-width column on desktop. */
 .app-frame {
   position: relative;
@@ -456,10 +477,12 @@ button {
 }
 .progress span {
   display: block;
+  width: 100%;
   height: 100%;
   border-radius: inherit;
   background: var(--rose);
-  transition: width 0.25s ease;
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 .question { flex: 1; padding-top: 46px; }
 /* Tinted "why we ask" strip bridging headline → options (Angi ebfd4d84):
@@ -714,6 +737,37 @@ button {
 .section h2,
 .section h3 { margin: 0 0 13px; font-size: 13px; font-weight: 700; }
 .section p { margin: 0; color: #4f494c; font-size: 13px; line-height: 1.55; }
+
+.file-card {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 6px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  padding: 12px 13px;
+  box-shadow: var(--card-shadow);
+}
+.file-card .file-badge {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--quiet);
+  font-size: 9px;
+  font-weight: 800;
+}
+.file-card strong {
+  display: block;
+  font-size: 11px;
+}
+.file-card div > span {
+  color: var(--muted);
+  font-size: 9px;
+}
 
 .fact-row {
   display: grid;

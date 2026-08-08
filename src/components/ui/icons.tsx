@@ -17,16 +17,33 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   doc: <path d="M5 4h14v16H5zM8 9h8M8 13h5" />,
+  check: <path d="M20 6 9 17l-5-5" />,
+  "arrow-up-right": <path d="M7 17 17 7M8 7h9v9" />,
+  alert: (
+    <>
+      <path d="M12 9v4M12 17h.01" />
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof PATHS & string;
 
 export function Icon({ name, size }: { name: IconName; size?: number }) {
+  // Self-contained stroke styling so icons render correctly in any context,
+  // not only inside containers whose CSS happens to style descendant SVGs.
   return (
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      style={size ? { width: size, height: size } : undefined}
+      style={{
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: 1.8,
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        ...(size ? { width: size, height: size } : {}),
+      }}
     >
       {PATHS[name]}
     </svg>

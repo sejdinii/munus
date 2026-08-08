@@ -60,7 +60,7 @@ export function Progress({ value }: { value: number }) {
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <span style={{ width: `${pct}%` }} />
+      <span style={{ transform: `scaleX(${pct / 100})` }} />
     </div>
   );
 }

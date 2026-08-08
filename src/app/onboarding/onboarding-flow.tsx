@@ -242,7 +242,7 @@ export function OnboardingFlow({
         <h1>{current.title}</h1>
         <div className="why-note">
           <span className="why-spark" aria-hidden="true">
-            ✦
+            <Icon name="spark" size={12} />
           </span>
           <span>{current.help}</span>
         </div>
@@ -363,11 +363,11 @@ export function OnboardingFlow({
           >
             <div className="upload-icon" aria-hidden="true">
               {cv.status === "uploaded" ? (
-                "✓"
+                <Icon name="check" />
               ) : cv.status === "uploading" ? (
                 <span className="spinner" style={{ width: 20, height: 20, margin: 0, borderWidth: 2 }} />
               ) : cv.status === "error" ? (
-                "!"
+                <Icon name="alert" />
               ) : (
                 <Icon name="upload" />
               )}

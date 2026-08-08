@@ -1,4 +1,5 @@
 import { ButtonLink } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icons";
 import { Overline, Screen, Wordmark } from "@/components/ui/screen";
 
 // Prototype screen 01 recomposed per researched hero pattern (BACKLOG design
@@ -16,7 +17,9 @@ export default function WelcomePage() {
             <small>your fit</small>
             <strong>92%</strong>
           </span>
-          <span className="orbit-pop">↗</span>
+          <span className="orbit-pop">
+            <Icon name="arrow-up-right" size={20} />
+          </span>
           <span className="orbit-card orbit-two">
             <small>fresh today</small>
             <strong>24</strong>
@@ -36,7 +39,9 @@ export default function WelcomePage() {
         </div>
         <div className="sheet-bottom">
           <p className="trust-line">
-            <span aria-hidden="true">✓</span>
+            <span aria-hidden="true">
+              <Icon name="check" size={12} />
+            </span>
             <span>You review every application before it is sent</span>
           </p>
           <div className="button-stack">

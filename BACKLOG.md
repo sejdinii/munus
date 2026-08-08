@@ -24,6 +24,18 @@
   (previews the actual product). Airtasker sticker-squiggle accents: cheap
   craft signal, optional. Avoid: Bumble binary-question layout (50% dead
   below options), soft-drop-shadow-as-primary-depth (reads 2019).
+- 2026-08-08 · impeccable skill vendored at .claude/skills/impeccable (+ its
+  finish/asset/documenter subagents in .claude/agents; user-requested, Apache
+  2.0). Applied its polish playbook + craft floor to bw0: SVG icon system
+  replacing unicode glyphs, themed browser surfaces (selection/caret/
+  placeholder/scrollbar/underline), file-card promoted to system CSS,
+  progress bar animates transform not width (its detector's finding).
+  Craft-floor items OVERRIDDEN by our committed world, per its own "brief
+  wins" rule: overline/eyebrow pattern (prototype-pinned), hard ink-offset
+  shadows (prototype's neo-brutalist accents), system font stack (iOS-native
+  PWA decision). Its detector (scripts/detect.mjs) is now part of the
+  pre-commit bar for UI work. Follow-up on offer: `/impeccable init` to
+  capture PRODUCT.md; DESIGN.md could be generated from CONTRACTS.md.
 - 2026-08-08 · ui-ux-pro-max skill vendored at .claude/skills/ui-ux-pro-max
   (user-requested, MIT). Useful: touch-first effect specs (press scale 0.97 —
   implemented), pre-delivery checklist, searchable UX guidelines. Its
