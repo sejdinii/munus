@@ -127,10 +127,10 @@ export default async function FactsPage() {
           if (rows.length === 0) return null;
           return (
             <section key={kind} className="section">
-              <h3>
+              <h2>
                 {KIND_LABELS[kind]}{" "}
                 <span style={{ color: "var(--muted)", fontWeight: 650 }}>· {rows.length}</span>
-              </h3>
+              </h2>
               {kind === "skill" ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                   {rows.map((fact) => (

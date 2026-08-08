@@ -70,29 +70,32 @@ export default async function SignInPage({
 
   return (
     <Screen className="welcome">
-      <Wordmark />
-      <div className="ready-art" aria-hidden="true" style={{ marginTop: 40 }}>
-        <div className="ready-card" />
-        <div className="ready-card" />
-        <div className="ready-card">
-          <div>
-            <strong>92</strong>
-            <br />
-            <span>top match · saved to your account</span>
+      <div className="hero-band" style={{ paddingBottom: 40 }}>
+        <Wordmark />
+        <div className="ready-art" aria-hidden="true" style={{ marginTop: 26 }}>
+          <div className="ready-card" />
+          <div className="ready-card" />
+          <div className="ready-card">
+            <div>
+              <strong>92</strong>
+              <br />
+              <span>top match · saved to your account</span>
+            </div>
           </div>
         </div>
       </div>
-      <div className="welcome-copy" style={{ marginBottom: 34 }}>
-        <Overline>One account, everything saved</Overline>
-        <h1 style={{ fontSize: 38, letterSpacing: "-0.055em" }}>
-          Continue to <em>Scout.</em>
-        </h1>
-        <p className="lead">
-          Your profile, favorites, and application receipts stay in one place —
-          on this phone and the next one.
-        </p>
-      </div>
-      <div>
+      <div className="hero-sheet">
+        <div>
+          <Overline>One account, everything saved</Overline>
+          <h1 style={{ fontSize: 38, letterSpacing: "-0.055em" }}>
+            Continue to <em>Scout.</em>
+          </h1>
+          <p className="lead">
+            Your profile, favorites, and application receipts stay in one place
+            — on this phone and the next one.
+          </p>
+        </div>
+        <div className="sheet-bottom">
         {errorMessage ? (
           <p
             role="alert"
@@ -129,6 +132,7 @@ export default async function SignInPage({
             a local dev session.
           </p>
         ) : null}
+        </div>
       </div>
     </Screen>
   );

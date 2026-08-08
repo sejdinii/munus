@@ -240,7 +240,12 @@ export function OnboardingFlow({
           Question {step + 1} of {STEPS.length}
         </Overline>
         <h1>{current.title}</h1>
-        <p className="lead">{current.help}</p>
+        <div className="why-note">
+          <span className="why-spark" aria-hidden="true">
+            ✦
+          </span>
+          <span>{current.help}</span>
+        </div>
 
         {current.key === "roles" ? (
           <div>

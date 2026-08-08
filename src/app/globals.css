@@ -193,9 +193,19 @@ button {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.btn { transition: transform 0.15s ease; }
 .btn:hover { transform: translateY(-1px); }
+/* Immediate press feedback per touch-first checklist (ui-ux-pro-max,
+   Flat Mobile spec): scale 0.97, no delay. */
+.btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.5; cursor: default; transform: none; }
-.btn-primary { border-color: var(--rose); background: var(--rose); color: white; }
+/* Gradient fill per current CTA practice (Redfin/Deezer, Mobbin 2026 pull) —
+   flat single-color fills read one generation older. */
+.btn-primary {
+  border-color: var(--rose);
+  background: linear-gradient(180deg, #fb1f88 0%, var(--rose) 45%, #d3086a 100%);
+  color: white;
+}
 .btn-dark { border-color: var(--ink); background: var(--ink); color: white; }
 .btn-plain { border-color: transparent; background: transparent; }
 .btn-small { min-height: 40px; border-radius: 12px; padding: 0 14px; font-size: 13px; }
@@ -228,8 +238,60 @@ button {
 .welcome {
   justify-content: space-between;
   overflow: hidden;
-  padding: 46px 27px 30px;
+  padding: 0;
   background: var(--paper);
+}
+
+/* Color-blocked hero: rose band + organic blobs, paper sheet overlapping
+   from below. Pattern: Angi onboarding (Mobbin flow 413f781a, 2026 pull) —
+   category analogs run 35-40% color mass in a top band; scattered-chips-on-
+   white is the pattern that reads as empty. */
+.hero-band {
+  position: relative;
+  overflow: hidden;
+  padding: 46px 27px 46px;
+  background: var(--rose-soft);
+}
+.hero-band::before {
+  content: "";
+  position: absolute;
+  right: -70px;
+  top: 30px;
+  width: 290px;
+  height: 290px;
+  border-radius: 46% 54% 58% 42%;
+  background: #fcc3de;
+  transform: rotate(18deg);
+}
+.hero-band::after {
+  content: "";
+  position: absolute;
+  left: -70px;
+  bottom: -90px;
+  width: 220px;
+  height: 220px;
+  border-radius: 55% 45% 48% 52%;
+  background: #ffdcec;
+}
+.hero-band > * {
+  position: relative;
+  z-index: 1;
+}
+.hero-sheet {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  margin-top: -26px;
+  border-radius: 26px 26px 0 0;
+  background: var(--paper);
+  padding: 30px 27px 30px;
+  box-shadow: 0 -10px 30px rgba(32, 32, 38, 0.06);
+}
+.hero-sheet .sheet-bottom {
+  margin-top: auto;
+  padding-top: 24px;
 }
 
 /* Orbit art — prototype welcome-orbit, recolored for pink. The pink theme
@@ -400,6 +462,30 @@ button {
   transition: width 0.25s ease;
 }
 .question { flex: 1; padding-top: 46px; }
+/* Tinted "why we ask" strip bridging headline → options (Angi ebfd4d84):
+   a colored layer, not gray copy, so the gap reads as content. */
+.why-note {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 9px;
+  margin: 14px 0 24px;
+  border-radius: 12px;
+  background: var(--rose-soft);
+  padding: 11px 12px;
+  color: var(--rose-ink);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.why-note .why-spark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: white;
+  color: var(--rose);
+  font-size: 12px;
+}
 .question h1 {
   margin: 0;
   font-size: 35px;
@@ -428,6 +514,10 @@ button {
   font-weight: 620;
   cursor: pointer;
 }
+.choice { transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease; }
+.choice:active { transform: scale(0.97); }
+.guide-chip:active,
+.icon-button:active { transform: scale(0.97); }
 .choice::after {
   content: "";
   width: 19px;
@@ -436,8 +526,11 @@ button {
   border-radius: 50%;
   flex: 0 0 auto;
 }
+/* 3-layer selected state at 2px (Duolingo goal screen, Mobbin e2891a87):
+   tint fill + saturated 2px border + label recolor change together. */
 .choice.selected {
-  border-color: var(--rose);
+  border: 2px solid var(--rose);
+  padding: 0 15px;
   background: var(--rose-soft);
   color: var(--rose-ink);
 }
@@ -618,7 +711,8 @@ button {
 }
 
 .section { padding: 20px 0; border-top: 1px solid var(--line); }
-.section h3 { margin: 0 0 13px; font-size: 13px; }
+.section h2,
+.section h3 { margin: 0 0 13px; font-size: 13px; font-weight: 700; }
 .section p { margin: 0; color: #4f494c; font-size: 13px; line-height: 1.55; }
 
 .fact-row {
