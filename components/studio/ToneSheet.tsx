@@ -97,7 +97,7 @@ export function ToneSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="tone-sheet-title"
-        className={`relative w-full rounded-t-[26px] bg-paper px-5 pb-[26px] pt-3.5 shadow-[0_-12px_40px_rgba(24,20,22,0.18)] transition-transform duration-300 ease-out ${
+        className={`relative w-full rounded-t-[26px] bg-paper px-5 pb-[26px] pt-3.5 shadow-[0_-12px_40px_rgba(24,20,22,0.18)] transition-transform duration-[var(--duration-gentle)] ease-[var(--ease-out-soft)] ${
           entered ? "translate-y-0" : "translate-y-full"
         }`}
       >

@@ -105,7 +105,7 @@ export function TopCard({
       className={`card-promote absolute inset-0 flex touch-none select-none flex-col overflow-hidden rounded-[28px] border border-ink/10 bg-paper shadow-[0_13px_34px_rgba(31,32,38,0.09)] ${
         swipe.dragging
           ? ""
-          : "transition-[transform,opacity] duration-[220ms] ease-out"
+          : "transition-[transform,opacity] duration-[var(--duration-base)] ease-[var(--ease-out-soft)]"
       }`}
       style={swipe.style as CSSProperties}
     >

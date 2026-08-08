@@ -155,7 +155,7 @@ export default function OnboardingPage() {
         </IconButton>
         <div className="h-[3px] overflow-hidden rounded-full bg-quiet">
           <span
-            className="block h-full rounded-full bg-rose transition-[width] duration-200 ease-out"
+            className="block h-full rounded-full bg-rose transition-[width] duration-[var(--duration-base)] ease-[var(--ease-out-soft)]"
             style={{
               width: `${((stepIndex + 1) / onboardingSteps.length) * 100}%`,
             }}

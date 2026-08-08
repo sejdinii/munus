@@ -20,7 +20,7 @@ export function ReadinessBar({
       </div>
       <div className="h-1.5 overflow-hidden rounded-[6px] bg-quiet">
         <span
-          className="block h-full rounded-[inherit] bg-green transition-[width] duration-300 ease-out"
+          className="block h-full rounded-[inherit] bg-green transition-[width] duration-[var(--duration-gentle)] ease-[var(--ease-out-soft)]"
           style={{ width: `${pct}%` }}
         />
       </div>

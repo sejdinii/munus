@@ -62,7 +62,7 @@
 }
 
 .screen-in {
-  animation: screen-in 0.24s ease;
+  animation: screen-in var(--duration-base) var(--ease-out-soft);
 }
 
 @keyframes spin {
@@ -108,5 +108,24 @@
 }
 
 .card-promote {
-  animation: card-in 0.26s ease;
+  /* Arrival moment → the spring earns its keep here. */
+  animation: card-in var(--duration-gentle) var(--ease-spring);
+}
+
+/* Press feedback: every control dips on :active. Fast, tiny, universal —
+   the difference between "web page" and "app". The !important is
+   deliberate and narrow: while pressed, this must beat per-element
+   hover:-translate-y-px utilities (utilities layer otherwise wins over
+   base), and no button uses transform for positioning (audited). The
+   base transition makes both press-in and release animate. */
+@layer base {
+  button,
+  [role="button"] {
+    transition: transform var(--duration-fast) var(--ease-out-soft);
+  }
+
+  button:active,
+  [role="button"]:active {
+    transform: translateY(1px) scale(0.985) !important;
+  }
 }
