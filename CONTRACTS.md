@@ -24,7 +24,16 @@ Colors (CSS custom properties, defined once in `src/app/globals.css`):
 | --red | #c42c43 | destructive |
 | --sky / --tangerine / --butter | #78d9ff / #ff8b5c / #ffe36e | rare accents (ready-art, toast action) |
 
-Shadows: page card `0 13px 34px rgba(31,32,38,.09)`; sheet `0 -12px 40px rgba(24,20,22,.18)`.
+Shadows: page card `0 13px 34px rgba(31,32,38,.09)`; sheet `0 -12px 40px rgba(24,20,22,.18)`;
+hard-offset art shadow `5px 6px 0 var(--ink)` (orbit cards, pop badges).
+
+DEVIATION (2026-08-08, recorded per change policy): the prototype's pink theme
+hides the welcome orbit art and strips hard-offset shadows — that produced
+wireframe-empty screens in the real app. We recolor the art into the pink
+palette instead of hiding it (orbit: rose card + butter pop + sky card, ink
+borders and offsets; sign-in: the ready-screen rose/sky/paper card stack).
+Palette choice must never delete structural richness. Content-light screens
+each carry one intentional art moment.
 Font: system stack `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif`, antialiased.
 
 Type scale (size / weight / letter-spacing):

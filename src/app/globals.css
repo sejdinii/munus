@@ -231,6 +231,119 @@ button {
   padding: 46px 27px 30px;
   background: var(--paper);
 }
+
+/* Orbit art — prototype welcome-orbit, recolored for pink. The pink theme
+   hid this art and shipped dead space instead; the ready-screen card stack
+   proves rose+sky card art is on-language, so we recolor rather than hide.
+   (Deviation from prototype pink, reason logged in CONTRACTS.md §1.) */
+.welcome-orbit {
+  position: relative;
+  height: 200px;
+  margin: 44px 0 0;
+  pointer-events: none;
+}
+.orbit-card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid var(--ink);
+  box-shadow: 5px 6px 0 var(--ink);
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+.orbit-card small {
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.orbit-one {
+  left: 3px;
+  top: 26px;
+  width: 115px;
+  height: 82px;
+  border-radius: 22px;
+  background: var(--rose);
+  color: white;
+  padding: 14px;
+  transform: rotate(-7deg);
+}
+.orbit-one strong { font-size: 29px; line-height: 0.8; }
+.orbit-two {
+  right: 0;
+  top: 53px;
+  width: 121px;
+  height: 79px;
+  border-radius: 19px;
+  background: var(--sky);
+  color: var(--ink);
+  padding: 13px;
+  transform: rotate(7deg);
+}
+.orbit-two strong { font-size: 27px; line-height: 0.85; }
+.orbit-pop {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  display: grid;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--butter);
+  box-shadow: 3px 4px 0 var(--ink);
+  font-size: 22px;
+  font-weight: 900;
+  transform: translateX(-50%) rotate(9deg);
+}
+
+/* Stacked-card art — prototype ready-art, kept by the pink theme. */
+.ready-art {
+  position: relative;
+  height: 210px;
+  pointer-events: none;
+}
+.ready-card {
+  position: absolute;
+  left: 50%;
+  width: 220px;
+  height: 155px;
+  border: 1px solid var(--line);
+  border-radius: 25px;
+  background: var(--paper);
+  box-shadow: 0 16px 40px rgba(32, 32, 38, 0.1);
+  transform-origin: bottom center;
+}
+.ready-card:nth-child(1) {
+  top: 30px;
+  transform: translateX(-50%) rotate(-10deg);
+  background: var(--rose);
+  border-color: var(--rose);
+}
+.ready-card:nth-child(2) {
+  top: 18px;
+  transform: translateX(-50%) rotate(8deg);
+  background: var(--sky);
+  border-color: var(--sky);
+}
+.ready-card:nth-child(3) {
+  top: 5px;
+  display: grid;
+  place-items: center;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.ready-card:nth-child(3) strong {
+  font-size: 50px;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+.ready-card:nth-child(3) span {
+  font-size: 10px;
+  color: var(--muted);
+}
 .welcome-copy { margin-top: auto; margin-bottom: 50px; }
 .welcome h1 {
   max-width: 315px;

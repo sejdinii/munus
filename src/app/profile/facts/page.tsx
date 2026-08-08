@@ -81,7 +81,21 @@ export default async function FactsPage() {
         </GroundingNote>
 
         {cvMeta ? (
-          <div className="file-row" style={{ display: "grid", gridTemplateColumns: "36px 1fr auto", gap: 9, alignItems: "center", marginBottom: 6 }}>
+          <div
+            className="file-row"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "36px 1fr auto",
+              gap: 9,
+              alignItems: "center",
+              marginBottom: 6,
+              border: "1px solid var(--line)",
+              borderRadius: 18,
+              background: "var(--paper)",
+              padding: "12px 13px",
+              boxShadow: "var(--card-shadow)",
+            }}
+          >
             <span
               style={{
                 display: "grid",

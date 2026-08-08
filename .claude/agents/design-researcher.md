@@ -34,6 +34,11 @@ guesswork. For a given category (e.g. "wedding venue booking"):
   search→detail→booking for marketplaces)
 - Concrete design-system observations: type scale, spacing density, card anatomy,
   imagery treatment, CTA placement
+- VISUAL MASS section (mandatory): flow order alone produces wireframes. For
+  each screen type report what fills it — illustration/art moments, color-blocked
+  surfaces, card stacks, oversized type — with rough proportions (how much of
+  the screen carries non-neutral color, where the art moment sits, row heights).
+  A brief that only describes structure and sequence is incomplete.
 - Patterns to AVOID (dated or cluttered), with reasons
 - 3-5 specific references the build will be graded against in the critique phase
 

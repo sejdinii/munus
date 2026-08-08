@@ -9,6 +9,17 @@ export default function WelcomePage() {
   return (
     <Screen className="welcome">
       <Wordmark />
+      <div className="welcome-orbit" aria-hidden="true">
+        <span className="orbit-card orbit-one">
+          <small>your fit</small>
+          <strong>92%</strong>
+        </span>
+        <span className="orbit-pop">↗</span>
+        <span className="orbit-card orbit-two">
+          <small>fresh today</small>
+          <strong>24</strong>
+        </span>
+      </div>
       <div className="welcome-copy">
         <Overline>Your job search, focused</Overline>
         <h1>

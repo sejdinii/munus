@@ -244,46 +244,46 @@ export function OnboardingFlow({
 
         {current.key === "roles" ? (
           <div>
-            <div className="guide-chips" role="group" aria-label="Roles you want">
+            <div className="choices" role="group" aria-label="Roles you want">
               {SUGGESTED_ROLES.map((role) => {
                 const selected = roleTargets.some(
                   (r) => r.toLowerCase() === role.toLowerCase(),
                 );
                 return (
-                  <button
-                    key={role}
-                    type="button"
-                    className={selected ? "guide-chip selected" : "guide-chip"}
-                    aria-pressed={selected}
-                    onClick={() => toggleRole(role)}
-                  >
+                  <Choice key={role} selected={selected} onSelect={() => toggleRole(role)}>
                     {role}
-                  </button>
+                  </Choice>
                 );
               })}
-              {roleTargets
-                .filter(
-                  (r) =>
-                    !SUGGESTED_ROLES.some(
-                      (s) => s.toLowerCase() === r.toLowerCase(),
-                    ),
-                )
-                .map((role) => (
-                  <button
-                    key={role}
-                    type="button"
-                    className="guide-chip selected"
-                    aria-pressed="true"
-                    aria-label={`Remove ${role}`}
-                    onClick={() => toggleRole(role)}
-                  >
-                    {role}
-                    <span className="chip-x" aria-hidden="true">
-                      ×
-                    </span>
-                  </button>
-                ))}
             </div>
+            {roleTargets.some(
+              (r) => !SUGGESTED_ROLES.some((s) => s.toLowerCase() === r.toLowerCase()),
+            ) ? (
+              <div className="guide-chips" style={{ marginTop: 12 }}>
+                {roleTargets
+                  .filter(
+                    (r) =>
+                      !SUGGESTED_ROLES.some(
+                        (s) => s.toLowerCase() === r.toLowerCase(),
+                      ),
+                  )
+                  .map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      className="guide-chip selected"
+                      aria-pressed="true"
+                      aria-label={`Remove ${role}`}
+                      onClick={() => toggleRole(role)}
+                    >
+                      {role}
+                      <span className="chip-x" aria-hidden="true">
+                        ×
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            ) : null}
             <div className="role-add">
               <input
                 className="text-field"

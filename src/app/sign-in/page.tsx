@@ -69,8 +69,19 @@ export default async function SignInPage({
   const errorMessage = error ? (ERRORS[error] ?? ERRORS["oauth-exchange"]) : null;
 
   return (
-    <Screen className="welcome" >
+    <Screen className="welcome">
       <Wordmark />
+      <div className="ready-art" aria-hidden="true" style={{ marginTop: 40 }}>
+        <div className="ready-card" />
+        <div className="ready-card" />
+        <div className="ready-card">
+          <div>
+            <strong>92</strong>
+            <br />
+            <span>top match · saved to your account</span>
+          </div>
+        </div>
+      </div>
       <div className="welcome-copy" style={{ marginBottom: 34 }}>
         <Overline>One account, everything saved</Overline>
         <h1 style={{ fontSize: 38, letterSpacing: "-0.055em" }}>
