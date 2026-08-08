@@ -1,5 +1,15 @@
 import { createRequire } from "module";
 import { pathToFileURL } from "url";
+import { DOMMatrix } from "@napi-rs/canvas";
+
+/* W5b deploy fix: pdfjs (even the legacy build) touches the global
+   DOMMatrix in Node serverless runtimes (Vercel). Node has no DOMMatrix,
+   so the CV parse crashed with "DOMMatrix is not defined" on the deployed
+   site and silently fell back to the draft parser. The documented fix is
+   the @napi-rs/canvas polyfill — prebuilt for Vercel's linux-x64. */
+if (typeof globalThis.DOMMatrix === "undefined") {
+  globalThis.DOMMatrix = DOMMatrix as unknown as typeof globalThis.DOMMatrix;
+}
 
 /** Text extraction from CV files — server-only (route handlers).
  *  PDF via pdfjs-dist legacy build (pure Node, no DOM), DOCX via mammoth. */

@@ -46,11 +46,6 @@ export default function ProfilePage() {
   ];
   const answered = prefFields.filter(Boolean).length;
 
-  const handleReset = () => {
-    reset();
-    showToast("Demo data reset");
-  };
-
   /* W5a — GDPR export: every row about this user, as a JSON download. */
   const handleExport = async () => {
     setExporting(true);
@@ -90,6 +85,19 @@ export default function ProfilePage() {
       setDeleteOpen(false);
       showToast("Delete failed — try again");
     }
+  };
+
+  /* W5b — log out: sign out of Supabase, clear the local store, and land
+     on the welcome screen with a clean slate. */
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      /* Sign-out failure still leaves the local session — reset anyway. */
+    }
+    reset();
+    window.location.assign("/");
   };
 
   return (
@@ -184,17 +192,19 @@ export default function ProfilePage() {
           }
         />
 
+        {/* W5b — log out: leave the account, back to the welcome screen. */}
         <div className="pt-7">
           <button
             type="button"
-            onClick={handleReset}
-            className="text-[12px] font-[650] text-muted underline underline-offset-2"
+            onClick={handleLogout}
+            className="flex min-h-11 w-full items-center justify-between rounded-lg px-1 text-left text-[13px] font-[650] text-rose-ink"
           >
-            Reset demo data
+            Log out
+            <span className="text-[11px] font-[650]">of this account ›</span>
           </button>
           <p className="mt-1.5 text-[10px] text-muted">
-            Demo only — clears this browser&rsquo;s local mock data. No real
-            account or payment exists yet.
+            Returns to the welcome screen. Your profile and matches stay
+            saved to your account.
           </p>
         </div>
       </div>

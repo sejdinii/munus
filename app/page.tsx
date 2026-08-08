@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/Wordmark";
+import { LogInButton } from "@/components/auth/LogInButton";
 
 /* Welcome — prototype screen 01, pink theme (orbit art hidden per theme
-   override). Guest preview kept per FEATURES.md D16. */
+   override). W5b founder direction: no guest mock deck — existing users
+   log in, new users build their profile. */
 
 
 export default function WelcomePage() {
@@ -35,12 +37,7 @@ export default function WelcomePage() {
           >
             Build my job profile
           </Link>
-          <Link
-            href="/discover"
-            className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[15px] border border-transparent bg-transparent px-[18px] font-[710]"
-          >
-            Preview with sample data
-          </Link>
+          <LogInButton />
         </div>
       </div>
     </section>

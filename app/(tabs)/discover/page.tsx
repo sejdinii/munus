@@ -12,9 +12,10 @@ import { useRouter } from "next/navigation";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { jobs, type Job } from "@/lib/mock/jobs";
+import type { Job } from "@/lib/mock/jobs";
 import { useMunusStore } from "@/lib/mock/store";
 import { useSession } from "@/lib/supabase/session";
+import { LogInButton } from "@/components/auth/LogInButton";
 import { BehindCard, TopCard } from "@/components/deck/SwipeCard";
 import { DeckActions } from "@/components/deck/DeckActions";
 import { CoachOverlay } from "@/components/deck/CoachOverlay";
@@ -122,10 +123,8 @@ export default function DiscoverPage() {
 
   const { status } = useSession();
   /* W2: when signed in with a real backend, the deck comes from /api/deck
-     (ranked real jobs); signed-out preview keeps the mock catalog.
-     W5b: a failed load must be retryable — the error state previously
-     stuck forever until a manual reload (transient deploy-window 5xx
-     stranded signed-in users on the empty state). */
+     (ranked real jobs). W5b: mock preview removed — signed-out visitors
+     get a sign-in prompt, never the sample catalog. */
   const [realDeck, setRealDeck] = useState<Job[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const loadDeck = useCallback(async () => {
@@ -156,7 +155,9 @@ export default function DiscoverPage() {
     void loadDeck();
   }, [status, loadDeck]);
 
-  const source = realDeck ?? jobs;
+  /* W5b founder direction: the mock catalog is gone — the deck is real
+     jobs only. Signed-out visitors see a sign-in prompt, never samples. */
+  const source = realDeck ?? [];
   const deck: Job[] = source.filter(
     (j) =>
       !store.dismissed.includes(j.id) &&
@@ -208,6 +209,25 @@ export default function DiscoverPage() {
   }, [top]);
 
   if (!store.hydrated) return <LoadingState label="Preparing your deck" />;
+
+  /* W5b founder direction: no guest mock deck — signed-out visitors get a
+     sign-in prompt. The deck is real listings, account-only. */
+  if (status !== "signedIn") {
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <div className="px-5 pb-2 pt-2.5">
+          <h1 className="m-0 text-2xl tracking-[-0.04em]">Fresh roles</h1>
+        </div>
+        <EmptyState
+          symbol="🔒"
+          title="Sign in to see live listings"
+          body="Your ranked deck of real company postings is tied to your account — there's no guest preview."
+        >
+          <LogInButton />
+        </EmptyState>
+      </section>
+    );
+  }
 
   if (store.storageError && store.decisions.length === 0) {
     return (
@@ -262,19 +282,15 @@ export default function DiscoverPage() {
           body={
             realDeck
               ? "You've swiped through every ranked role. Fresh listings arrive with the next daily refresh — undo a decision or revisit your favorites."
-              : status === "signedIn"
+              : loadFailed
                 ? "Live listings couldn't be loaded right now — hit Try again below."
-                : "You're browsing the sample catalog as a guest. Sign in to see live listings ranked for you."
+                : "No ranked roles yet — fresh listings arrive with the next daily refresh."
           }
         >
           <LinkButton href="/favorites" variant="primary" className="w-full">
             Open favorites
           </LinkButton>
-          {status !== "signedIn" ? (
-            <LinkButton href="/onboarding" variant="default" className="w-full">
-              Sign in for live listings
-            </LinkButton>
-          ) : loadFailed ? (
+          {loadFailed ? (
             <Button onClick={() => void loadDeck()} variant="primary" className="w-full">
               Try again
             </Button>
@@ -301,9 +317,9 @@ export default function DiscoverPage() {
           <p className="m-0 mt-0.5 text-[11px] text-muted">
             {realDeck
               ? `${deck.length} ranked roles · refreshed daily from company feeds`
-              : status === "signedIn"
-                ? `${deck.length} sample roles · live listings unavailable right now`
-                : `${deck.length} sample roles · sign in for live listings`}
+              : loadFailed
+                ? `Live listings unavailable right now`
+                : `Loading live listings…`}
           </p>
         </div>
       </div>

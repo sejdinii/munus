@@ -62,10 +62,10 @@ type MunusState = {
   deckCache: Record<string, Job>;
 };
 
-/* northstar starts favorited — prototype parity for the demo. */
+/* W5b founder direction: no mock defaults — favorites start empty. */
 const initialState: MunusState = {
   decisions: [],
-  favorites: ["northstar"],
+  favorites: [],
   dismissed: [],
   applications: [],
   studio: {},
