@@ -1,13 +1,67 @@
 import { createRequire } from "module";
 import { pathToFileURL } from "url";
-import { DOMMatrix } from "@napi-rs/canvas";
 
-/* W5b deploy fix: pdfjs (even the legacy build) touches the global
-   DOMMatrix in Node serverless runtimes (Vercel). Node has no DOMMatrix,
-   so the CV parse crashed with "DOMMatrix is not defined" on the deployed
-   site and silently fell back to the draft parser. The documented fix is
-   the @napi-rs/canvas polyfill — prebuilt for Vercel's linux-x64. */
+/* W5b deploy fix: Vercel's Node runtime throws "DOMMatrix is not defined"
+   somewhere inside pdfjs during CV parsing (Node has no DOMMatrix global;
+   the local 22.x build tolerates it, Vercel's doesn't). Rather than a
+   native dep (breaks Turbopack's bundle), shim the API surface pdfjs
+   actually touches. Text extraction never exercises transforms — the
+   shim only needs to exist and answer the calls rendering paths make. */
 if (typeof globalThis.DOMMatrix === "undefined") {
+  class DOMMatrix {
+    a: number; b: number; c: number; d: number; e: number; f: number;
+    constructor(init?: number[] | string) {
+      if (typeof init === "string") {
+        const m = init.match(/matrix\(\s*([-\d.e]+)[,\s]+([-\d.e]+)[,\s]+([-\d.e]+)[,\s]+([-\d.e]+)[,\s]+([-\d.e]+)[,\s]+([-\d.e]+)\s*\)/);
+        if (m) {
+          const nums = m.slice(1).map(Number);
+          this.a = nums[0]!; this.b = nums[1]!; this.c = nums[2]!;
+          this.d = nums[3]!; this.e = nums[4]!; this.f = nums[5]!;
+          return;
+        }
+      }
+      const arr = Array.isArray(init) ? init : [];
+      this.a = arr[0] ?? 1;
+      this.b = arr[1] ?? 0;
+      this.c = arr[2] ?? 0;
+      this.d = arr[3] ?? 1;
+      this.e = arr[4] ?? 0;
+      this.f = arr[5] ?? 0;
+    }
+    scaleSelf(sx: number, sy = sx) {
+      this.a *= sx; this.b *= sx; this.c *= sy; this.d *= sy;
+      return this;
+    }
+    translateSelf(tx: number, ty = 0) {
+      this.e += tx; this.f += ty;
+      return this;
+    }
+    multiplySelf(other: DOMMatrix) {
+      const { a, b, c, d, e, f } = this;
+      this.a = a * other.a + c * other.b;
+      this.b = b * other.a + d * other.b;
+      this.c = a * other.c + c * other.d;
+      this.d = b * other.c + d * other.d;
+      this.e = a * other.e + c * other.f + e;
+      this.f = b * other.e + d * other.f + f;
+      return this;
+    }
+    inverse() {
+      const { a, b, c, d, e, f } = this;
+      const det = a * d - b * c;
+      if (det === 0) return new DOMMatrix([1, 0, 0, 1, 0, 0]);
+      const inv = new DOMMatrix([d / det, -b / det, -c / det, a / det, 0, 0]);
+      inv.e = -(inv.a * e + inv.c * f);
+      inv.f = -(inv.b * e + inv.d * f);
+      return inv;
+    }
+    transformPoint(p: { x: number; y: number }) {
+      return {
+        x: this.a * p.x + this.c * p.y + this.e,
+        y: this.b * p.x + this.d * p.y + this.f,
+      };
+    }
+  }
   globalThis.DOMMatrix = DOMMatrix as unknown as typeof globalThis.DOMMatrix;
 }
 
