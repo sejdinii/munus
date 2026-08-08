@@ -91,10 +91,14 @@ export function armCelebration(jobId: string) {
 }
 
 export function consumeCelebration(jobId: string): boolean {
+  /* Read-then-remove UNCONDITIONALLY: the handoff is valid only for the
+     immediately-next receipt mount. Leaving a mismatched key armed let a
+     stale win replay days later on the right receipt (critic QW0 #4 —
+     confetti on a 3-day-old receipt is a lie). */
   try {
-    if (sessionStorage.getItem(KEY) !== jobId) return false;
-    sessionStorage.removeItem(KEY);
-    return true;
+    const armed = sessionStorage.getItem(KEY);
+    if (armed !== null) sessionStorage.removeItem(KEY);
+    return armed === jobId;
   } catch {
     return false;
   }

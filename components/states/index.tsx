@@ -24,7 +24,17 @@ export function LoadingState({ label = "Loading" }: { label?: string }) {
    pile of meaningless boxes. */
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div aria-hidden className={`skeleton rounded-lg ${className}`} />;
+  /* Default radius ONLY when the caller passes none: at equal specificity
+     the class that sorts later in the built CSS wins, so an unconditional
+     rounded-lg silently flattens every rounded-full/rounded-[…] override
+     (critic QW0 #2 — circles were rendering as 8px squares). */
+  const hasRadius = /(?:^|\s)rounded/.test(className);
+  return (
+    <div
+      aria-hidden
+      className={`skeleton ${hasRadius ? "" : "rounded-lg"} ${className}`}
+    />
+  );
 }
 
 function SkeletonShell({
@@ -44,31 +54,39 @@ function SkeletonShell({
   );
 }
 
-/** Deck-shaped: one large card with photo area, title lines, chip row. */
+/** Deck-shaped: mirrors the real discover layout — card in the deck area,
+ *  action circles BELOW the card (matching DeckActions: 4×46px + one
+ *  56px primary), never inside it. Callers wrap it in the discover
+ *  section chrome so the header doesn't flash in on reveal. */
 export function SkeletonDeck({ label = "Loading your deck" }: { label?: string }) {
   return (
-    <SkeletonShell label={label} className="grid p-4">
-      <div className="relative flex flex-col overflow-hidden rounded-[28px] border border-ink/10 bg-paper p-[18px]">
-        <Skeleton className="mb-4 h-[44%] min-h-[190px] w-full rounded-[20px]" />
-        <Skeleton className="mb-2.5 h-7 w-3/4" />
-        <Skeleton className="mb-5 h-4 w-1/2" />
-        <div className="mb-5 flex gap-2">
-          <Skeleton className="h-6 w-20 rounded-[8px]" />
-          <Skeleton className="h-6 w-24 rounded-[8px]" />
-          <Skeleton className="h-6 w-16 rounded-[8px]" />
+    <SkeletonShell label={label} className="flex min-h-0 flex-col">
+      <div className="relative mx-3.5 mt-1 min-h-0 flex-1">
+        <div className="absolute inset-0 flex flex-col overflow-hidden rounded-[28px] border border-ink/10 bg-paper p-[18px]">
+          <Skeleton className="mb-4 h-[42%] min-h-[170px] w-full rounded-[20px]" />
+          <Skeleton className="mb-2.5 h-7 w-3/4" />
+          <Skeleton className="mb-5 h-4 w-1/2" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-20 rounded-[8px]" />
+            <Skeleton className="h-6 w-24 rounded-[8px]" />
+            <Skeleton className="h-6 w-16 rounded-[8px]" />
+          </div>
         </div>
-        <div className="mt-auto flex items-center justify-center gap-4">
-          <Skeleton className="size-[54px] rounded-full" />
-          <Skeleton className="size-[64px] rounded-full" />
-          <Skeleton className="size-[54px] rounded-full" />
-        </div>
+      </div>
+      <div className="flex items-center justify-center gap-3 px-5 pb-3 pt-3.5">
+        <Skeleton className="size-[46px] rounded-full" />
+        <Skeleton className="size-[46px] rounded-full" />
+        <Skeleton className="size-[46px] rounded-full" />
+        <Skeleton className="size-14 rounded-full" />
+        <Skeleton className="size-[46px] rounded-full" />
       </div>
     </SkeletonShell>
   );
 }
 
-/** List-shaped: leading tile + two text lines, for favorites/applications/
- *  profile rows. */
+/** List-shaped: mirrors FavoriteRow's divided-list grammar — 58px tile,
+ *  border-t rows, trailing action — NOT bordered cards (the reveal must
+ *  not switch visual grammar; critic QW0 #3). */
 export function SkeletonRows({
   count = 4,
   label = "Loading",
@@ -77,28 +95,38 @@ export function SkeletonRows({
   label?: string;
 }) {
   return (
-    <SkeletonShell label={label} className="grid content-start gap-3 p-4">
+    <SkeletonShell label={label} className="px-5">
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3.5 rounded-[18px] border border-line bg-paper p-3.5"
+          className="grid grid-cols-[58px_1fr_auto] items-center gap-[13px] border-t border-line py-4 first:border-t-0"
         >
-          <Skeleton className="size-[46px] shrink-0 rounded-[14px]" />
-          <div className="min-w-0 flex-1">
+          <Skeleton className="size-[58px] rounded-[17px]" />
+          <div className="min-w-0">
             <Skeleton className="mb-2 h-4 w-2/3" />
-            <Skeleton className="h-3 w-2/5" />
+            <Skeleton className="mb-2 h-3 w-1/2" />
+            <Skeleton className="h-5 w-24 rounded-[7px]" />
           </div>
+          <Skeleton className="h-9 w-[74px] rounded-[12px]" />
         </div>
       ))}
     </SkeletonShell>
   );
 }
 
-/** Detail/document-shaped: heading block then paragraph lines, for job
- *  detail, receipt, and studio surfaces. */
-export function SkeletonDetail({ label = "Loading" }: { label?: string }) {
+/** Detail/document-shaped: heading block then paragraph lines. `hero`
+ *  adds the 76px monogram tile detail screens open with, so the reveal
+ *  doesn't push content down. Callers wrap in their real Topbar. */
+export function SkeletonDetail({
+  label = "Loading",
+  hero = false,
+}: {
+  label?: string;
+  hero?: boolean;
+}) {
   return (
     <SkeletonShell label={label} className="grid content-start gap-3 p-5">
+      {hero ? <Skeleton className="mb-2 size-[76px] rounded-[21px]" /> : null}
       <Skeleton className="h-8 w-4/5" />
       <Skeleton className="mb-3 h-4 w-1/2" />
       <Skeleton className="h-4 w-full" />
@@ -117,18 +145,22 @@ export function EmptyState({
   body,
   children,
   tone = "rose",
+  calm = false,
 }: {
   symbol: ReactNode;
   title: string;
   body: string;
   children?: ReactNode;
   tone?: "rose" | "ink";
+  /** Skips the spring entrance — springs mark arrivals and wins, and an
+   *  error is neither (critic QW0 #11). ErrorState sets this. */
+  calm?: boolean;
 }) {
   return (
     <div className="grid flex-1 place-items-center p-[35px] text-center">
       <div>
         <div
-          className={`pop-in mx-auto mb-[18px] grid size-[68px] place-items-center rounded-[22px] text-[27px] ${
+          className={`${calm ? "" : "pop-in"} mx-auto mb-[18px] grid size-[68px] place-items-center rounded-[22px] text-[27px] ${
             tone === "rose" ? "bg-rose-soft text-rose" : "bg-quiet text-ink"
           }`}
         >
@@ -152,7 +184,7 @@ export function ErrorState({
   children?: ReactNode;
 }) {
   return (
-    <EmptyState symbol="!" tone="ink" title={title} body={body}>
+    <EmptyState calm symbol="!" tone="ink" title={title} body={body}>
       {children}
     </EmptyState>
   );
@@ -161,6 +193,7 @@ export function ErrorState({
 export function OfflineState({ children }: { children?: ReactNode }) {
   return (
     <EmptyState
+      calm
       symbol="!"
       tone="ink"
       title="No connection"

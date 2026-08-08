@@ -107,7 +107,13 @@ export default function StudioPage() {
     }
   }, [job, generated, kit, generating, tone, runGenerate]);
 
-  if (!store.hydrated) return <SkeletonDetail label="Opening the studio" />;
+  if (!store.hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <Topbar title="Application studio" backHref="/favorites" />
+        <SkeletonDetail label="Opening the studio" />
+      </section>
+    );
 
   if (!job) {
     return (

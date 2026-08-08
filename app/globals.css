@@ -182,12 +182,12 @@
    base transition makes both press-in and release animate. */
 @layer base {
   button,
-  [role="button"] {
+  a[data-press] {
     transition: transform var(--duration-fast) var(--ease-out-soft);
   }
 
   button:active,
-  [role="button"]:active {
+  a[data-press]:active {
     transform: translateY(1px) scale(0.985) !important;
   }
 }

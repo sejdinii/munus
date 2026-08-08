@@ -67,7 +67,17 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | App shell: welcome + tabbar + 4 tab routes | DONE | boot + screenshots (393×852) | tab screens are honest placeholders pending slices |
 | Mock data layer (prototype jobs + persisted store) | DONE | vitest 4/4 + boot | replaced by real APIs in W2 |
 | CI workflow (typecheck/build/test) | PARTIAL | file authored; first run pending on GitHub | verify on next push |
-| PWA manifest stub | PARTIAL | served at /manifest.webmanifest | icons + service worker in W6 |
+| PWA manifest stub | DONE | QW0 2026-08-08: superseded by full PWA shell (see REQUIRED table) | |
+
+## QW ROADMAP (quality waves — docs/QUALITY_BAR.md §5; BW waves in docs/BACKEND_BAR.md §8)
+| Wave | Ships | Status |
+|---|---|---|
+| QW0 · Foundation of feel | motion tokens + spring, skeletons on all data surfaces, celebration on confirm, empty-state polish, keyboard deck, PWA shell | DONE 2026-08-08 — browser-verified on prod build; critic FIX-FIRST (13 findings) → all fixed + re-verified same session |
+| QW1 · Legible matching | match-reason chips, "why ranked" sheet, provenance chips, deck-end honesty | PENDING (mock-data version buildable now) |
+| QW2 · Self-building profile | CV→fact confirmation inbox, one-tap fact chips, CV health score | BLOCKED on Supabase+Groq |
+| QW3 · The ritual | Today's Picks + countdown, deltas, email digest, value-before-signup onboarding | BLOCKED on real data |
+| QW4 · Studio polish | per-suggestion regenerate, tone quick-bar, tailoring eval harness | BLOCKED on Groq |
+| QW5 · Ship discipline | perf budget CI, Sentry, a11y audit, install-prompt placement | after deploy exists |
 
 ## REAL-DATA READINESS (wave 5 — built ahead of credentials)
 | Item | Status | Verified how | Notes |
@@ -107,7 +117,7 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
 | Loading/empty/error states on every screen | DONE | auditor 2026-07-26: all 11 dynamic routes verified (statics exempt) | offline state component exists, not yet wired to a network layer (W6) |
-| PWA install (manifest, service worker, offline shell) | MISSING | — | |
+| PWA install (manifest, service worker, offline shell) | PARTIAL | QW0 2026-08-08: SW active on prod build; offline favorites + fallback page browser-verified; icons installable | install PROMPT deferred to QW5 (after first win); SW page-cache must become auth-aware at BW0 (see gaps) |
 | PostHog (EU) cookie-less analytics | MISSING | — | KPI events from plan §6 |
 | Onboarding funnel measurement | MISSING | — | target >60% completion |
 | Alert delivery (email digest at minimum) | BLOCKED | — | plan collects preference, ships no mechanism — BACKLOG item, needs user call |
@@ -116,6 +126,25 @@ DECISIONS LOG D11: recommendation pending user confirmation).
 | "I got hired" pause flow | MISSING | — | BACKLOG; later |
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
+- 2026-08-08 (QW0 critic, verdict FIX-FIRST, 13 findings, all fixed and
+  browser-re-verified same session): ONE was demo-breaking — the new keyboard
+  arrow-keyed straight through the swipe paywall (swipesUsed hit 22/20 live).
+  Standing lessons: (a) a RENDER BRANCH is not an invariant — the paywall
+  gate now lives in store.decide() (returns boolean; callers must not
+  toast/navigate on refusal), and the same rule is why server metering is
+  RLS-enforced, never UI-enforced; (b) skeletons must be wrapped in the
+  page's REAL chrome and copy the destination's exact layout grammar or the
+  reveal jumps; (c) a class default at equal CSS specificity silently beats
+  callers' overrides — Skeleton now only defaults rounded-lg when no radius
+  is passed; (d) one-shot handoffs (sessionStorage celebration) must consume
+  the key UNCONDITIONALLY on first read or stale wins replay days later;
+  (e) hidden-but-mounted interactive elements (toast Undo at opacity-0) are
+  focusable state-mutators — render actions only while visible.
+- 2026-08-08 (QW0/BW0 seam): sw.js caches navigations per-route
+  (bounded FIFO, 30 entries). Safe TODAY because every cached page is a
+  user-free shell (data is client-side). The moment BW0 server-renders
+  anything per-user, page caching must become auth-aware (vary on session /
+  clear on logout) — this is a BW0 exit criterion, not a nice-to-have.
 - 2026-08-08 (backend research, full evidence in docs/BACKEND_BAR.md): gaps
   no wave currently covers, now sequenced as BW0-BW5 —
   (a) SCHEMA AMENDMENT REQUIRED: `jobs.open boolean` → `status
@@ -254,6 +283,18 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D25 · 2026-08-08 · **QW0 shipped; motion-system deviations sanctioned.**
+  One motion system (tokens: 140/220/300ms, soft ease-out + damped-spring
+  linear() curve): card mount goes .26s ease → 300ms spring, empty-state
+  tiles gain a spring pop (errors stay calm — springs mark arrivals/wins
+  only), universal press dip on buttons AND data-press anchors. Skeletons
+  replace spinners on all 9 data surfaces (spinner remains the honest shape
+  for process states). Celebration confetti on Confirmed applied
+  (reduced-motion renders nothing, deliberately). Keyboard deck (←/→/U/
+  Enter) with the paywall guard IN THE STORE. PWA shell: icons, bounded SW
+  page cache, offline fallback. store.decide() now returns boolean — the
+  metering refusal is the store's, not the UI's. (QUALITY_BAR §5 QW0;
+  prototype deviations justified under D23's standard.)
 - D24 · 2026-08-08 · **Backend standard compiled → docs/BACKEND_BAR.md** (the
   backend half of D23, same push). Method: 2 repo audits + 6 web-researched
   areas + adversarial fact-check of 29 load-bearing claims (28 confirmed,

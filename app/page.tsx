@@ -31,12 +31,14 @@ export default function WelcomePage() {
         <div className="grid gap-[9px]">
           <Link
             href="/onboarding"
-            className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[15px] border border-rose bg-rose px-[18px] font-[710] text-white transition-transform hover:-translate-y-px"
+            data-press
+            className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[15px] border border-rose bg-rose px-[18px] font-[710] text-white transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:-translate-y-px"
           >
             Build my job profile
           </Link>
           <Link
             href="/discover"
+            data-press
             className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[15px] border border-transparent bg-transparent px-[18px] font-[710]"
           >
             Preview with sample data

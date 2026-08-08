@@ -46,7 +46,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toast ? (
           <>
             <span>{toast.message}</span>
-            {toast.action ? (
+            {/* Action renders ONLY while visible: a hidden toast kept an
+                invisible, focusable, state-mutating button at the top of
+                the screen (critic QW0 #7). */}
+            {toast.action && visible ? (
               <button
                 className="pointer-events-auto -my-3 -mr-2 grid min-h-11 min-w-11 place-items-center border-0 bg-transparent px-2 text-[11px] font-extrabold text-butter"
                 onClick={() => {

@@ -28,7 +28,15 @@ export default function ApplicationsPage() {
   const { hydrated, applications, setArchived } = useMunusStore();
   const [showArchived, setShowArchived] = useState(false);
 
-  if (!hydrated) return <SkeletonRows label="Loading applications" />;
+  if (!hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <PageHeader />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <SkeletonRows label="Loading applications" />
+        </div>
+      </section>
+    );
 
   // Most recently touched first.
   /* Most recently touched first, by the stamp that actually exists —

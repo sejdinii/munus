@@ -27,7 +27,15 @@ export default function ProfilePage() {
   const { hydrated, swipesLeft, onboarding, reset } = useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <SkeletonRows count={5} label="Loading profile" />;
+  if (!hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <div className="px-5 pb-[18px] pt-2.5">
+          <h1 className="m-0 text-[34px] tracking-[-0.055em]">Profile</h1>
+        </div>
+        <SkeletonRows count={5} label="Loading profile" />
+      </section>
+    );
 
   const prefFields = [
     onboarding.role,

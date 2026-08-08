@@ -17,10 +17,26 @@
    Bump VERSION on any change to this file's logic; activation prunes
    old caches. */
 
-const VERSION = "munus-sw-v1";
+const VERSION = "munus-sw-v2";
 const PAGES = `${VERSION}-pages`;
 const ASSETS = `${VERSION}-assets`;
 const OFFLINE_URL = "/offline.html";
+/* Pages cache is bounded: FIFO-trim beyond this many entries so months of
+   /jobs/* and /studio/* visits can't grow storage forever (critic QW0 #8). */
+const PAGES_MAX = 30;
+
+async function putPageBounded(request, response) {
+  const cache = await caches.open(PAGES);
+  await cache.put(request, response);
+  const keys = await cache.keys();
+  /* keys() is insertion-ordered; never evict the offline fallback. */
+  const evictable = keys.filter(
+    (k) => !k.url.endsWith(OFFLINE_URL),
+  );
+  for (let i = 0; i < evictable.length - PAGES_MAX; i++) {
+    await cache.delete(evictable[i]);
+  }
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -58,7 +74,7 @@ self.addEventListener("fetch", (event) => {
         .then((response) => {
           if (response.ok) {
             const copy = response.clone();
-            caches.open(PAGES).then((cache) => cache.put(request, copy));
+            putPageBounded(request, copy);
           }
           return response;
         })

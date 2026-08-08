@@ -18,9 +18,12 @@ const variantClasses: Record<Variant, string> = {
 };
 
 /* The svg constraint matches the prototype's `.btn svg` (18px, no shrink) —
-   without it an unconstrained icon fills the button (critic W3 #1). */
+   without it an unconstrained icon fills the button (critic W3 #1).
+   Timing uses the motion tokens, not Tailwind's stock 150ms/ease, so a
+   Button press and any other control press feel identical (critic QW0
+   #5); data-press opts anchors into the global :active dip. */
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 border font-[710] transition-transform hover:-translate-y-px [&_svg]:size-[18px] [&_svg]:shrink-0";
+  "inline-flex items-center justify-center gap-2 border font-[710] transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:-translate-y-px [&_svg]:size-[18px] [&_svg]:shrink-0";
 
 function sizeClasses(small: boolean) {
   return small
@@ -70,6 +73,7 @@ export function LinkButton({
   return (
     <Link
       href={href}
+      data-press
       className={`${baseClasses} ${sizeClasses(small)} ${variantClasses[variant]} ${className}`}
     >
       {children}

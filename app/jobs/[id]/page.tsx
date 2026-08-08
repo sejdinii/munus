@@ -23,7 +23,13 @@ export default function JobDetailPage() {
   const { hydrated, favorites, decide } = useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <SkeletonDetail label="Loading role" />;
+  if (!hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <Topbar title="Role" backHref="/discover" />
+        <SkeletonDetail label="Loading role" hero />
+      </section>
+    );
 
   const job = jobById(id);
 
@@ -125,7 +131,7 @@ export default function JobDetailPage() {
             type="button"
             aria-label="Pass"
             onClick={handlePass}
-            className="grid size-[46px] place-items-center rounded-full border border-line bg-paper text-ink shadow-[0_5px_13px_rgba(31,32,38,0.07)] transition-transform hover:-translate-y-px [&_svg]:size-[22px]"
+            className="grid size-[46px] place-items-center rounded-full border border-line bg-paper text-ink shadow-[0_5px_13px_rgba(31,32,38,0.07)] transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:-translate-y-px [&_svg]:size-[22px]"
           >
             <XIcon />
           </button>

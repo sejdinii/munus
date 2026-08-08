@@ -73,7 +73,13 @@ export default function PreflightPage() {
     };
   }, []);
 
-  if (!store.hydrated) return <SkeletonDetail label="Preparing your review" />;
+  if (!store.hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <Topbar title="Review" backHref="/favorites" />
+        <SkeletonDetail label="Preparing your review" />
+      </section>
+    );
 
   if (store.storageError && store.applications.length === 0) {
     return (

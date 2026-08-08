@@ -34,7 +34,15 @@ function PageHeader({ subtitle }: { subtitle: string }) {
 export default function FavoritesPage() {
   const { hydrated, favorites, applications } = useMunusStore();
 
-  if (!hydrated) return <SkeletonRows label="Loading favorites" />;
+  if (!hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <PageHeader subtitle="Your serious shortlist, not another inbox." />
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8">
+          <SkeletonRows label="Loading favorites" />
+        </div>
+      </section>
+    );
 
   const shortlistedIds = favorites.filter(
     (id) => !applications.some((a) => a.jobId === id),

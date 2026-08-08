@@ -66,10 +66,12 @@
       <div class="tile" aria-hidden="true">!</div>
       <h1>No connection</h1>
       <p>
-        Your favorites and prepared applications are still on this device.
-        New roles will refresh when you reconnect.
+        Screens you've already visited still work — your favorites and
+        applications live on this device. This one needs the network.
       </p>
-      <a href="/">Try again</a>
+      <!-- Retry reloads the URL the user actually wanted, not the
+           welcome page (critic QW0 #10). -->
+      <a href="#" onclick="location.reload(); return false;">Try again</a>
     </div>
   </body>
 </html>

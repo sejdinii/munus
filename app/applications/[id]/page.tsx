@@ -80,7 +80,13 @@ export default function ApplicationReceiptPage() {
     if (id && consumeCelebration(id)) setBurst((b) => b + 1);
   }, [id]);
 
-  if (!hydrated) return <SkeletonDetail label="Loading receipt" />;
+  if (!hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <Topbar title="Application receipt" backHref="/applications" />
+        <SkeletonDetail label="Loading receipt" hero />
+      </section>
+    );
 
   const application = applications.find((a) => a.jobId === id);
   const job = jobById(id);
@@ -185,9 +191,12 @@ export default function ApplicationReceiptPage() {
                             : step.status === "confirmed"
                               ? application.confirmedAt
                               : undefined;
-                        return stamp
-                          ? step.done(formatStamp(stamp))
-                          : step.pending;
+                        if (stamp) return step.done(formatStamp(stamp));
+                        /* A done step without a stamp (only `prepared`
+                           qualifies) still reads as DONE — the green ✓
+                           next to its pending instruction contradicted
+                           itself (critic QW0 #6). */
+                        return cls === "done" ? step.done("") : step.pending;
                       })()}
                     </p>
                   </div>
@@ -287,7 +296,8 @@ export default function ApplicationReceiptPage() {
                 href={job.applyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[15px] border border-line bg-paper px-[18px] font-[710] transition-transform hover:-translate-y-px"
+                data-press
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-[15px] border border-line bg-paper px-[18px] font-[710] transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-soft)] hover:-translate-y-px"
               >
                 Open sample listing
               </a>

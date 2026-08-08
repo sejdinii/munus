@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { EmptyState, ErrorState, SkeletonDeck } from "@/components/states";
+import { EmptyState, ErrorState, Skeleton, SkeletonDeck } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { jobs, type Job } from "@/lib/mock/jobs";
@@ -52,21 +52,23 @@ export default function DiscoverPage() {
   const lastDecision = store.decisions[store.decisions.length - 1];
   const canUndo = Boolean(lastDecision && lastDecision.type !== "unsave");
 
-  const runUndo = () => {
+  const runUndo = useCallback(() => {
     const last = store.undo();
     if (last) {
       decidingRef.current = null;
       setRestoredId(last.jobId);
     }
-  };
+  }, [store]);
 
   const decide = useCallback(
     (direction: SwipeDirection, jobId?: string) => {
       const id = jobId ?? topIdRef.current;
       if (!id || topIdRef.current !== id || decidingRef.current === id) return;
+      /* A refused decide (swipe budget spent) gets NO toast and NO deck
+         mutation — the paywall branch takes over on the next render. */
+      if (!store.decide(id, direction)) return;
       decidingRef.current = id;
       setRestoredId(null);
-      store.decide(id, direction);
       showToast(direction === "save" ? "Saved to Favorites" : "Passed", {
         label: "Undo",
         onPress: () => {
@@ -105,26 +107,48 @@ export default function DiscoverPage() {
       )
         return;
       if (!store.coached) return;
+      /* The paywall replaces the deck: while the budget is spent, the
+         keyboard must be as gated as the pointer — no decisions, no
+         Enter into cards the user can't see (critic QW0 #1). Undo stays
+         allowed: it refunds a swipe, same as the paywall screen's own
+         undo affordance. */
+      const gated = store.swipesLeft <= 0;
       const id = topIdRef.current;
-      if (e.key === "ArrowLeft" && id) {
+      if (e.key === "ArrowLeft" && id && !gated) {
         e.preventDefault();
         decide("pass");
-      } else if (e.key === "ArrowRight" && id) {
+      } else if (e.key === "ArrowRight" && id && !gated) {
         e.preventDefault();
         decide("save");
       } else if ((e.key === "u" || e.key === "U") && canUndo) {
         e.preventDefault();
         runUndo();
-      } else if (e.key === "Enter" && id && !t?.closest("button, a")) {
+      } else if (
+        e.key === "Enter" &&
+        id &&
+        !gated &&
+        !t?.closest("button, a")
+      ) {
         e.preventDefault();
         router.push(`/jobs/${id}`);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [store.coached, store.swipesLeft, canUndo, decide, runUndo, router]);
 
-  if (!store.hydrated) return <SkeletonDeck label="Preparing your deck" />;
+  if (!store.hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col bg-[#f4f0f1]">
+        <div className="flex min-h-[54px] items-center justify-between px-5 pb-1 pt-[5px]">
+          <div>
+            <h1 className="m-0 text-2xl tracking-[-0.04em]">Fresh roles</h1>
+            <Skeleton className="mt-1.5 h-3 w-44" />
+          </div>
+        </div>
+        <SkeletonDeck label="Preparing your deck" />
+      </section>
+    );
 
   if (store.storageError && store.decisions.length === 0) {
     return (
@@ -237,9 +261,9 @@ export default function DiscoverPage() {
         onPass={() => decide("pass")}
         onStar={() => {
           if (decidingRef.current === top.id) return;
+          if (!store.decide(top.id, "star")) return;
           decidingRef.current = top.id;
           setRestoredId(null);
-          store.decide(top.id, "star");
           showToast("Starred — opening the studio");
           router.push(`/studio/${top.id}`);
         }}

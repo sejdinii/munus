@@ -37,7 +37,13 @@ export default function CareerProfilePage() {
   const { hydrated, onboarding } = useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <SkeletonRows label="Loading your evidence store" />;
+  if (!hydrated)
+    return (
+      <section className="screen-in flex flex-1 flex-col">
+        <Topbar title="Career profile" backHref="/profile" />
+        <SkeletonRows label="Loading your evidence store" />
+      </section>
+    );
 
   const grouped = groupByKind(mockFacts);
 

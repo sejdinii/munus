@@ -77,11 +77,13 @@ const STORAGE_KEY = "munus-mock-v1";
 type Store = MunusState & {
   hydrated: boolean;
   storageError: boolean;
+  /** Returns false when the metered swipe budget refuses the decision —
+   *  callers must not toast/navigate on a refused decide. */
   decide: (
     jobId: string,
     type: Exclude<DecisionType, "unsave">,
     opts?: { meter?: boolean },
-  ) => void;
+  ) => boolean;
   undo: () => Decision | undefined;
   unsave: (jobId: string) => void;
   restoreFavorite: (jobId: string) => void;
@@ -143,8 +145,13 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
       jobId: string,
       type: Exclude<DecisionType, "unsave">,
       opts?: { meter?: boolean },
-    ) => {
+    ): boolean => {
       const meter = opts?.meter !== false;
+      /* The paywall invariant lives HERE, not in each caller: a metered
+         decision with an exhausted budget is refused outright (critic QW0
+         #1 — the keyboard arrow-keyed straight through the deck's gate
+         because the gate was only a render branch). */
+      if (meter && stateRef.current.swipesUsed >= FREE_SWIPES) return false;
       setState((s) => ({
         ...s,
         decisions: [...s.decisions, { jobId, type, at: Date.now() }],
@@ -161,6 +168,7 @@ export function MunusStoreProvider({ children }: { children: ReactNode }) {
             ? [...s.dismissed, jobId]
             : s.dismissed,
       }));
+      return true;
     },
     [],
   );

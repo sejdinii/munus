@@ -20,10 +20,13 @@ const items: Array<{ href: string; label: string; icon: ReactNode }> = [
 
 export function Tabbar() {
   const pathname = usePathname();
-  const { favorites, applications } = useMunusStore();
-  const favBadge = favorites.filter(
-    (id) => !applications.some((a) => a.jobId === id),
-  ).length;
+  const { hydrated, favorites, applications } = useMunusStore();
+  /* Badge waits for hydration — pre-hydration store defaults flashed a
+     wrong count next to a skeleton (critic QW0 #12). */
+  const favBadge = hydrated
+    ? favorites.filter((id) => !applications.some((a) => a.jobId === id))
+        .length
+    : 0;
 
   return (
     <nav
@@ -37,6 +40,7 @@ export function Tabbar() {
           <Link
             key={item.href}
             href={item.href}
+            data-press
             aria-current={active ? "page" : undefined}
             className={`grid min-h-[44px] content-center justify-items-center gap-[3px] p-0.5 text-[9px] font-[620] ${
               active ? "text-rose" : "text-[#8c8488]"
