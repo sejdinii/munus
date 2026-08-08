@@ -263,7 +263,7 @@ export default function DiscoverPage() {
             Open favorites
           </LinkButton>
           {status !== "signedIn" ? (
-            <LinkButton href="/onboarding" variant="secondary" className="w-full">
+            <LinkButton href="/onboarding" variant="default" className="w-full">
               Sign in for live listings
             </LinkButton>
           ) : null}
