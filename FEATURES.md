@@ -32,7 +32,7 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
 | Usage metering (server-side; Free limits, Plus fair-use) | MISSING | — | phase 5 |
 | Stripe: Plus checkout + portal + webhooks + paywall moments | MISSING | — | phase 5 |
 | Privacy/terms + GDPR export/delete | MISSING | — | phase 5; legal-blocking for launch, not for demo |
-| Landing page at / (Persuade; CTA → app, pricing shown) | MISSING | — | user-decided 2026-08-08; replaces welcome screen as / |
+| Landing page at / (Persuade; CTA → app, pricing shown) | DONE | prod build, detector clean, screenshots 1280/500px, artifact preview published | supersedes welcome screen; CTAs session-aware |
 
 ## REQUIRED BUT NOT CORE (pre-launch)
 | Feature | Status | Verified how | Notes |
