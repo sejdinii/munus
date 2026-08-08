@@ -116,6 +116,23 @@
   animation: confetti 1.05s var(--ease-out-soft) both;
 }
 
+/* Empty-state symbol tile arrival — small spring pop so empty screens
+   read as designed, not defaulted. */
+@keyframes pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.pop-in {
+  animation: pop-in var(--duration-gentle) var(--ease-spring) both;
+}
+
 /* BACK stamp flash after undo — prototype's stampFlash: fade in, hold, out.
    Base opacity is 1 so prefers-reduced-motion (animation: none) shows a
    STATIC stamp instead of nothing; the deck clears it via timeout. With

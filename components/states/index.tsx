@@ -128,7 +128,7 @@ export function EmptyState({
     <div className="grid flex-1 place-items-center p-[35px] text-center">
       <div>
         <div
-          className={`mx-auto mb-[18px] grid size-[68px] place-items-center rounded-[22px] text-[27px] ${
+          className={`pop-in mx-auto mb-[18px] grid size-[68px] place-items-center rounded-[22px] text-[27px] ${
             tone === "rose" ? "bg-rose-soft text-rose" : "bg-quiet text-ink"
           }`}
         >
