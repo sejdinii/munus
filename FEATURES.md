@@ -3,42 +3,388 @@
 # Status values: DONE (built + verified running) | PARTIAL (built, missing states/edge cases)
 #                STUB (placeholder/mock only) | MISSING (not started) | BLOCKED (needs user decision)
 # RULE: nothing gets marked DONE without being run/tested in this session.
+# Authority chain: docs/MUNUS_MVP_PLAN.md (product) > CONTRACTS.md (technical) > this file (state).
+
+## ⚠ REPO STATE — READ BEFORE TOUCHING BRANCHES (2026-08-08)
+- `claude/munus-bootstrap-plan-11inb2` (this branch) is the CANONICAL state.
+- `backup/w5b-final` is a REJECTED line of work (built with DeepSeek + a
+  Hermes agent, ~38 commits). The founder reviewed it, did not accept the
+  result, and deliberately reverted to this branch. **Never merge it.** It
+  is retained as a backup only. Its FEATURES.md claims W0–W5b DONE and a
+  live deployment — those claims describe the rejected line, NOT reality.
+- `main` sitting at the initial commit is DELIBERATE, not an accident.
+- External services were DELETED by the founder, not merely unconfigured:
+  Supabase project + database, Google auth client, Vercel deployment, Groq
+  API keys. Any of them must be recreated from scratch before real data
+  work resumes; nothing from the rejected line survives.
+- A prior session mistook the rejected branch for the current state and
+  reported the app as live. Verify against this note first.
 
 ## MVP Definition of Done
-An MVP is DONE when: the app boots with zero errors, every CORE flow below is
+Munus MVP is DONE when: the app boots with zero errors, every CORE flow below is
 DONE (not PARTIAL), every screen has loading/empty/error states, and the
-critical-path demo (search → view venue → book → confirmation) runs end-to-end
-on device/simulator without a crash.
+critical-path demo — sign in → onboard (6 questions + CV → parsed facts) →
+swipe real fresh jobs with real evidence-based reasons → save → tailor in the
+studio (evidence-only, verifier-gated) → preflight → open official listing →
+return-confirm → application receipt — runs end-to-end on a phone (PWA)
+without a crash, with a stranger able to pay for Plus.
+
+## SCOPE (from plan §1 — the contract of what MVP is and is not)
+| In MVP (ships) | Explicitly NOT in MVP |
+|---|---|
+| Onboarding: 6 questions + CV → structured facts store | Automated submission (Pro tier — later, on this foundation) |
+| Discover: swipe deck of real fresh jobs, fit score, 2 evidence reasons, 1 honest concern, swipe/buttons/star/undo/detail | Employer screening-question autofill |
+| Favorites: shortlist + per-job readiness chips | WhatsApp |
+| AI Application Studio: evidence-only suggestions w/ evidence chips, Accept/Keep, tone regen, PDF export | Native App Store build (PWA first) |
+| Preflight → redirect apply → return-confirm → receipt | Multi-CV management |
+| Applications: list + receipt (Prepared → Opened listing → Confirmed applied) | |
+| Accounts & plans: Google/Apple sign-in, Free + Plus, Stripe checkout | |
+| Legal basics: privacy, terms, GDPR export/delete, cookie-less analytics | |
+
+Beachhead: ONE vertical — recommended product/UX designers in Europe (see
+DECISIONS LOG D11: recommendation pending user confirmation).
+
+## WAVE ROADMAP (from plan §4 — "Done means" is the exit criterion; nothing depends on a later phase)
+| Wave | Plan phase | Weeks | Ships | Exit criterion ("Done means") | Status |
+|---|---|---|---|---|---|
+| W0 | 0 · Foundation | 0–1 | Repo, CI, Supabase schema + migrations, auth (Google/Apple), CV upload → facts extraction | Sign in, upload CV, see parsed facts | PARTIAL — app scaffold/CI/shell DONE (see FOUNDATION); Supabase schema/auth/CV BLOCKED on user creds |
+| W1 | 1 · Ingestion | 1–2 | Seed list (1k companies), Greenhouse+Lever pullers, normalizer, dedupe, freshness, embeddings | 3–5k live jobs, auto-refreshing, spot-checked | PARTIAL — adapters/normalize/dedupe DONE (fixture-tested); seed config, cron, embeddings, real-feed run BLOCKED on network policy |
+| W2 | 2 · Deck | 2–3 | Matching + deck API; Discover UI ported pixel-exact (swipe physics, star, undo, coach, detail) | Swipe real ranked jobs with real reasons on a phone | PARTIAL — deck UI + detail DONE (critic-reviewed, 12 findings fixed); matching + real jobs BLOCKED on creds/network |
+| W3 | 3 · Studio | 3–4 | Favorites; facts-constrained tailoring + verifier; suggestions UI; tone sheet; PDF export | Generate → accept → download an honest tailored CV+letter | PARTIAL — exit criterion MET vs mock facts/provider (browser-verified downloads); real CV-parse + Groq provider BLOCKED on creds |
+| W4 | 4 · Apply loop | 4–5 | Preflight; redirect + return-confirm; applications + receipts; "still open" checks | Full journey: swipe → tailor → apply → receipt | PARTIAL — full journey DONE vs sample listings (browser-verified end-to-end); "still open" checks + real URLs BLOCKED on live feeds |
+| W5a | 5 · Law & metering (real, D21) | 5–6 | Real metering logic, privacy/terms, GDPR export+delete | A regulator can't hurt us; the meter protects LLM cost | PARTIAL — metering logic + legal pages DONE; GDPR export/delete and API enforcement need auth |
+| W5b | 5 · Payments (MOCK per D21) | later | Mock upgrade path, Pro waitlist capture | A tester can simulate Plus; no money moves | MISSING |
+| W6 | 6 · Polish & beta | 6–7 | Onboarding funnel, PWA install, PostHog, empty/offline states, 20-user closed beta | Beta users complete the loop unaided; crash-free | MISSING |
+| W7 | 7 · Launch | 8 | Fix beta findings, seed content, launch (designer communities, Product Hunt) | Public, measured, first organic signups | MISSING |
+
+## FOUNDATION (orchestrator-built, wave 1 base)
+| Item | Status | Verified how | Notes |
+|---|---|---|---|
+| Next.js 16 scaffold (TS strict, Tailwind 4) | DONE | typecheck+build+boot 2026-07-23, all routes 200 | Next 16.2.11 |
+| Design tokens (styles/tokens.css from prototype pink) | DONE | screenshots vs prototype 2026-07-23 | |
+| UI primitives (Button, chips, IconButton, Topbar, Toast, icons) | DONE | build + rendered in shell | hand-rolled: shadcn registry unreachable under network policy (justified deviation) |
+| State components (Loading/Empty/Error/Offline) | DONE | rendered on all tab screens | |
+| App shell: welcome + tabbar + 4 tab routes | DONE | boot + screenshots (393×852) | tab screens are honest placeholders pending slices |
+| Mock data layer (prototype jobs + persisted store) | DONE | vitest 4/4 + boot | replaced by real APIs in W2 |
+| CI workflow (typecheck/build/test) | PARTIAL | file authored; first run pending on GitHub | verify on next push |
+| PWA manifest stub | DONE | QW0 2026-08-08: superseded by full PWA shell (see REQUIRED table) | |
+
+## QW ROADMAP (quality waves — docs/QUALITY_BAR.md §5; BW waves in docs/BACKEND_BAR.md §8)
+| Wave | Ships | Status |
+|---|---|---|
+| QW0 · Foundation of feel | motion tokens + spring, skeletons on all data surfaces, celebration on confirm, empty-state polish, keyboard deck, PWA shell | DONE 2026-08-08 — browser-verified on prod build; critic FIX-FIRST (13 findings) → all fixed + re-verified same session |
+| QW1 · Legible matching | match-reason chips, "why ranked" sheet, provenance chips, deck-end honesty | PENDING (mock-data version buildable now) |
+| QW2 · Self-building profile | CV→fact confirmation inbox, one-tap fact chips, CV health score | BLOCKED on Supabase+Groq |
+| QW3 · The ritual | Today's Picks + countdown, deltas, email digest, value-before-signup onboarding | BLOCKED on real data |
+| QW4 · Studio polish | per-suggestion regenerate, tone quick-bar, tailoring eval harness | BLOCKED on Groq |
+| QW5 · Ship discipline | perf budget CI, Sentry, a11y audit, install-prompt placement | after deploy exists |
+
+## REAL-DATA READINESS (wave 5 — built ahead of credentials)
+| Item | Status | Verified how | Notes |
+|---|---|---|---|
+| Supabase schema (14 tables, migrations) | DONE | typecheck of SQL by review; runs on first `db push` | favorites is a real view over the decision log; verifier_drops audit table |
+| RLS policies on every table | DONE | written + reviewed | owner-only user data; NO client write on usage/subscriptions (D21 consequence b) |
+| Seed-list config (175 companies) | DONE | 880 per-row data guards + distribution test | Pollfish excluded (unverified slug, rule #1) |
+| Ingestion runner (all 5 ATS) | DONE | 10 behavioural tests, in-memory store | transient outage never mass-marks jobs closed |
+| Company identity bridge | DONE | 7 tests incl. no-collision across all rows + type-level runner contract | dual-ATS companies share one id |
+| Dry-run feed verifier CLI | DONE | ran against live network: correctly reported blocked egress | `npm run ingest:dry` — needs ONLY network policy, not Supabase |
+| Supabase JobStore implementation | MISSING | — | the one ingestion piece that truly needs credentials |
 
 ## CORE FLOWS (MVP-blocking)
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
-| Venue search + filters | MISSING | — | |
-| Venue detail page (gallery, pricing, availability) | MISSING | — | |
-| Booking flow (date select → request/confirm) | MISSING | — | |
-| Double-booking prevention | MISSING | — | server-side check required |
-| Booking confirmation + status screen | MISSING | — | |
-| Auth (signup/login, both user types) | MISSING | — | |
-| Vendor: venue listing creation/edit | MISSING | — | |
-| Vendor: calendar/availability management | MISSING | — | |
-| Vendor: incoming booking requests | MISSING | — | |
-| Cancellation/refund flow | BLOCKED | — | policy undecided — known gap |
+| Auth (Google/Apple via Supabase) | MISSING | — | placement in flow: see GAPS |
+| Onboarding 6-question flow | DONE | wave1: implementer browser-run + integrated build/boot 2026-07-23 | mock persistence; real profile API lands W2+ |
+| CV upload → facts extraction (LLM parse) | MISSING | — | facts table = evidence store |
+| Job ingestion (all 5 ATS adapters) | PARTIAL | wave2: 50 fixture tests pass (5 adapters) | adapters+normalize+dedupe done incl. ashby/workable/smartrecruiters; cron/seed config/embeddings/real-feed run pending (network policy) |
+| Matching (embeddings + rule layer, cached reasons) | MISSING | — | LLM only above threshold, top 30/day polish |
+| Discover swipe deck (physics, star, undo, coach) | DONE | wave2: Playwright-driven swipes/undo/buttons/limit/caught-up 2026-07-25 | mock data by design until W1 feeds + matching; star toasts pending studio (see GAPS) |
+| Job detail | DONE | wave2: implementer browser-run + integrated boot | mock data; real job API later |
+| Favorites + readiness chips + "still open" check | PARTIAL | wave1: seeded-store browser-run, all states | UI done vs mock incl. unsave; still-open check needs real data (W4) |
+| Studio: evidence-only tailoring + verifier gate | PARTIAL | wave3: 15 pipeline/compose tests incl. lying-provider + no-free-text-channel; browser-run | deterministic verifier DONE, letter structurally gated (D20b); mock provider until GROQ_API_KEY (D17) |
+| Studio: Accept/Keep, tone regen, PDF export | DONE | wave3: browser-driven accept/tone/download, both PDFs verified | client-side PDF per D19 (server render in production) |
+| Preflight review | DONE | wave4: browser-run, D3-compliant (no employer questions) | docs counts real; contact details arrive with auth |
+| Redirect apply + return-confirm + receipt | DONE | wave4: full journey browser-run incl. popup return + both confirm branches | sample URLs labelled; real URLs with live feeds |
+| Applications list + receipt timeline | DONE | wave4: archive/undo/unarchive + real timestamps + real doc counts browser-run | still-open checks need live feeds (W4 leftover) |
+| Usage metering (server-side) | PARTIAL | wave5: 11 tests on limits + honest paywall copy | pure logic DONE; API-route enforcement needs auth. RLS already denies client writes to usage/subscriptions |
+| Stripe: Plus checkout + portal + webhooks | MISSING | — | €14.99/mo · €6.99/wk · €34.99/q |
+| Paywall moments (3rd AI try, 21st swipe) | MISSING | — | |
+| Plans screen (Free/Plus/Pro-waitlist) | DONE | wave1: rendered, D9 prices grep-verified, contrast checked | checkout + waitlist capture are W5 stubs (toasts) |
+| Privacy, terms | PARTIAL | wave5: real GDPR-accurate content, browser-verified TOC | founder placeholders listed in BACKLOG; needs solicitor review before launch |
+| GDPR export/delete flows | MISSING | — | blocked on auth; privacy policy currently points to email fallback |
 
 ## REQUIRED BUT NOT CORE (post-boot, pre-launch)
 | Feature | Status | Verified how | Notes |
 |---|---|---|---|
-| Empty states (all list screens) | MISSING | — | |
-| Error states + retry (all network screens) | MISSING | — | |
-| Reviews/ratings | MISSING | — | |
-| Notifications (booking status changes) | MISSING | — | |
-| Deposits/payments | MISSING | — | decide: in-MVP or manual? |
-| Onboarding (first-run) | MISSING | — | |
-| Profile/settings | MISSING | — | |
+| Loading/empty/error states on every screen | DONE | auditor 2026-07-26: all 11 dynamic routes verified (statics exempt) | offline state component exists, not yet wired to a network layer (W6) |
+| PWA install (manifest, service worker, offline shell) | PARTIAL | QW0 2026-08-08: SW active on prod build; offline favorites + fallback page browser-verified; icons installable | install PROMPT deferred to QW5 (after first win); SW page-cache must become auth-aware at BW0 (see gaps) |
+| PostHog (EU) cookie-less analytics | MISSING | — | KPI events from plan §6 |
+| Onboarding funnel measurement | MISSING | — | target >60% completion |
+| Alert delivery (email digest at minimum) | BLOCKED | — | plan collects preference, ships no mechanism — BACKLOG item, needs user call |
+| Pro waitlist capture | MISSING | — | needs a table; BACKLOG item |
+| Profile/settings (prefs edit, plan, career profile) | DONE | wave1: integrated boot | mock-backed; rows link to onboarding/plans |
+| "I got hired" pause flow | MISSING | — | BACKLOG; later |
 
 ## DISCOVERED GAPS (agent appends here when it finds unstated requirements)
-- (agent: every time you notice a missing requirement mid-build, add it here
-  immediately — do not rely on remembering it later)
+- 2026-08-08 (QW0 critic, verdict FIX-FIRST, 13 findings, all fixed and
+  browser-re-verified same session): ONE was demo-breaking — the new keyboard
+  arrow-keyed straight through the swipe paywall (swipesUsed hit 22/20 live).
+  Standing lessons: (a) a RENDER BRANCH is not an invariant — the paywall
+  gate now lives in store.decide() (returns boolean; callers must not
+  toast/navigate on refusal), and the same rule is why server metering is
+  RLS-enforced, never UI-enforced; (b) skeletons must be wrapped in the
+  page's REAL chrome and copy the destination's exact layout grammar or the
+  reveal jumps; (c) a class default at equal CSS specificity silently beats
+  callers' overrides — Skeleton now only defaults rounded-lg when no radius
+  is passed; (d) one-shot handoffs (sessionStorage celebration) must consume
+  the key UNCONDITIONALLY on first read or stale wins replay days later;
+  (e) hidden-but-mounted interactive elements (toast Undo at opacity-0) are
+  focusable state-mutators — render actions only while visible.
+- 2026-08-08 (QW0/BW0 seam): sw.js caches navigations per-route
+  (bounded FIFO, 30 entries). Safe TODAY because every cached page is a
+  user-free shell (data is client-side). The moment BW0 server-renders
+  anything per-user, page caching must become auth-aware (vary on session /
+  clear on logout) — this is a BW0 exit criterion, not a nice-to-have.
+- 2026-08-08 (backend research, full evidence in docs/BACKEND_BAR.md): gaps
+  no wave currently covers, now sequenced as BW0-BW5 —
+  (a) SCHEMA AMENDMENT REQUIRED: `jobs.open boolean` → `status
+  open|closed|unknown` + `closed_at` (the anti-mass-closure guard needs a
+  third state); embedding rows also need a model-version column;
+  (b) LAUNCH-BLOCKING CONFIGS, all external: Groq zero-data-retention toggle
+  + DPA (default retains prompts 30 days — GDPR deletion story is false
+  without it), Groq Developer-tier unlock (free tier is a 30 RPM throughput
+  wall), Supabase Pro (Free tier has NO backups), custom SMTP (built-in
+  sender: 2 emails/hour), separate Storage backup sync (DB backups do NOT
+  cover CV files);
+  (c) ingestion scheduler = GitHub Actions workflow — which also means the
+  175-feed dry-run can run in CI TODAY, no sandbox network change needed
+  (partially retires the long-standing WebFetch-403 blocker);
+  (d) missing engineering: idempotency keys on generation endpoints, per-
+  ATS-host circuit breakers + politeness budget (SmartRecruiters/Workable
+  have hard 429 limits), golden-set nDCG CI gate, position-bias logging on
+  swipes, cost kill switch, heartbeat (not uptime) monitoring, expand/
+  contract migrations, restore drills, breach runbook, retention windows,
+  anonymous-account upgrade test, deletion cascade across 4 systems.
+- 2026-08-08 (quality research, full evidence in docs/QUALITY_BAR.md): the
+  category leaders ship things no Munus wave currently builds —
+  (a) match-reason chips ON the deck card + a "why this ranked" explainer
+  behind every score (a bare match % is now banned);
+  (b) one-tap skill/fact prompts inside the deck that FEED THE EVIDENCE
+  STORE — the profile builds itself, the verifier gains citable facts;
+  (c) CV health score with next-action deep links;
+  (d) Today's Picks (small daily curated shelf + refresh countdown) and an
+  HONEST deck-exhaustion state — deck-end is currently an afterthought;
+  (e) delta-since-last-visit counts ("12 new since Tuesday") which double
+  as the email digest content — closes the alert-delivery gap's design;
+  (f) value-before-signup onboarding (first matched deck BEFORE account
+  ask) — makes guest preview (D16) load-bearing, auth stays at save moment;
+  (g) a celebration moment at Confirmed applied — receipts are win screens;
+  (h) matcher golden-set + tailoring eval harnesses — without them
+  "perfect job suggestions" is unfalsifiable. None of these are in W0–W6
+  exit criteria yet; QUALITY_BAR.md §5 sequences them as QW0–QW5.
+- 2026-07-25 (wave2): deck star fast-track toasts instead of opening the
+  studio — RESOLVED in wave3: star → save → studio restored.
+- 2026-07-25 (wave2/auditor): vitest was double-counting suites from agent
+  worktrees under .claude/ — fixed via vitest.config.ts exclude; earlier
+  "80 tests" claims were inflated, true wave-1 count was 34 (82 as of W4).
+- 2026-07-23 (wave1 slice3): mock store lacks the `receipt jsonb` docs
+  snapshot — receipt document rows are static placeholders until Studio (W3)
+  produces real documents.
+- 2026-07-23 (wave1 slice3): store `undo()` cannot restore an `unsave` —
+  unsave toast is feedback-only until decisions handling grows an inverse.
+- 2026-07-23 (wave1 slice4): no `name` field in onboarding/profiles mock —
+  profile initials derive from role; real profiles table has name (schema OK,
+  mock+onboarding question missing).
+- 2026-07-23 (wave1 checkpoint): unlayered element CSS silently defeats
+  Tailwind utilities — all future base styles MUST live in @layer base
+  (bug shipped in foundation, caught at integration).
+- 2026-07-26 (wave4 critic): verdict FIX-FIRST, 12 findings, 5 demo-breaking
+  — all fixed and browser-verified. TWO were invisible to my own testing:
+  my walkthrough closed the popup and refocused in one motion, masking that
+  the confirm dialog fired on DEPARTURE, and an "opened" application had no
+  confirm path outside preflight. Standing lesson: verify a state machine by
+  asserting WHEN each transition happens, not just that the end state
+  eventually appears. Root causes worth remembering: window.open(url,
+  "_blank", "noopener") ALWAYS returns null (so blocked-popup detection read
+  every success as a block), and two setState calls in one tick race React
+  batching — state machines need atomic actions (now lib/mock/transitions).
+- 2026-07-23 (wave1 critic): design-critic verdict was FIX-FIRST with 15
+  findings (3 demo-breaking honesty violations). 13 fixed and browser-
+  verified same session. Deferred: discover placeholder has no error branch
+  (screen is rebuilt wholesale in W2 — real deck must ship ALL states);
+  favorites "›" job-detail navigation returns when job detail exists (W2),
+  overflow menu stays as "⋯". Lesson recorded: implementers reproduce
+  prototype copy faithfully even when it fabricates state — every wave spec
+  must name the honest-copy variant explicitly.
+- 2026-07-23 (bootstrap): **Alert delivery is unshipped.** Onboarding asks alert
+  cadence (§1.1) but no phase builds any notification channel. Decide: email
+  digest in W6, or label "coming soon" and stop asking the question.
+- 2026-07-23 (bootstrap): **Auth placement is unspecified.** Plan says
+  Google/Apple sign-in; prototype welcome has no sign-in and flows straight
+  into onboarding (+ a "Preview with sample data" guest path). Where auth
+  happens (before onboarding vs. at CV-upload/save moment) changes the funnel.
+- 2026-07-23 (bootstrap): **Guest preview mode** exists in the prototype,
+  absent from the plan. Needs an explicit in/out decision.
+- 2026-07-23 (bootstrap): **`decisions` log needs an `unsave` type** (or
+  favorites can't be a view over it) — undo removes saves. Phase 0 schema detail.
+- 2026-07-23 (bootstrap): **Pro waitlist has no storage.** §7 mandates the
+  waitlist button; nothing captures the signups.
+- 2026-07-23 (bootstrap): **docs/PRICING.md is referenced by the plan footer
+  but does not exist in the repo.** Prices are recoverable from plan §1.7 +
+  prototype plans screen (they agree), but the canonical doc is missing.
+- 2026-07-23 (bootstrap): **Prototype "Withdraw application" is impossible
+  under redirect apply** — replace with archive/remove-from-list + honest copy.
+- 2026-07-23 (bootstrap): prototype has dead code for a Discover
+  "learning banner" (CSS + dismiss action, never rendered) — treat as not spec.
 
 ## DECISIONS LOG
-- (agent: record every product decision the user makes, with date, so future
-  sessions don't re-ask)
+# Format: D# · date · decision · source. Plan-sourced decisions are PRE-DECIDED:
+# never re-ask the user.
+- D1 · 2026-07-23 · Thin/stale deck risk → beachhead vertical + 1k-company seed
+  list + freshness checks; never show a dead link twice. (plan §7)
+- D2 · 2026-07-23 · MVP apply = redirect + return-confirm ONLY. Automated
+  submission is Pro, later. Receipt timeline: Prepared → Opened listing →
+  Confirmed applied. Prototype's direct-submit copy does not ship. (plan §1/§7)
+- D3 · 2026-07-23 · No employer screening-question autofill in MVP — the
+  preflight "Employer questions" block from the prototype drops out. (plan §1)
+- D4 · 2026-07-23 · Missing salary → show "not listed" honestly, never estimate
+  silently. (plan §7)
+- D5 · 2026-07-23 · LLM invented experience → verifier is a BLOCKING gate, not
+  a warning; log every drop; zero escapes audited weekly. (plan §7, §6)
+- D6 · 2026-07-23 · ATS feed changes → per-source adapters with health alerts;
+  sources are additive. (plan §7)
+- D7 · 2026-07-23 · Apple tax → web/PWA first keeps Stripe economics; Capacitor
+  wrapper only after PMF. (plan §7)
+- D8 · 2026-07-23 · Auto-apply scope creep → Pro stays a waitlist button until
+  Plus revenue exists. (plan §7)
+- D9 · 2026-07-23 · Pricing: Free (20 swipes/wk, 2 AI tries/job, free first kit
+  per saved job) · Plus €14.99/mo · €6.99/wk · €34.99/q, unlimited within fair
+  use (500 swipes/day, 30 gens/day). (plan §1/§2) · Amended 2026-07-25
+  (auditor): Pro DISPLAY pricing on the plans screen is €34.99/mo · €12.99/wk
+  · €79.99/q per the prototype — display-only, Pro remains waitlist (D8).
+- D10 · 2026-07-23 · Stack: Next.js 16 + Vercel + Supabase + Groq llama-3.3-70b
+  + MiniLM/bge-small + Stripe + PostHog EU — same stack as talk.cv on purpose.
+  (plan §2)
+- D11 · 2026-07-23 · Beachhead: ONE vertical at launch; plan RECOMMENDS
+  product/UX designers in Europe. Recommendation adopted as working assumption
+  (founder is seeding against it) — final confirmation is on the user's
+  decision list from the bootstrap report. Second vertical = config change.
+  (plan §1)
+- D12 · 2026-07-23 · prototypes/scout-pink-v2.html is the BINDING visual spec;
+  pink theme ships; product copy says Munus wherever the prototype says Scout.
+  (bootstrap instruction)
+- D13 · 2026-07-23 · Ingestion adapter requirements adopted from founder batch 1:
+  no slug guessing, EU Greenhouse host fallback, empty-feed-is-healthy,
+  dual-ATS migration tolerance, vertical-as-config. (checkpoint; CONTRACTS §2)
+- D14 · 2026-07-23 · decisions.type gains `unsave` so favorites stays a pure
+  view over the swipe log. (checkpoint)
+- D15 · 2026-07-23 · Pro waitlist gets a `waitlist` table in W5. (checkpoint)
+- D16 · 2026-07-23 · Working defaults adopted pending user override (open until
+  W2): keep guest preview mode; auth happens at the CV-upload moment; Google
+  sign-in first, Apple before beta; alert channel = email digest in W6.
+  (checkpoint — user can override any of these)
+- D25 · 2026-08-08 · **QW0 shipped; motion-system deviations sanctioned.**
+  One motion system (tokens: 140/220/300ms, soft ease-out + damped-spring
+  linear() curve): card mount goes .26s ease → 300ms spring, empty-state
+  tiles gain a spring pop (errors stay calm — springs mark arrivals/wins
+  only), universal press dip on buttons AND data-press anchors. Skeletons
+  replace spinners on all 9 data surfaces (spinner remains the honest shape
+  for process states). Celebration confetti on Confirmed applied
+  (reduced-motion renders nothing, deliberately). Keyboard deck (←/→/U/
+  Enter) with the paywall guard IN THE STORE. PWA shell: icons, bounded SW
+  page cache, offline fallback. store.decide() now returns boolean — the
+  metering refusal is the store's, not the UI's. (QUALITY_BAR §5 QW0;
+  prototype deviations justified under D23's standard.)
+- D24 · 2026-08-08 · **Backend standard compiled → docs/BACKEND_BAR.md** (the
+  backend half of D23, same push). Method: 2 repo audits + 6 web-researched
+  areas + adversarial fact-check of 29 load-bearing claims (28 confirmed,
+  1 refuted) + completeness critic. Headline rulings (full list in the doc §3):
+  multilingual-e5-small embeddings NOT English-only models (pan-EU feeds);
+  transformers.js WASM backend (onnxruntime-node native binaries fail on
+  Vercel); LLM traces metadata-only (body tracing would re-create the CV
+  retention store Groq ZDR eliminates); salary_fit neutral-imputation 0.5
+  (never estimate, never bury unlisted); verifier module is the eval grader,
+  never an LLM judge. Launch-blocking config discovered: Groq retains prompts
+  up to 30 days by DEFAULT — Zero-Data-Retention toggle + DPA required before
+  any real CV data flows; Groq free tier (30 RPM/8K TPM) is a throughput wall
+  → free Developer-tier unlock required pre-launch. Model deprecation now
+  HARD: llama-3.3-70b sunset window closed Aug 2026 (D17 confirmed final;
+  grep-guard the string in CI). Build order BW0-BW5 defined, aligned with
+  QW waves + D21 resequencing. Over-engineering refusals recorded in doc §6
+  (no CF, no ANN index, no queue broker, no staging project, etc., each with
+  its revisit trigger).
+- D23 · 2026-08-08 · **USER DIRECTIVE: the quality bar is the product.**
+  The app must match the design + engineering standard of today's top apps
+  ("same as asking an IT agency or an Apple engineer") — this bar is WHY the
+  founder rejected the external DeepSeek/Hermes build. Priorities ordered by
+  the founder: (1) perfect job suggestions, (2) CV + cover-letter tailoring,
+  (3) automate every process as far as honesty allows — automated submission
+  stays post-MVP (D8/D22). Mobbin research ran 2026-08-08; the standard,
+  evidence links, gap analysis, and quality-wave build order now live in
+  **docs/QUALITY_BAR.md** — that doc governs design/engineering quality the
+  way CONTRACTS.md governs honesty. Headline adoptions: match-reason chips
+  on deck cards (Tinder), "why this ranked" sheet behind every score
+  (Credit Karma), one-tap fact chips feeding the evidence store (Glassdoor),
+  CV health score (Wellfound), Today's Picks daily shelf + honest deck-end
+  (Hinge), value-before-signup onboarding (Duolingo), matcher golden-set
+  eval harness (falsifies "perfect suggestions"). Justified refusals of
+  leader patterns: no salary estimates, no applicant counts — unverifiable
+  numbers stay banned.
+- D22 · 2026-07-26 · **USER DIRECTION: Pro = sustained human-pace applying.**
+  The goal is removing the ENDURANCE limit, not the quality limit: ~50
+  tailored applications/day, every day, at human pace (~1 per 10 min).
+  Explicitly NOT mass-blasting. Design agreed:
+  (a) the agent PREPARES the batch overnight (tailored CV + letter +
+      answers, all drawn from the evidence store);
+  (b) the user approves the BATCH ONCE — consent is preserved, the grind
+      is not; approving 50 individually would defeat the purpose;
+  (c) the agent then submits at human pace across the day and files a
+      receipt per application;
+  (d) screening questions may ONLY be answered from verified facts —
+      anything ungroundable escalates to a "needs you" pile, never a
+      guess. The verifier discipline extends to application answers.
+  Engineering reality recorded so it is not rediscovered: submission is
+  browser automation (no third-party apply API exists), portals redesign
+  often so this needs ongoing maintenance, bot detection is the real
+  technical wall, and the collateral for a flagged submission is the
+  USER's account — human pacing is a safety feature, not a nicety.
+  Still post-MVP (D8: Pro stays a waitlist until Plus revenue exists);
+  this records the target design, not a build order.
+- D21 · 2026-07-26 · **USER SCOPE DIRECTIVE: everything real except payments.**
+  Real accounts + onboarding, real job ingestion, fully functional app;
+  Stripe/checkout stays a mock. Consequences recorded now so they are not
+  re-litigated: (a) the LAW half of W5 is NOT deferred — real accounts hold
+  real CVs, so privacy policy, GDPR export/delete and RLS become mandatory
+  the moment sign-in ships, not at launch; (b) usage METERING must be real
+  even with mock payments, or one account can exhaust the Groq free tier —
+  the meter protects cost, the checkout only collects money; (c) the mock
+  upgrade path must be guarded so it can never reach a public deployment;
+  (d) "scrape" = the plan's public ATS JSON APIs (legal, structured,
+  free), NOT HTML scraping — unchanged from §2.
+  Re-sequenced plan: W0 auth+CV parse and W1 real ingestion come next,
+  W5 splits into W5a (metering + law, real) and W5b (checkout, mocked).
+- D20 · 2026-07-25 · Studio deviations from the prototype, all sanctioned:
+  (a) "Download PDF kit" button added — W3's exit criterion demands an
+  in-studio download; (b) the letter is a FIXED FRAME (app-template greeting
+  + closing) whose substantive paragraphs are verifier-gated suggestions
+  with per-paragraph Accept/Keep — closes the free-text hallucination
+  channel the prototype's letter implied (critic W3 #3); (c) grounding-note
+  copy states the real guarantee instead of the prototype's sample claims;
+  (d) doc toolbar says "Your CV" — prototype's filename was sample personal
+  data; (e) suggestions carry a content-vs-instruction kind: instructions
+  (reorder) apply as ordering actions and never export as prose.
+- D19 · 2026-07-25 · PDF export is CLIENT-SIDE during the mock phase (no
+  server infra exists); the plan §2's server-side render + Supabase Storage
+  + documents.pdf_path becomes the production path once creds exist —
+  receipts require durably stored PDFs, so the client path is temporary.
+  (slice B suggestion, adopted)
+- D18 · 2026-07-25 · Discover header (title + honest sample-data line) is an
+  ADDITION to the prototype (renderDiscover ships no header) — justified by
+  the honesty rule; batch dots and swipe-hint were removed as unsanctioned
+  (prototype dead code). Critic W2 verdict FIX-FIRST: all 12 findings fixed
+  and browser-verified same session.
+- D17 · 2026-07-24 · Plan §2 names Groq llama-3.3-70b, but Groq deprecated it
+  (June 17 2026; serving stops ~Aug 2026 on free/dev tiers). The plan's real
+  decision — Groq for fast cheap inference — stands; the model ID moves to
+  Groq's stated replacement openai/gpt-oss-120b. Working default pending user
+  override; verify the live model list in the console after signup.

@@ -1,0 +1,36 @@
+{
+  "_comment": "Hand-authored fixture — network is unavailable in this environment; reconstructs the Workable widget accounts/{slug} response shape, not a live capture. Includes one job using each of Workable's two live URL schemes (legacy slug-based and newer opaque hash-ID) per the founder risk note in BACKLOG.md RISKS (Batch 2, 2026-07-23).",
+  "name": "Loomery Widget",
+  "jobs": [
+    {
+      "title": "Backend Engineer",
+      "shortcode": "A1B2C3D4",
+      "code": "REQ-1001",
+      "url": "https://apply.workable.com/loomery/j/A1B2C3D4/",
+      "published_on": "2026-07-15",
+      "city": "Berlin",
+      "country": "Germany",
+      "remote": false,
+      "description": "Design and build backend services for our platform. Compensation: €68,000–€82,000 base."
+    },
+    {
+      "title": "Support Engineer (Remote)",
+      "shortcode": "E5F6A7B8",
+      "code": "REQ-1002",
+      "url": "https://apply.workable.com/j/9C7D2E11FA/",
+      "published_on": "2026-07-16",
+      "locations": [{ "city": "Lisbon", "country": "Portugal", "remote": true }],
+      "description": "Help customers succeed with our product, fully remote. Salary not published for this role."
+    },
+    {
+      "title": "Enterprise Account Executive",
+      "shortcode": "C9D0E1F2",
+      "url": "https://apply.workable.com/loomery/j/C9D0E1F2/",
+      "published_on": "2026-07-17",
+      "city": "London",
+      "country": "United Kingdom",
+      "remote": false,
+      "description": "Own enterprise sales cycles end to end. Base salary £90-110k plus commission."
+    }
+  ]
+}

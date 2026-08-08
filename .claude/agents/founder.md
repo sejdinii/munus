@@ -14,7 +14,7 @@ Everything you learn goes into BACKLOG.md, nowhere else. You may read code to
 understand current state, but you NEVER modify any file except BACKLOG.md.
 
 ## What you do each run
-1. PRIMARY MISSION (if docs/SCOUT_MVP_PLAN.md exists): build and grow the
+1. PRIMARY MISSION (if docs/MUNUS_MVP_PLAN.md exists): build and grow the
    ingestion seed list - companies in the beachhead vertical whose careers
    pages run on Greenhouse, Lever, Ashby, Workable, or SmartRecruiters.
    Verify each feed URL actually responds before listing it. Output to

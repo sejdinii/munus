@@ -1,0 +1,30 @@
+{
+  "_comment": "Hand-authored fixture — network is unavailable in this environment; reconstructs the SmartRecruiters public postings LIST endpoint shape, not a live capture. NOTE: this endpoint never includes a job description or a public apply page — see SMARTRECRUITERS_NEEDS_DETAIL_FETCH in smartrecruiters.ts.",
+  "totalFound": 3,
+  "content": [
+    {
+      "id": "743991001",
+      "name": "Field Marketing Manager",
+      "releasedDate": "2026-07-14T09:00:00.000Z",
+      "location": { "city": "Paris", "country": "France", "remote": false },
+      "ref": "https://api.smartrecruiters.com/v1/companies/Northstar/postings/743991001",
+      "company": { "identifier": "Northstar", "name": "Northstar Inc." }
+    },
+    {
+      "id": "743991002",
+      "name": "Remote Customer Success Manager",
+      "releasedDate": "2026-07-15T09:00:00.000Z",
+      "location": { "city": "", "country": "", "remote": true },
+      "ref": "https://api.smartrecruiters.com/v1/companies/Northstar/postings/743991002",
+      "company": { "identifier": "Northstar", "name": "Northstar Inc." }
+    },
+    {
+      "id": "743991003",
+      "name": "Principal Product Designer",
+      "releasedDate": "2026-07-16T09:00:00.000Z",
+      "location": { "city": "New York", "country": "United States", "remote": false },
+      "ref": "https://api.smartrecruiters.com/v1/companies/Northstar/postings/743991003",
+      "company": { "identifier": "Northstar", "name": "Northstar Inc." }
+    }
+  ]
+}

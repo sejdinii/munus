@@ -1,0 +1,75 @@
+# Feed check — the dry run against every seed feed, on GitHub's runners.
+#
+# Why here: our dev sandbox has no outbound network, but GitHub-hosted
+# runners do. This workflow is the "one real HTTP pass over every
+# feed_url" action item from BACKLOG RISKS, finally executable. It hits
+# the REAL ATS endpoints read-only (contract: public job-board JSON APIs,
+# polite headers, no writes anywhere) and reports live/quiet/broken per
+# feed so slugs get re-checked from evidence, not guesses.
+#
+# It is informational: broken feeds do NOT fail the job (a red X here
+# should mean "the check itself couldn't run", not "a company changed
+# ATS"). The summary lands in the run's step summary for humans.
+#
+# Schedule: weekly, plus on demand from the Actions tab. Production
+# ingestion (BW1) will be a separate workflow with Supabase credentials;
+# this one needs NO secrets by design.
+
+name: feed-check
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Only check the first N feeds (blank = all)"
+        required: false
+        type: string
+      ats:
+        description: "Only one ATS (greenhouse|lever|ashby|smartrecruiters|workable)"
+        required: false
+        type: string
+  schedule:
+    # Mondays 06:20 UTC — off the :00 herd, before the work week.
+    - cron: "20 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Dry run against real feeds
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          if [ -n "${{ inputs.ats }}" ]; then ARGS="$ARGS --ats ${{ inputs.ats }}"; fi
+          npx tsx workers/ingestion/index.ts --dry-run $ARGS | tee feed-check.log
+
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo "## Feed check — $(date -u +%Y-%m-%dT%H:%MZ)"
+            echo '```'
+            cat feed-check.log 2>/dev/null || echo "run did not produce output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the log as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feed-check-log
+          path: feed-check.log
+          retention-days: 90

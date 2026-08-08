@@ -1,0 +1,72 @@
+/* Munus design tokens — single source of visual truth.
+   Values are the pink theme of prototypes/scout-pink-v2.html (binding spec).
+   Change requires a DECISIONS LOG entry in FEATURES.md. */
+
+:root {
+  color-scheme: light;
+  --rose: #f20c78; /* forward motion + saving. Never decorative filler. */
+  --rose-ink: #b90056;
+  --rose-soft: #fff0f6;
+  --sky: #78d9ff;
+  --tangerine: #ff8b5c;
+  --butter: #ffe36e;
+  --ink: #18181b;
+  --muted: #6f6f75;
+  --paper: #fffdfd;
+  --canvas: #ebe7e8;
+  --phone: #f8f6f6;
+  --line: #e6e0e2;
+  --quiet: #f0ecee;
+  --green: #16794b;
+  --amber: #a35b00;
+  --red: #c42c43;
+  --shadow: 0 30px 90px rgba(32, 32, 38, 0.18);
+
+  /* ── Motion (QUALITY_BAR §4): ONE system, three speeds, two easings.
+     Rules: UI transitions never exceed --duration-gentle; springs are
+     for arrival moments (cards, sheets, celebration), never for exits
+     (leaving should be quick and unremarkable); reduced-motion strips
+     everything globally in globals.css. Timed HOLDS (stamp flash) are
+     not transitions and may exceed these. */
+  --duration-fast: 140ms; /* micro feedback: press, chip, toggle */
+  --duration-base: 220ms; /* most enters/moves: cards, toasts, rows */
+  --duration-gentle: 300ms; /* largest surfaces: sheets, screen slides */
+  --ease-out-soft: cubic-bezier(0.2, 0.9, 0.25, 1);
+  /* Damped spring (≈8% overshoot, one settle) as a linear() curve —
+     real spring shape, zero JS. Arrival moments only. */
+  --ease-spring: linear(
+    0, 0.06, 0.24 4.9%, 0.68 11.2%, 0.92 15.4%, 1.03 19.5%,
+    1.08 23.8%, 1.09 27.9%, 1.07 32.4%, 1.02 40.1%, 0.996 47.5%,
+    0.99 53%, 0.998 63.4%, 1.001 74.2%, 1
+  );
+}
+
+@theme inline {
+  --color-rose: var(--rose);
+  --color-rose-ink: var(--rose-ink);
+  --color-rose-soft: var(--rose-soft);
+  --color-sky: var(--sky);
+  --color-tangerine: var(--tangerine);
+  --color-butter: var(--butter);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-paper: var(--paper);
+  --color-canvas: var(--canvas);
+  --color-phone: var(--phone);
+  --color-line: var(--line);
+  --color-quiet: var(--quiet);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", sans-serif;
+  /* Radii from the prototype: cards 28, sheets 26, buttons 15/12, chips 7–8 */
+  --radius-card: 28px;
+  --radius-sheet: 26px;
+  --radius-button: 15px;
+  --radius-button-sm: 12px;
+  --radius-chip: 8px;
+}
+/* Motion tokens are plain :root vars (above), consumed via arbitrary
+   values — e.g. duration-[var(--duration-base)] ease-[var(--ease-spring)]
+   — or by keyframe rules in globals.css. No @theme mapping needed. */
