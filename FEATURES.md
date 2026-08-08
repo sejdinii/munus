@@ -234,6 +234,24 @@ DECISIONS LOG D11: recommendation pending user confirmation).
   W2): keep guest preview mode; auth happens at the CV-upload moment; Google
   sign-in first, Apple before beta; alert channel = email digest in W6.
   (checkpoint — user can override any of these)
+- D24 · 2026-08-08 · **Backend standard compiled → docs/BACKEND_BAR.md** (the
+  backend half of D23, same push). Method: 2 repo audits + 6 web-researched
+  areas + adversarial fact-check of 29 load-bearing claims (28 confirmed,
+  1 refuted) + completeness critic. Headline rulings (full list in the doc §3):
+  multilingual-e5-small embeddings NOT English-only models (pan-EU feeds);
+  transformers.js WASM backend (onnxruntime-node native binaries fail on
+  Vercel); LLM traces metadata-only (body tracing would re-create the CV
+  retention store Groq ZDR eliminates); salary_fit neutral-imputation 0.5
+  (never estimate, never bury unlisted); verifier module is the eval grader,
+  never an LLM judge. Launch-blocking config discovered: Groq retains prompts
+  up to 30 days by DEFAULT — Zero-Data-Retention toggle + DPA required before
+  any real CV data flows; Groq free tier (30 RPM/8K TPM) is a throughput wall
+  → free Developer-tier unlock required pre-launch. Model deprecation now
+  HARD: llama-3.3-70b sunset window closed Aug 2026 (D17 confirmed final;
+  grep-guard the string in CI). Build order BW0-BW5 defined, aligned with
+  QW waves + D21 resequencing. Over-engineering refusals recorded in doc §6
+  (no CF, no ANN index, no queue broker, no staging project, etc., each with
+  its revisit trigger).
 - D23 · 2026-08-08 · **USER DIRECTIVE: the quality bar is the product.**
   The app must match the design + engineering standard of today's top apps
   ("same as asking an IT agency or an Apple engineer") — this bar is WHY the
