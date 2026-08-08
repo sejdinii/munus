@@ -191,25 +191,18 @@ export default function StudioPage() {
     showToast(accept ? "Change accepted" : "Original wording kept");
   };
 
-  /* W3 finish (founder direction): LaTeX + Tectonic PDF export server-side.
-     The composed documents (verifier-gated, accepted suggestions only)
-     go to /api/studio/export which renders LaTeX, compiles and returns
-     the PDF. */
-  const exportDoc = async (kind: "cv" | "letter", doc: unknown) => {
-    const response = await fetch("/api/studio/export", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, doc }),
-    });
-    if (!response.ok) throw new Error("export failed");
-    return response.blob();
-  };
-
+  /* W5b free deploy: PDFs render in the user's own browser (pdfmake) —
+     no server engine needed, works on Vercel free and offline. The
+     LaTeX/Tectonic server route stays in the repo as the WASM-upgrade
+     reference (lib/studio/latex.ts + /api/studio/export). */
   const downloadKit = async () => {
     if (!kit || exporting || generating) return;
     setExporting(true);
     try {
       const { downloadBlob } = await import("@/lib/pdf/render");
+      const { renderPdf, buildCvDefinition, buildLetterDefinition } = await import(
+        "@/lib/pdf/browserPdf"
+      );
       const realName =
         typeof user?.user_metadata?.full_name === "string"
           ? user.user_metadata.full_name
@@ -220,14 +213,14 @@ export default function StudioPage() {
         (store.onboarding.roles ?? [])[0],
         { name: realName },
       );
-      downloadBlob(await exportDoc("cv", cvDoc), `CV-${job.company}.pdf`);
+      downloadBlob(await renderPdf(buildCvDefinition(cvDoc)), `CV-${job.company}.pdf`);
       if (acceptedLetterCount > 0) {
         /* Sequential with a gap — simultaneous programmatic downloads trip
            the multiple-download permission outside automation (W3 #13). */
         await new Promise((r) => setTimeout(r, 500));
         const letterDoc = composeLetterDocument(job, acceptedSuggestions, realName);
         downloadBlob(
-          await exportDoc("letter", letterDoc),
+          await renderPdf(buildLetterDefinition(letterDoc)),
           `Letter-${job.company}.pdf`,
         );
         showToast("PDF kit downloaded — every claim evidence-checked");
