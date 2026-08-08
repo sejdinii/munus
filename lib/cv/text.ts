@@ -70,24 +70,23 @@ if (typeof globalThis.DOMMatrix === "undefined") {
 
 /** Point pdfjs at the real worker file. Bundled Next server builds break
  *  the default fake-worker resolution ("Cannot find module
- *  .../chunks/pdf.worker.mjs"); a file:// URL to node_modules fixes it. */
+ *  .../chunks/pdf.worker.mjs"); Vercel serverless functions don't ship
+ *  node_modules at all ("Cannot find module '/var/task/node_modules/...").
+ *  The fix: `new URL("pdfjs-dist/legacy/build/pdf.worker.mjs",
+ *  import.meta.url)` — Turbopack resolves it to a bundled asset that IS
+ *  deployed, so the worker loads from the lambda's own chunks. */
 function setPdfWorker(pdfjs: { GlobalWorkerOptions: { workerSrc?: string } }) {
-  try {
-    const require_ = createRequire(import.meta.url);
-    const workerPath = require_.resolve(
-      "pdfjs-dist/legacy/build/pdf.worker.mjs",
-    );
-    pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
-  } catch {
-    try {
-      // Fallback: `next start` runs from the project root.
-      pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(
-        `${process.cwd()}/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs`,
-      ).href;
-    } catch {
-      console.error("[cv] could not resolve pdf.worker.mjs");
-    }
-  }
+  /* The worker is vendored next to this module (lib/cv/pdf.worker.mjs) and
+     referenced via `new URL(..., import.meta.url)`: Turbopack emits it as
+     a server asset that ships in the lambda. Vercel serverless functions
+     do NOT include node_modules, so pointing at the package path dies
+     with "Cannot find module '/var/task/node_modules/pdfjs-dist/legacy/
+     build/pdf.worker.mjs'". The vendored copy exists in every
+     environment (lambda assets, local .next chunks, raw Node/vitest). */
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "./pdf.worker.mjs",
+    import.meta.url,
+  ).toString();
 }
 
 async function extractPdfText(buffer: ArrayBuffer): Promise<string> {

@@ -71,8 +71,8 @@ export function FactPanel({
       {empty ? (
         <p className="mb-3 mt-0 text-xs leading-[1.45] text-muted">
           The draft parser couldn&apos;t pull facts from this file. Add the
-          important ones below — the real parser unlocks when the AI key is
-          configured.
+          important ones below — the parser hit a snag; your facts still
+          save when you continue.
         </p>
       ) : (
         <ul className="m-0 grid list-none gap-2 p-0">
