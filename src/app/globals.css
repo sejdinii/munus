@@ -974,6 +974,320 @@ a {
   margin-top: 16px;
 }
 
+/* Hero: color as a dominant field (Preply/Chatbase/Hume pattern — pink
+   commits to 55%+ of the fold, never just a CTA accent). */
+.landing-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--rose-soft) 0%, #ffd9ea 58%, #ffd0e4 100%);
+}
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  right: -140px;
+  top: -60px;
+  width: 520px;
+  height: 520px;
+  border-radius: 46% 54% 58% 42%;
+  background: #fcc3de;
+  transform: rotate(18deg);
+}
+.landing-hero::after {
+  content: "";
+  position: absolute;
+  left: -120px;
+  bottom: -160px;
+  width: 380px;
+  height: 380px;
+  border-radius: 55% 45% 48% 52%;
+  background: #ffe1ee;
+}
+.hero-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 44px;
+  max-width: 1080px;
+  margin: 0 auto;
+  align-items: center;
+}
+@media (min-width: 920px) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  }
+}
+.eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(24, 20, 22, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 254, 252, 0.72);
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 750;
+  backdrop-filter: blur(8px);
+}
+.eyebrow-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.landing-hero h1 {
+  margin: 18px 0 0;
+  font-size: clamp(42px, 6.2vw, 72px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  max-width: 12ch;
+}
+.landing-hero h1 em {
+  color: var(--rose);
+  font-style: normal;
+}
+.landing-hero .hero-sub {
+  max-width: 46ch;
+  margin: 22px 0 0;
+  color: #6b5560;
+  font-size: clamp(15px, 1.7vw, 18px);
+  line-height: 1.5;
+}
+.hero-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin-top: 30px;
+}
+.hero-links {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.hero-links a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Mini product mock — real UI language, drawn from the swipe-card spec. */
+.mock-phone {
+  position: relative;
+  width: min(330px, 88vw);
+  margin: 0 auto;
+  border: 1px solid rgba(24, 20, 22, 0.1);
+  border-radius: 34px;
+  background: var(--phone);
+  padding: 16px 14px 18px;
+  box-shadow: 0 30px 70px rgba(32, 32, 38, 0.22);
+  transform: rotate(2deg);
+}
+.mock-card {
+  overflow: hidden;
+  border: 1px solid rgba(24, 20, 22, 0.08);
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: 0 13px 34px rgba(31, 32, 38, 0.09);
+}
+.mock-card-top {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 118px;
+  padding: 15px;
+  background: #dcd6ff;
+}
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  border: 1px solid rgba(24, 20, 22, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.65);
+  padding: 6px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+.source-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.mock-monogram {
+  font-size: 44px;
+  font-weight: 850;
+  letter-spacing: -0.08em;
+  line-height: 0.8;
+  opacity: 0.92;
+}
+.mock-card-body {
+  padding: 15px;
+}
+.mock-card-body .job-company {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.mock-card-body .job-title {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+.mock-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+.fit-mini {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+.fit-mini .fit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  font-size: 11px;
+  font-weight: 750;
+}
+.fit-mini .fit-score {
+  color: var(--green);
+  font-weight: 800;
+}
+.fit-mini .fact-row {
+  margin-top: 6px;
+  font-size: 10.5px;
+}
+.mock-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 14px;
+}
+.mock-actions span {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 5px 13px rgba(31, 32, 38, 0.07);
+}
+.mock-actions .save {
+  border: 2px solid var(--ink);
+  background: var(--rose);
+  color: white;
+  box-shadow: 3px 4px 0 var(--ink);
+}
+
+/* How-it-works: numbered because the sequence itself is the information. */
+.step-grid {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 860px) {
+  .step-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.step-card {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--paper);
+  padding: 22px;
+}
+.step-card .step-no {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: var(--butter);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 14px;
+  font-weight: 850;
+}
+.step-card h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  letter-spacing: -0.03em;
+}
+.step-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Trust band: the differentiator gets its own colored section. */
+.trust-band {
+  background: var(--green-note);
+}
+.trust-grid {
+  display: grid;
+  gap: 40px;
+  max-width: 1080px;
+  margin: 0 auto;
+  align-items: center;
+}
+@media (min-width: 920px) {
+  .trust-grid {
+    grid-template-columns: 1.05fr 0.95fr;
+  }
+}
+.trust-band h2,
+.trust-band .section-lead {
+  color: var(--green-note-ink);
+}
+.trust-band .section-lead {
+  color: #3f6a54;
+}
+.trust-points {
+  display: grid;
+  gap: 12px;
+  margin-top: 26px;
+}
+.trust-points .fact-row {
+  font-size: 13.5px;
+  color: var(--green-note-ink);
+}
+.no-bot-line {
+  margin-top: 26px;
+  border-left: 1px solid #bcdccb;
+  padding-left: 14px;
+  color: #3f6a54;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.evidence-mock {
+  border: 1px solid #cdebdc;
+  border-radius: 22px;
+  background: var(--paper);
+  padding: 20px;
+  box-shadow: 0 16px 40px rgba(22, 121, 75, 0.1);
+  transform: rotate(-1.5deg);
+}
+.evidence-mock .grounding-note {
+  margin-bottom: 14px;
+}
+.evidence-mock .fact-source {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
 .landing-footer {
   border-top: 1px solid var(--line);
   padding: 30px clamp(20px, 5vw, 48px);

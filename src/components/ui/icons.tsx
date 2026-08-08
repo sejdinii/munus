@@ -18,6 +18,12 @@ const PATHS: Record<string, React.ReactNode> = {
   ),
   doc: <path d="M5 4h14v16H5zM8 9h8M8 13h5" />,
   check: <path d="M20 6 9 17l-5-5" />,
+  heart: (
+    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.7-7.5a5.5 5.5 0 0 0 1.1-8.9Z" />
+  ),
+  star: (
+    <path d="m12 3 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.2l5.9-.8L12 3Z" />
+  ),
   "arrow-up-right": <path d="M7 17 17 7M8 7h9v9" />,
   alert: (
     <>
