@@ -7,7 +7,7 @@
    (setArchived(id, false) unarchives from there). */
 
 import { useState } from "react";
-import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, ErrorState, SkeletonRows } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { jobById, type Job } from "@/lib/mock/jobs";
 import { useMunusStore, type Application } from "@/lib/mock/store";
@@ -28,7 +28,7 @@ export default function ApplicationsPage() {
   const { hydrated, applications, setArchived } = useMunusStore();
   const [showArchived, setShowArchived] = useState(false);
 
-  if (!hydrated) return <LoadingState label="Loading applications" />;
+  if (!hydrated) return <SkeletonRows label="Loading applications" />;
 
   // Most recently touched first.
   /* Most recently touched first, by the stamp that actually exists —

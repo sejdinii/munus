@@ -4,7 +4,7 @@
    to jobs that have not already become an application (prototype's
    `renderFavorites`: applied jobs graduate to Applications). Wave 1 slice 3. */
 
-import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, ErrorState, SkeletonRows } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { jobById } from "@/lib/mock/jobs";
 import { useMunusStore } from "@/lib/mock/store";
@@ -34,7 +34,7 @@ function PageHeader({ subtitle }: { subtitle: string }) {
 export default function FavoritesPage() {
   const { hydrated, favorites, applications } = useMunusStore();
 
-  if (!hydrated) return <LoadingState label="Loading favorites" />;
+  if (!hydrated) return <SkeletonRows label="Loading favorites" />;
 
   const shortlistedIds = favorites.filter(
     (id) => !applications.some((a) => a.jobId === id),

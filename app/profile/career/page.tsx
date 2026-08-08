@@ -10,7 +10,7 @@
    list were ever empty (it never is in the mock, but a real CV-parse
    failure could produce zero facts). */
 
-import { EmptyState, LoadingState } from "@/components/states";
+import { EmptyState, SkeletonRows } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
@@ -37,7 +37,7 @@ export default function CareerProfilePage() {
   const { hydrated, onboarding } = useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <LoadingState label="Loading your evidence store" />;
+  if (!hydrated) return <SkeletonRows label="Loading your evidence store" />;
 
   const grouped = groupByKind(mockFacts);
 

@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { EmptyState, ErrorState, SkeletonDeck } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { jobs, type Job } from "@/lib/mock/jobs";
@@ -86,7 +86,7 @@ export default function DiscoverPage() {
     if (top && decidingRef.current !== top.id) decidingRef.current = null;
   }, [top]);
 
-  if (!store.hydrated) return <LoadingState label="Preparing your deck" />;
+  if (!store.hydrated) return <SkeletonDeck label="Preparing your deck" />;
 
   if (store.storageError && store.decisions.length === 0) {
     return (

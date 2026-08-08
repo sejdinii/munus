@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { ErrorState, LoadingState } from "@/components/states";
+import { ErrorState, SkeletonDetail } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
@@ -107,7 +107,7 @@ export default function StudioPage() {
     }
   }, [job, generated, kit, generating, tone, runGenerate]);
 
-  if (!store.hydrated) return <LoadingState label="Opening the studio" />;
+  if (!store.hydrated) return <SkeletonDetail label="Opening the studio" />;
 
   if (!job) {
     return (

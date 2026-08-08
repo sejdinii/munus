@@ -10,7 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { ErrorState, LoadingState } from "@/components/states";
+import { ErrorState, SkeletonDetail } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
@@ -72,7 +72,7 @@ export default function PreflightPage() {
     };
   }, []);
 
-  if (!store.hydrated) return <LoadingState label="Preparing your review" />;
+  if (!store.hydrated) return <SkeletonDetail label="Preparing your review" />;
 
   if (store.storageError && store.applications.length === 0) {
     return (

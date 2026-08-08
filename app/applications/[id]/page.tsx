@@ -7,7 +7,7 @@
    submit copy from the prototype — MVP never auto-submits (CONTRACTS §3.3). */
 
 import { useParams, useRouter } from "next/navigation";
-import { ErrorState, LoadingState } from "@/components/states";
+import { ErrorState, SkeletonDetail } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Topbar } from "@/components/ui/Topbar";
 import { useToast } from "@/components/ui/Toast";
@@ -72,7 +72,7 @@ export default function ApplicationReceiptPage() {
     useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <LoadingState label="Loading receipt" />;
+  if (!hydrated) return <SkeletonDetail label="Loading receipt" />;
 
   const application = applications.find((a) => a.jobId === id);
   const job = jobById(id);

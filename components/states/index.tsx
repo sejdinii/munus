@@ -15,6 +15,102 @@ export function LoadingState({ label = "Loading" }: { label?: string }) {
   );
 }
 
+/* ── Skeletons (QUALITY_BAR §4: skeletons, not spinners, on data
+   surfaces). LoadingState's spinner remains correct for PROCESS states
+   (something is being done: generating, submitting); skeletons are for
+   "your data is on its way" and must echo the destination's layout so
+   the reveal doesn't jump. All are aria-hidden inside a labelled
+   role=status wrapper — screen readers get one announcement, not a
+   pile of meaningless boxes. */
+
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div aria-hidden className={`skeleton rounded-lg ${className}`} />;
+}
+
+function SkeletonShell({
+  label,
+  children,
+  className = "",
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div role="status" aria-live="polite" className={`flex-1 ${className}`}>
+      <span className="sr-only">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+/** Deck-shaped: one large card with photo area, title lines, chip row. */
+export function SkeletonDeck({ label = "Loading your deck" }: { label?: string }) {
+  return (
+    <SkeletonShell label={label} className="grid p-4">
+      <div className="relative flex flex-col overflow-hidden rounded-[28px] border border-ink/10 bg-paper p-[18px]">
+        <Skeleton className="mb-4 h-[44%] min-h-[190px] w-full rounded-[20px]" />
+        <Skeleton className="mb-2.5 h-7 w-3/4" />
+        <Skeleton className="mb-5 h-4 w-1/2" />
+        <div className="mb-5 flex gap-2">
+          <Skeleton className="h-6 w-20 rounded-[8px]" />
+          <Skeleton className="h-6 w-24 rounded-[8px]" />
+          <Skeleton className="h-6 w-16 rounded-[8px]" />
+        </div>
+        <div className="mt-auto flex items-center justify-center gap-4">
+          <Skeleton className="size-[54px] rounded-full" />
+          <Skeleton className="size-[64px] rounded-full" />
+          <Skeleton className="size-[54px] rounded-full" />
+        </div>
+      </div>
+    </SkeletonShell>
+  );
+}
+
+/** List-shaped: leading tile + two text lines, for favorites/applications/
+ *  profile rows. */
+export function SkeletonRows({
+  count = 4,
+  label = "Loading",
+}: {
+  count?: number;
+  label?: string;
+}) {
+  return (
+    <SkeletonShell label={label} className="grid content-start gap-3 p-4">
+      {Array.from({ length: count }, (_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3.5 rounded-[18px] border border-line bg-paper p-3.5"
+        >
+          <Skeleton className="size-[46px] shrink-0 rounded-[14px]" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className="mb-2 h-4 w-2/3" />
+            <Skeleton className="h-3 w-2/5" />
+          </div>
+        </div>
+      ))}
+    </SkeletonShell>
+  );
+}
+
+/** Detail/document-shaped: heading block then paragraph lines, for job
+ *  detail, receipt, and studio surfaces. */
+export function SkeletonDetail({ label = "Loading" }: { label?: string }) {
+  return (
+    <SkeletonShell label={label} className="grid content-start gap-3 p-5">
+      <Skeleton className="h-8 w-4/5" />
+      <Skeleton className="mb-3 h-4 w-1/2" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-11/12" />
+      <Skeleton className="mt-3 h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="mt-5 h-[52px] w-full rounded-[15px]" />
+    </SkeletonShell>
+  );
+}
+
 export function EmptyState({
   symbol,
   title,

@@ -7,7 +7,7 @@
    lands with the matching engine in a later wave. */
 
 import { useParams, useRouter } from "next/navigation";
-import { ErrorState, LoadingState } from "@/components/states";
+import { ErrorState, SkeletonDetail } from "@/components/states";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { MetaChip } from "@/components/ui/Chip";
 import { Topbar } from "@/components/ui/Topbar";
@@ -23,7 +23,7 @@ export default function JobDetailPage() {
   const { hydrated, favorites, decide } = useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <LoadingState label="Loading role" />;
+  if (!hydrated) return <SkeletonDetail label="Loading role" />;
 
   const job = jobById(id);
 

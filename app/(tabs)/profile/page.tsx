@@ -7,7 +7,7 @@
    from the role answer instead of a person's name — see final report. */
 
 import Link from "next/link";
-import { LoadingState } from "@/components/states";
+import { SkeletonRows } from "@/components/states";
 import { useToast } from "@/components/ui/Toast";
 import { useMunusStore } from "@/lib/mock/store";
 import { SettingRow } from "./SettingRow";
@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const { hydrated, swipesLeft, onboarding, reset } = useMunusStore();
   const { showToast } = useToast();
 
-  if (!hydrated) return <LoadingState label="Loading profile" />;
+  if (!hydrated) return <SkeletonRows count={5} label="Loading profile" />;
 
   const prefFields = [
     onboarding.role,
