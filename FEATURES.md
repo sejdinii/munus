@@ -5,6 +5,21 @@
 # RULE: nothing gets marked DONE without being run/tested in this session.
 # Authority chain: docs/MUNUS_MVP_PLAN.md (product) > CONTRACTS.md (technical) > this file (state).
 
+## ⚠ REPO STATE — READ BEFORE TOUCHING BRANCHES (2026-08-08)
+- `claude/munus-bootstrap-plan-11inb2` (this branch) is the CANONICAL state.
+- `backup/w5b-final` is a REJECTED line of work (built with DeepSeek + a
+  Hermes agent, ~38 commits). The founder reviewed it, did not accept the
+  result, and deliberately reverted to this branch. **Never merge it.** It
+  is retained as a backup only. Its FEATURES.md claims W0–W5b DONE and a
+  live deployment — those claims describe the rejected line, NOT reality.
+- `main` sitting at the initial commit is DELIBERATE, not an accident.
+- External services were DELETED by the founder, not merely unconfigured:
+  Supabase project + database, Google auth client, Vercel deployment, Groq
+  API keys. Any of them must be recreated from scratch before real data
+  work resumes; nothing from the rejected line survives.
+- A prior session mistook the rejected branch for the current state and
+  reported the app as live. Verify against this note first.
+
 ## MVP Definition of Done
 Munus MVP is DONE when: the app boots with zero errors, every CORE flow below is
 DONE (not PARTIAL), every screen has loading/empty/error states, and the
