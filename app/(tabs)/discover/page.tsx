@@ -122,31 +122,39 @@ export default function DiscoverPage() {
 
   const { status } = useSession();
   /* W2: when signed in with a real backend, the deck comes from /api/deck
-     (ranked real jobs); signed-out preview keeps the mock catalog. */
+     (ranked real jobs); signed-out preview keeps the mock catalog.
+     W5b: a failed load must be retryable — the error state previously
+     stuck forever until a manual reload (transient deploy-window 5xx
+     stranded signed-in users on the empty state). */
   const [realDeck, setRealDeck] = useState<Job[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const loadDeck = useCallback(async () => {
+    if (status !== "signedIn") return;
+    setLoadFailed(false);
+    try {
+      const r = await fetch("/api/deck");
+      if (!r.ok) throw new Error("deck" + r.status);
+      const payload = (await r.json()) as { jobs?: RealDeckJob[] };
+      const rows = payload?.jobs ?? [];
+      if (rows.length > 0) {
+        const mapped = rows.map(toJobShape);
+        setRealDeck(mapped);
+        /* Real jobs must open in the studio (their ids aren't in the
+           mock catalog) — cache them in the store for lookup. */
+        store.setDeckCache(mapped);
+      } else {
+        setLoadFailed(true);
+      }
+    } catch {
+      /* network/API failure: keep the mock catalog visible but surface
+         an honest retry path instead of pretending nothing happened. */
+      setLoadFailed(true);
+    }
+  }, [status]);
   useEffect(() => {
     if (status !== "signedIn") return;
-    let cancelled = false;
-    fetch("/api/deck")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("deck" + r.status))))
-      .then((payload) => {
-        if (cancelled) return;
-        const rows = (payload?.jobs ?? []) as RealDeckJob[];
-        if (rows.length > 0) {
-          const mapped = rows.map(toJobShape);
-          setRealDeck(mapped);
-          /* Real jobs must open in the studio (their ids aren't in the
-             mock catalog) — cache them in the store for lookup. */
-          store.setDeckCache(mapped);
-        }
-      })
-      .catch(() => {
-        /* network/API failure: fall back to the mock catalog silently */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [status]);
+    void loadDeck();
+  }, [status, loadDeck]);
 
   const source = realDeck ?? jobs;
   const deck: Job[] = source.filter(
@@ -255,7 +263,7 @@ export default function DiscoverPage() {
             realDeck
               ? "You've swiped through every ranked role. Fresh listings arrive with the next daily refresh — undo a decision or revisit your favorites."
               : status === "signedIn"
-                ? "Live listings couldn't be loaded right now — check back in a moment."
+                ? "Live listings couldn't be loaded right now — hit Try again below."
                 : "You're browsing the sample catalog as a guest. Sign in to see live listings ranked for you."
           }
         >
@@ -266,6 +274,10 @@ export default function DiscoverPage() {
             <LinkButton href="/onboarding" variant="default" className="w-full">
               Sign in for live listings
             </LinkButton>
+          ) : loadFailed ? (
+            <Button onClick={() => void loadDeck()} variant="primary" className="w-full">
+              Try again
+            </Button>
           ) : null}
           {canUndo ? (
             <button
