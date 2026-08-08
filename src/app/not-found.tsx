@@ -5,7 +5,8 @@ import { EmptyState } from "@/components/ui/states";
 
 export default function NotFound() {
   return (
-    <Screen>
+    <div className="app-frame">
+      <Screen>
       <EmptyState
         symbol={<Icon name="x" size={26} />}
         title="That page doesn't exist"
@@ -15,6 +16,7 @@ export default function NotFound() {
           Back to Scout
         </ButtonLink>
       </EmptyState>
-    </Screen>
+      </Screen>
+    </div>
   );
 }

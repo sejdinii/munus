@@ -19,9 +19,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
-        <div className="app-frame">{children}</div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -7,7 +7,8 @@ import { EmptyState } from "@/components/ui/states";
 
 export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
   return (
-    <Screen>
+    <div className="app-frame">
+      <Screen>
       <EmptyState
         symbol={<Icon name="alert" size={26} />}
         title="Something broke"
@@ -17,6 +18,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
           Try again
         </Button>
       </EmptyState>
-    </Screen>
+      </Screen>
+    </div>
   );
 }

@@ -32,6 +32,7 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
 | Usage metering (server-side; Free limits, Plus fair-use) | MISSING | — | phase 5 |
 | Stripe: Plus checkout + portal + webhooks + paywall moments | MISSING | — | phase 5 |
 | Privacy/terms + GDPR export/delete | MISSING | — | phase 5; legal-blocking for launch, not for demo |
+| Landing page at / (Persuade; CTA → app, pricing shown) | MISSING | — | user-decided 2026-08-08; replaces welcome screen as / |
 
 ## REQUIRED BUT NOT CORE (pre-launch)
 | Feature | Status | Verified how | Notes |
@@ -100,6 +101,12 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
   space/visual-mass bar, input-freedom check.
 
 ## DECISIONS LOG
+- 2026-08-08 · USER DECIDED (landing page): built as the app's real / route
+  (not a prototypes/ mock); primary CTA links into the app (/sign-in), NOT a
+  waitlist; pricing section shown publicly (Free / Plus €14.99 / Pro teaser).
+  Consequence: former welcome screen is superseded by the landing; app
+  screens moved into the (app) route group with the phone frame; PRODUCT.md
+  created as durable product truth (impeccable init).
 - 2026-08-08 · Scope + architecture locked per docs/SCOUT_MVP_PLAN.md (approved before this session): discovery + favorites + evidence-only AI docs + redirect apply; auto-apply Pro is architected-for, not built. Stack: Next.js + Supabase + Groq + Stripe, PWA-first.
 - 2026-08-08 · Prototype `scout-pink-v2.html` is the design spec, PINK theme (body[data-theme="pink"] overrides). Pixel-exact port is the bar; deviations need written reasons.
 - 2026-08-08 · Beachhead vertical: product/UX designers in Europe. USER
