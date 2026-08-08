@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import { MunusStoreProvider } from "@/lib/mock/store";
 import { ToastProvider } from "@/components/ui/Toast";
+import { RegisterSW } from "@/components/pwa/RegisterSW";
 
 export const metadata: Metadata = {
   title: "Munus — find the roles worth your time",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <RegisterSW />
         <MunusStoreProvider>
           <ToastProvider>
             <div className="relative mx-auto flex min-h-dvh max-w-[430px] flex-col bg-phone">
