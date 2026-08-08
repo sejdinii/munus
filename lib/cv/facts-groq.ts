@@ -24,10 +24,13 @@ Rules:
 - source_span: 10-160 chars, verbatim from the CV.
 - If the CV text is unreadable or empty, return {"facts":[]}.`;
 
+export type GroqUsage = { promptTokens: number; completionTokens: number } | null;
+
 export async function extractFactsGroq(
   text: string,
   apiKey: string,
   fetchImpl: typeof fetch = fetch,
+  onUsage?: (usage: GroqUsage) => void,
 ): Promise<CvFact[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 45_000);
@@ -59,9 +62,14 @@ export async function extractFactsGroq(
     }
     const payload = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) return [];
+    onUsage?.({
+      promptTokens: payload.usage?.prompt_tokens ?? 0,
+      completionTokens: payload.usage?.completion_tokens ?? 0,
+    });
     return parseFactsJson(content);
   } finally {
     clearTimeout(timer);

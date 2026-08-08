@@ -7,9 +7,12 @@
    from the role answer instead of a person's name — see final report. */
 
 import Link from "next/link";
+import { useState } from "react";
 import { LoadingState } from "@/components/states";
 import { useToast } from "@/components/ui/Toast";
 import { useMunusStore } from "@/lib/mock/store";
+import { useSession } from "@/lib/supabase/session";
+import { createClient } from "@/lib/supabase/client";
 import { SettingRow } from "./SettingRow";
 
 function initialsFromRole(role?: string): string {
@@ -26,6 +29,11 @@ function initialsFromRole(role?: string): string {
 export default function ProfilePage() {
   const { hydrated, swipesLeft, onboarding, reset } = useMunusStore();
   const { showToast } = useToast();
+  const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { user } = useSession();
+  const isOwner = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   if (!hydrated) return <LoadingState label="Loading profile" />;
 
@@ -41,6 +49,47 @@ export default function ProfilePage() {
   const handleReset = () => {
     reset();
     showToast("Demo data reset");
+  };
+
+  /* W5a — GDPR export: every row about this user, as a JSON download. */
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const response = await fetch("/api/gdpr/export", { method: "POST" });
+      if (!response.ok) throw new Error("export failed");
+      const payload = await response.json();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `munus-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Your data export is downloading");
+    } catch {
+      showToast("Export failed — try again");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  /* W5a — GDPR delete: wipe every row + the auth user, then sign out. */
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch("/api/gdpr/delete", { method: "POST" });
+      if (!response.ok) throw new Error("delete failed");
+      showToast("Account deleted — everything erased");
+      reset();
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      setDeleting(false);
+      setDeleteOpen(false);
+      showToast("Delete failed — try again");
+    }
   };
 
   return (
@@ -91,6 +140,41 @@ export default function ProfilePage() {
         <SettingRow label="Privacy and automation" meta="Review first ›" />
         <SettingRow label="Privacy policy" meta="Draft ›" href="/privacy" />
         <SettingRow label="Terms of service" meta="Draft ›" href="/terms" />
+
+        {/* W5a — GDPR: your data, your call (Art. 15/17). */}
+        <div className="mt-6 border-t border-line pt-5">
+          <h3 className="m-0 mb-1.5 text-[11px] font-[760] uppercase tracking-[0.1em] text-rose-ink">
+            Your data
+          </h3>
+          <p className="mb-3 text-[11px] text-muted">
+            Everything munus holds about you — export it anytime, or erase
+            it all. This is your right under EU law.
+          </p>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex min-h-11 w-full items-center justify-between rounded-lg px-1 text-left text-[13px] font-[650] disabled:opacity-50"
+          >
+            Export my data
+            <span className="text-[11px] font-[650] text-rose-ink">
+              {exporting ? "Packaging…" : "JSON ›"}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="flex min-h-11 w-full items-center justify-between rounded-lg px-1 text-left text-[13px] font-[650] text-rose-ink"
+          >
+            Delete my account
+            <span className="text-[11px]">Erases everything ›</span>
+          </button>
+        </div>
+
+        {isOwner ? (
+          <SettingRow label="AI cost meter" meta="Operator ›" href="/admin" />
+        ) : null}
+
         <SettingRow
           label="I got hired 🎉"
           meta="Pause everything ›"
@@ -114,6 +198,37 @@ export default function ProfilePage() {
           </p>
         </div>
       </div>
+
+      {/* W5a — delete confirm: a destructive act gets a real dialog. */}
+      {deleteOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-5">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="m-0 text-[20px] tracking-[-0.03em]">Delete everything?</h3>
+            <p className="mt-2 text-xs text-muted">
+              Your profile, CV facts, favorites and AI usage will be erased
+              from munus. This cannot be undone.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setDeleteOpen(false)}
+                className="min-h-11 rounded-xl bg-quiet text-[13px] font-[700] disabled:opacity-50"
+              >
+                Keep my account
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDelete}
+                className="min-h-11 rounded-xl bg-rose-ink text-[13px] font-[700] text-white disabled:opacity-50"
+              >
+                {deleting ? "Erasing…" : "Delete everything"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

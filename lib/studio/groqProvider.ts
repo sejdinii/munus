@@ -13,6 +13,7 @@ import type {
   TailorRequest,
   TailorResult,
 } from "./types";
+import type { GroqUsage } from "@/lib/cv/facts-groq";
 
 const TAILOR_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 const TAILOR_MODEL = "openai/gpt-oss-120b";
@@ -32,11 +33,12 @@ Rules:
 export function groqTailorProvider(
   apiKey: string,
   fetchImpl: typeof fetch = fetch,
+  onUsage?: (usage: GroqUsage) => void,
 ): TailorProvider {
   return {
     name: "groq",
     tailor(request: TailorRequest): Promise<TailorResult> {
-      return callGroq(request, apiKey, fetchImpl);
+      return callGroq(request, apiKey, fetchImpl, onUsage);
     },
   };
 }
@@ -45,6 +47,7 @@ async function callGroq(
   request: TailorRequest,
   apiKey: string,
   fetchImpl: typeof fetch,
+  onUsage?: (usage: GroqUsage) => void,
 ): Promise<TailorResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30_000);
@@ -76,9 +79,14 @@ async function callGroq(
     if (!response.ok) return { suggestions: [] };
     const payload = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) return { suggestions: [] };
+    onUsage?.({
+      promptTokens: payload.usage?.prompt_tokens ?? 0,
+      completionTokens: payload.usage?.completion_tokens ?? 0,
+    });
     return { suggestions: parseSuggestions(content, request.facts) };
   } catch {
     return { suggestions: [] };

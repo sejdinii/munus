@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { scoreJob, type MatchFact, type MatchJob, type MatchProfile } from "@/lib/matching/score";
 import { polishReasons } from "@/lib/matching/reasons";
+import { recordUsage, costOf } from "@/lib/llm/meter";
 
 /**
  * W2 deck API — GET /api/deck
@@ -113,6 +114,18 @@ export async function GET() {
         provenFacts: facts.slice(0, 30).map((f) => `${f.kind}: ${f.content}`),
       },
       groqKey,
+      undefined,
+      (usage) => {
+        if (!usage) return;
+        void recordUsage(supabase, {
+          profileId: user.id,
+          endpoint: "reasons",
+          model: "openai/gpt-oss-120b",
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          costEur: costOf("openai/gpt-oss-120b", usage.promptTokens, usage.completionTokens),
+        });
+      },
     );
     if (llm.length > 0) {
       entry.reasons = llm;

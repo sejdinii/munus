@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { extractTextFromCv } from "@/lib/cv/text";
 import { extractFacts } from "@/lib/cv/facts";
+import { recordUsage, costOf } from "@/lib/llm/meter";
 import type { CvParseResult } from "@/lib/cv/types";
 
 export const runtime = "nodejs";
@@ -74,10 +75,22 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Parse facts (Groq when configured, mock otherwise).
-  const { facts, provider } = await extractFacts(text, {
-    groqApiKey: process.env.GROQ_API_KEY,
-  });
+  // 3. Parse facts (Groq when configured, mock otherwise). Metered.
+  const { facts, provider } = await extractFacts(
+    text,
+    { groqApiKey: process.env["GROQ_API_KEY"] },
+    (usage) => {
+      if (!usage) return;
+      void recordUsage(supabase, {
+        profileId: user.id,
+        endpoint: "cv-parse",
+        model: "openai/gpt-oss-120b",
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        costEur: costOf("openai/gpt-oss-120b", usage.promptTokens, usage.completionTokens),
+      });
+    },
+  );
 
   // 4. Persist: replace the profile's fact set (one source of truth per upload).
   const { error: deleteError } = await supabase

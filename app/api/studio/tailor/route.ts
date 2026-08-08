@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateKit } from "@/lib/studio/pipeline";
 import { groqTailorProvider } from "@/lib/studio/groqProvider";
+import { recordUsage, costOf, countToday } from "@/lib/llm/meter";
 import { mockTailorProvider } from "@/lib/studio/mockProvider";
 import type { Fact, TailorRequest } from "@/lib/studio/types";
 
@@ -84,7 +85,32 @@ export async function POST(request: Request) {
   };
 
   const groqKey = process.env.GROQ_API_KEY;
-  const provider = groqKey ? groqTailorProvider(groqKey) : mockTailorProvider;
+  /* W5a cap: the invisible guardrail — free tier gets 5 tailor runs/day
+     per user; the meter is the source of truth (counts today's rows). */
+  const DAILY_TAILOR_CAP = 5;
+  const usedToday = await countToday(supabase, user.id, "tailor");
+  if (usedToday >= DAILY_TAILOR_CAP) {
+    return NextResponse.json(
+      {
+        error: "tailor-limit",
+        message: `You’ve used your ${DAILY_TAILOR_CAP} AI tailoring runs for today — come back tomorrow.`,
+      },
+      { status: 429 },
+    );
+  }
+  const provider = groqKey
+    ? groqTailorProvider(groqKey, undefined, (usage) => {
+        if (!usage) return;
+        void recordUsage(supabase, {
+          profileId: user.id,
+          endpoint: "tailor",
+          model: "openai/gpt-oss-120b",
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          costEur: costOf("openai/gpt-oss-120b", usage.promptTokens, usage.completionTokens),
+        });
+      })
+    : mockTailorProvider;
   const result = await generateKit(provider, requestBody.job, facts, tone);
 
   return NextResponse.json({

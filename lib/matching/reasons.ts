@@ -7,6 +7,8 @@
 const REASON_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 const REASON_MODEL = "openai/gpt-oss-120b";
 
+import type { GroqUsage } from "@/lib/cv/facts-groq";
+
 const SYSTEM_PROMPT = `You write the "why this job matches" lines for a job-matching app.
 Given a candidate's proven facts (from their CV) and one job, return STRICT JSON:
 {"reasons":["<line 1>","<line 2>"]}
@@ -26,6 +28,7 @@ export async function polishReasons(
   input: ReasonInput,
   apiKey: string,
   fetchImpl: typeof fetch = fetch,
+  onUsage?: (usage: GroqUsage) => void,
 ): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20_000);
@@ -54,9 +57,14 @@ export async function polishReasons(
     if (!response.ok) return [];
     const payload = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) return [];
+    onUsage?.({
+      promptTokens: payload.usage?.prompt_tokens ?? 0,
+      completionTokens: payload.usage?.completion_tokens ?? 0,
+    });
     let parsed: unknown;
     try {
       parsed = JSON.parse(content);
