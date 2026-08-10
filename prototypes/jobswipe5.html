@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Job Swipe</title>
+  <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/e66905e07608167a84e6ad52f638c3c6?family=Helvetica+Now+Var" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background: #ffffff;
+      overflow-x: hidden;
+    }
+
+    .vf-root, .vf-root * {
+      font-family: 'Helvetica Now Var', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      box-sizing: border-box;
+    }
+
+    .vf-root button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .liquid-glass,
+    .liquid-glass-selected {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.01);
+      background-blend-mode: luminosity;
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .liquid-glass-selected {
+      background: rgba(255, 255, 255, 0.12);
+      background-blend-mode: luminosity;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .liquid-glass::before,
+    .liquid-glass-selected::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .liquid-glass::before {
+      background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0)    40%,
+        rgba(255, 255, 255, 0)    60%,
+        rgba(255, 255, 255, 0.15) 80%,
+        rgba(255, 255, 255, 0.45) 100%);
+    }
+
+    .liquid-glass-selected::before {
+      background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.6)  0%,
+        rgba(255, 255, 255, 0.25) 20%,
+        rgba(255, 255, 255, 0)    40%,
+        rgba(255, 255, 255, 0)    60%,
+        rgba(255, 255, 255, 0.25) 80%,
+        rgba(255, 255, 255, 0.6)  100%);
+    }
+
+    .fade-up {
+      opacity: 0;
+      animation: vfFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes vfFadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes vfScaleIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes vfSlideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up { animation-duration: 0.01s; }
+      .vf-scale-in { animation-duration: 0.01s; }
+      .vf-slide-up { animation-duration: 0.01s; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    // ── Icon components (Lucide SVG inline — no CDN dependency) ──
+
+    const IconX = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    );
+
+    const IconCheck = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 6 9 17l-5-5"/>
+      </svg>
+    );
+
+    const IconBookmark = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill={props.fill||"none"} stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+    );
+
+    const IconHeart = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill={props.fill||"none"} stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+      </svg>
+    );
+    const IconMapPin = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    );
+
+    const IconSlidersHorizontal = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/>
+        <line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/>
+        <line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/>
+        <line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/>
+        <line x1="18" x2="22" y1="16" y2="16"/>
+      </svg>
+    );
+
+    const IconRotateCcw = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+    );
+
+    const IconBriefcase = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        <rect width="20" height="14" x="2" y="6" rx="2"/>
+      </svg>
+    );
+
+    const IconLayers = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/>
+        <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/>
+        <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>
+      </svg>
+    );
+
+    const IconSend = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+      </svg>
+    );
+
+    const IconUser = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+    );
+
+    const IconChevronRight = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="m9 18 6-6-6-6"/>
+      </svg>
+    );
+
+    const IconShieldCheck = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    );
+
+    const IconUpload = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" x2="12" y1="3" y2="15"/>
+      </svg>
+    );
+
+    const IconSliders = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" x2="4" y1="21" y2="14"/>
+        <line x1="4" x2="4" y1="10" y2="3"/>
+        <line x1="12" x2="12" y1="21" y2="12"/>
+        <line x1="12" x2="12" y1="8" y2="3"/>
+        <line x1="20" x2="20" y1="21" y2="16"/>
+        <line x1="20" x2="20" y1="12" y2="3"/>
+        <line x1="2" x2="6" y1="14" y2="14"/>
+        <line x1="10" x2="14" y1="8" y2="8"/>
+        <line x1="18" x2="22" y1="16" y2="16"/>
+      </svg>
+    );
+
+    const IconArrowRight = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <line x1="5" x2="19" y1="12" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    );
+
+    const IconPencil = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+        <path d="m15 5 4 4"/>
+      </svg>
+    );
+
+    const IconEye = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    );
+
+    const IconChevronDown = (props) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={props.size||24} height={props.size||24}
+        viewBox="0 0 24 24" fill="none" stroke={props.color||"currentColor"}
+        strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    );
+
+    // ── Constants ──
+
+    const BG_URL = "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260704_143500_a76b8e64-2c69-4683-80e7-2bb060a921d6.png&w=1280&q=85";
+
+    const JOBS = [
+      { id: 1, company: "SAP SE", initials: "SA", role: "Machine Learning Engineer", location: "Berlin, DE", salary: "€78–95k", type: "Full-time", tags: ["Hybrid", "Visa sponsor"], match: 92, skills: 5 },
+      { id: 2, company: "Zalando", initials: "ZA", role: "Data Scientist, Growth", location: "Berlin, DE", salary: "€70–85k", type: "Full-time", tags: ["Remote", "Listed"], match: 87, skills: 4 },
+      { id: 3, company: "Delivery Hero", initials: "DH", role: "AI Product Engineer", location: "Berlin, DE", salary: "€82–100k", type: "Full-time", tags: ["Remote", "4-day week"], match: 84, skills: 4 },
+      { id: 4, company: "N26", initials: "N2", role: "MLOps Engineer", location: "Berlin, DE", salary: "€75–90k", type: "Full-time", tags: ["Hybrid", "Stock options"], match: 78, skills: 3 },
+      { id: 5, company: "Celonis", initials: "CE", role: "Analytics Engineer", location: "Munich, DE", salary: "€62–74k", type: "Full-time", tags: ["On-site", "Relocation"], match: 71, skills: 3 }
+    ];
+
+    // Per-job CV + cover letter mock statuses for the Saved tab
+    const DOC_STATUS = {
+      1: { cv: "ready", cvText: "Tailored CV emphasizing ML pipeline experience with TensorFlow, PyTorch, and MLOps on AWS. Highlights 3 years deploying models at scale with A/B testing frameworks.", cl: "ready", clText: "Dear SAP team,\n\nYour ML Engineer role aligns perfectly with my experience building production ML pipelines. At my current role, I reduced inference latency by 40% through model optimization and built an internal feature store serving 12 teams.\n\nI'm particularly excited about SAP's AI Business Services division and the opportunity to work on enterprise-scale ML systems." },
+      2: { cv: "ready", cvText: "Data Science CV highlighting growth analytics, A/B testing, and recommendation systems. Experience with Python, SQL, and Looker at e-commerce scale.", cl: "generating", clText: null },
+      3: { cv: "generating", cvText: null, cl: "generating", clText: null },
+      4: { cv: "ready", cvText: "MLOps-focused CV with Kubernetes, Docker, and CI/CD for ML. Built monitoring and alerting for 15+ production models with drift detection.", cl: "ready", clText: "Dear N26 team,\n\nYour MLOps Engineer role is exactly what I've been building toward. I've designed and maintained ML infrastructure handling 2M+ predictions daily, with automated retraining pipelines and model versioning.\n\nN26's engineering culture and the scale of your ML operations are what draw me to this role." },
+      5: { cv: "ready", cvText: "Analytics Engineer CV focused on dbt, Snowflake, and data modeling. Built company-wide metrics layers and self-serve analytics for 200+ stakeholders.", cl: "generating", clText: null }
+    };
+
+    const SWIPE_THRESHOLD = 100;
+
+    const TABS = [
+      { id: "deck", label: "Discover", icon: IconLayers },
+      { id: "saved", label: "Saved", icon: IconHeart },
+      { id: "apps", label: "Applications", icon: IconSend },
+      { id: "profile", label: "Profile", icon: IconUser }
+    ];
+
+    const ONBOARDING_STEPS = [
+      {
+        icon: IconUpload,
+        title: "Upload your CV",
+        sub: "Get started by uploading your CV. We'll verify your skills automatically against your evidence.",
+        label: "Step 1 of 3"
+      },
+      {
+        icon: IconSliders,
+        title: "Set preferences",
+        sub: "Tell us what roles, locations, and work types you're looking for. We'll rank every match against your profile.",
+        label: "Step 2 of 3"
+      },
+      {
+        icon: IconLayers,
+        title: "Start swiping",
+        sub: "Swipe right to save favorites, left to skip. Apply from your Saved tab with a tailored CV and cover letter.",
+        label: "Step 3 of 3"
+      }
+    ];
+
+    const statusFor = (i) => (i === 0 ? "Evidence viewed" : i === 1 ? "In review" : "Applied");
+
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+    // ── Shared Components ──
+
+    function Tag({ children }) {
+      return (
+        <span style={{
+          display: "inline-flex", alignItems: "center", padding: "5px 10px", borderRadius: 9999,
+          fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.75)",
+          background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)"
+        }}>
+          {children}
+        </span>
+      );
+    }
+
+    function JobCardContent({ job, position, total, reveal, animate }) {
+      return (
+        <div style={{
+          position: "absolute", inset: 0, padding: 20, display: "flex", flexDirection: "column",
+          opacity: reveal, transition: animate ? "opacity 0.35s ease" : "none"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="liquid-glass" style={{
+              width: 44, height: 44, borderRadius: "50%", display: "flex",
+              alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                {job.initials}
+              </span>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>
+                {job.company}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                <IconMapPin size={11} color="rgba(255,255,255,0.5)" />
+                {job.location}
+              </div>
+            </div>
+            <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.4)" }}>
+              {String(position).padStart(2, "0")}/{String(total).padStart(2, "0")}
+            </span>
+          </div>
+
+          <div style={{ flex: 1 }} />
+
+          <h2 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 400, lineHeight: 1.15, letterSpacing: "-0.02em", color: "#ffffff" }}>
+            {job.role}
+          </h2>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
+            {job.salary} · {job.type}
+          </div>
+
+          <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
+            {job.tags.map((t) => (<Tag key={t}>{t}</Tag>))}
+          </div>
+
+          <div style={{ marginTop: 18 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>Evidence match</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>{job.match}%</span>
+            </div>
+            <div style={{ marginTop: 6, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+              <div style={{ width: `${job.match}%`, height: "100%", borderRadius: 9999, background: "rgba(255,255,255,0.85)" }} />
+            </div>
+            <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
+              {job.skills} verified skills overlap
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function JobRow({ job, right, onClick, expanded }) {
+      return (
+        <div className={expanded ? "liquid-glass-selected" : "liquid-glass"} style={{
+          borderRadius: expanded ? 24 : 20, padding: expanded ? 16 : 14, display: "flex", alignItems: "center", gap: 12,
+          marginBottom: 10, flexShrink: 0, cursor: onClick ? "pointer" : "default",
+          transition: "all 0.3s cubic-bezier(0.22, 1, 0.36, 1)"
+        }}
+          onClick={onClick}>
+          <div className="liquid-glass" style={{
+            width: 38, height: 38, borderRadius: "50%", display: "flex",
+            alignItems: "center", justifyContent: "center", flexShrink: 0
+          }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+              {job.initials}
+            </span>
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: "#ffffff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {job.role}
+            </div>
+            <div style={{ marginTop: 2, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+              {job.company} · {job.location}
+            </div>
+          </div>
+          {right}
+        </div>
+      );
+    }
+
+    function EmptyHint({ title, sub }) {
+      return (
+        <div style={{
+          flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "center", textAlign: "center", padding: "0 16px"
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>{title}</div>
+          <div style={{ marginTop: 6, fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.5)" }}>{sub}</div>
+        </div>
+      );
+    }
+
+    // ── Onboarding Screen ──
+
+    function OnboardingScreen({ step, onNext, onBack, onFinish }) {
+      const s = ONBOARDING_STEPS[step];
+      const Icon = s.icon;
+      const isLast = step === 2;
+      const isFirst = step === 0;
+
+      return (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 60, display: "flex",
+          flexDirection: "column", padding: "56px 24px 24px"
+        }}>
+          {/* Progress dots */}
+          <div className="fade-up" style={{
+            animationDelay: "0.1s", display: "flex", justifyContent: "center", gap: 8, marginBottom: 32
+          }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={i === step ? "" : "liquid-glass"} style={{
+                width: i === step ? 24 : 8, height: 8, borderRadius: 9999,
+                background: i === step ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.15)",
+                transition: "all 0.35s cubic-bezier(0.22, 1, 0.36, 1)"
+              }} />
+            ))}
+          </div>
+
+          {/* Step card */}
+          <div className="fade-up liquid-glass" style={{
+            animationDelay: "0.18s", flex: 1, borderRadius: 32, padding: "32px 24px",
+            display: "flex", flexDirection: "column", alignItems: "center",
+            justifyContent: "center", textAlign: "center"
+          }}>
+            <div className="liquid-glass" style={{
+              width: 72, height: 72, borderRadius: "50%", display: "flex",
+              alignItems: "center", justifyContent: "center", marginBottom: 24
+            }}>
+              <Icon size={32} color="rgba(255,255,255,0.9)" />
+            </div>
+
+            <h2 style={{
+              margin: "0 0 12px", fontSize: 24, fontWeight: 400,
+              lineHeight: 1.25, letterSpacing: "-0.02em", color: "#ffffff"
+            }}>
+              {s.title}
+            </h2>
+
+            <p style={{
+              margin: 0, fontSize: 14, lineHeight: 1.6,
+              color: "rgba(255,255,255,0.65)", maxWidth: 260
+            }}>
+              {s.sub}
+            </p>
+
+            <span style={{
+              marginTop: 24, fontSize: 11, fontWeight: 500,
+              color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em", textTransform: "uppercase"
+            }}>
+              {s.label}
+            </span>
+          </div>
+
+          {/* Navigation */}
+          <div className="fade-up" style={{
+            animationDelay: "0.3s", marginTop: 20, display: "flex",
+            alignItems: "center", justifyContent: "space-between"
+          }}>
+            <button type="button" onClick={onBack}
+              className="liquid-glass" style={{
+                width: 48, height: 48, borderRadius: "50%", border: "none", outline: "none",
+                appearance: "none", WebkitAppearance: "none", cursor: isFirst ? "default" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                opacity: isFirst ? 0.3 : 1, transition: "opacity 0.3s"
+              }}
+              disabled={isFirst}>
+              <IconX size={20} color="rgba(255,255,255,0.8)" />
+            </button>
+
+            <button type="button" onClick={isLast ? onFinish : onNext}
+              className="liquid-glass-selected" style={{
+                minWidth: isLast ? 180 : 130, height: 48, borderRadius: 9999,
+                border: "none", outline: "none", appearance: "none", WebkitAppearance: "none",
+                cursor: "pointer", display: "flex", alignItems: "center",
+                justifyContent: "center", gap: 6, padding: "0 20px"
+              }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#ffffff" }}>
+                {isLast ? "Get Started" : "Next"}
+              </span>
+              <IconArrowRight size={16} color="rgba(255,255,255,0.8)" />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Apply From Saved Review Modal ──
+
+    function ApplyFromSavedModal({ job, onConfirm, onCancel, confirming }) {
+      const doc = DOC_STATUS[job.id] || { cv: "generating", cvText: null, cl: "generating", clText: null };
+
+      return (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 80, display: "flex",
+          flexDirection: "column", justifyContent: "flex-end",
+          background: "rgba(0,0,0,0.55)", animation: "vfScaleIn 0.25s cubic-bezier(0.22, 1, 0.36, 1)"
+        }}>
+          <div className="liquid-glass-selected" style={{
+            borderRadius: "32px 32px 0 0", padding: "28px 24px 32px",
+            maxHeight: "85%", overflowY: "auto",
+            animation: "vfSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1)"
+          }}>
+            {/* Handle */}
+            <div style={{
+              width: 36, height: 4, borderRadius: 9999,
+              background: "rgba(255,255,255,0.2)", margin: "0 auto 20px"
+            }} />
+
+            {/* Job summary */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <div className="liquid-glass" style={{
+                width: 48, height: 48, borderRadius: "50%", display: "flex",
+                alignItems: "center", justifyContent: "center", flexShrink: 0
+              }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                  {job.initials}
+                </span>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 500, color: "#ffffff" }}>
+                  {job.role}
+                </div>
+                <div style={{ marginTop: 2, fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+                  {job.company} · {job.location}
+                </div>
+              </div>
+              <span style={{ marginLeft: "auto", fontSize: 13, fontWeight: 500, color: "rgba(134, 220, 150, 0.9)" }}>
+                {job.match}%
+              </span>
+            </div>
+
+            {/* CV Preview */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <IconBriefcase size={14} color="rgba(255,255,255,0.6)" />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                    Tailored CV
+                  </span>
+                </div>
+                <button type="button" aria-label="Edit CV" className="liquid-glass" style={{
+                  width: 32, height: 32, borderRadius: "50%", border: "none", outline: "none",
+                  appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <IconPencil size={13} color="rgba(255,255,255,0.7)" />
+                </button>
+              </div>
+              <div className="liquid-glass" style={{
+                borderRadius: 16, padding: 14, maxHeight: 90, overflow: "hidden",
+                position: "relative"
+              }}>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.8)" }}>
+                  {doc.cvText || "Generating tailored CV from your verified skills and experience..."}
+                </p>
+                {doc.cv === "ready" && (
+                  <div style={{
+                    position: "absolute", bottom: 0, left: 0, right: 0, height: 30,
+                    background: "linear-gradient(transparent, rgba(30,35,45,0.95))", borderRadius: "0 0 16px 16px"
+                  }} />
+                )}
+              </div>
+            </div>
+
+            {/* Cover Letter Preview */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <IconSend size={14} color="rgba(255,255,255,0.6)" />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                    Cover Letter
+                  </span>
+                </div>
+                <button type="button" aria-label="Edit Cover Letter" className="liquid-glass" style={{
+                  width: 32, height: 32, borderRadius: "50%", border: "none", outline: "none",
+                  appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <IconPencil size={13} color="rgba(255,255,255,0.7)" />
+                </button>
+              </div>
+              <div className="liquid-glass" style={{
+                borderRadius: 16, padding: 14, maxHeight: 100, overflow: "hidden",
+                position: "relative"
+              }}>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.8)", whiteSpace: "pre-wrap" }}>
+                  {doc.clText || "Generating tailored cover letter based on your profile and this role..."}
+                </p>
+                {doc.cl === "ready" && (
+                  <div style={{
+                    position: "absolute", bottom: 0, left: 0, right: 0, height: 30,
+                    background: "linear-gradient(transparent, rgba(30,35,45,0.95))", borderRadius: "0 0 16px 16px"
+                  }} />
+                )}
+              </div>
+            </div>
+
+            {/* What's included summary */}
+            <div className="liquid-glass" style={{
+              borderRadius: 20, padding: 14, marginBottom: 20
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.45)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Application package
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <IconShieldCheck size={14} color="rgba(134, 220, 150, 0.9)" />
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>
+                  Verified skills profile ({job.skills} matching)
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <IconCheck size={14} color={doc.cv === "ready" ? "rgba(134, 220, 150, 0.9)" : "rgba(255,255,255,0.35)"} />
+                <span style={{ fontSize: 12, color: doc.cv === "ready" ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.45)" }}>
+                  {doc.cv === "ready" ? "Tailored CV included" : "CV being generated..."}
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <IconCheck size={14} color={doc.cl === "ready" ? "rgba(134, 220, 150, 0.9)" : "rgba(255,255,255,0.35)"} />
+                <span style={{ fontSize: 12, color: doc.cl === "ready" ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.45)" }}>
+                  {doc.cl === "ready" ? "Cover letter included" : "Cover letter being generated..."}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={onCancel} disabled={confirming}
+                className="liquid-glass" style={{
+                  flex: 1, height: 52, borderRadius: 9999, border: "none", outline: "none",
+                  appearance: "none", WebkitAppearance: "none", cursor: confirming ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  opacity: confirming ? 0.4 : 1
+                }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>
+                  Cancel
+                </span>
+              </button>
+
+              <button type="button" onClick={onConfirm} disabled={confirming}
+                className="liquid-glass-selected" style={{
+                  flex: 2, height: 52, borderRadius: 9999, border: "none", outline: "none",
+                  appearance: "none", WebkitAppearance: "none",
+                  cursor: confirming ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  background: confirming ? "rgba(134, 220, 150, 0.15)" : undefined,
+                  transition: "background 0.3s ease"
+                }}>
+                {confirming ? (
+                  <span style={{ fontSize: 15, fontWeight: 500, color: "rgba(134, 220, 150, 0.9)" }}>
+                    Submitting…
+                  </span>
+                ) : (
+                  <React.Fragment>
+                    <span style={{ fontSize: 15, fontWeight: 500, color: "#ffffff" }}>
+                      Submit Application
+                    </span>
+                    <IconSend size={16} color="rgba(255,255,255,0.8)" />
+                  </React.Fragment>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Saved Job Expanded Card ──
+
+    function SavedJobExpanded({ job, onCollapse, onApply }) {
+      const doc = DOC_STATUS[job.id] || { cv: "generating", cvText: null, cl: "generating", clText: null };
+      const gold = "rgba(220,200,80,0.9)";
+      const green = "rgba(134, 220, 150, 0.95)";
+
+      return (
+        <div className="liquid-glass-selected" style={{
+          borderRadius: 24, padding: 18, marginBottom: 12, flexShrink: 0,
+          animation: "vfScaleIn 0.3s cubic-bezier(0.22, 1, 0.36, 1)"
+        }}>
+          {/* Header with collapse button */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div className="liquid-glass" style={{
+              width: 44, height: 44, borderRadius: "50%", display: "flex",
+              alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                {job.initials}
+              </span>
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 500, color: "#ffffff" }}>
+                {job.role}
+              </div>
+              <div style={{ marginTop: 2, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                {job.company} · {job.location} · {job.salary}
+              </div>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 500, color: green }}>{job.match}%</span>
+            <button type="button" aria-label="Collapse" onClick={onCollapse} className="liquid-glass" style={{
+              width: 36, height: 36, borderRadius: "50%", border: "none", outline: "none",
+              appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <IconChevronDown size={16} color="rgba(255,255,255,0.7)" />
+            </button>
+          </div>
+
+          {/* Tags */}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+            {job.tags.map((t) => (<Tag key={t}>{t}</Tag>))}
+          </div>
+
+          {/* CV Section */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <IconBriefcase size={13} color="rgba(255,255,255,0.6)" />
+                <span style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  Tailored CV
+                </span>
+                {doc.cv === "ready" ? (
+                  <span style={{ fontSize: 10, color: green }}>Ready</span>
+                ) : (
+                  <span style={{ fontSize: 10, color: gold }}>Generating…</span>
+                )}
+              </div>
+              <button type="button" aria-label="Edit CV" className="liquid-glass" style={{
+                width: 30, height: 30, borderRadius: "50%", border: "none", outline: "none",
+                appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <IconPencil size={12} color="rgba(255,255,255,0.6)" />
+              </button>
+            </div>
+            <div className="liquid-glass" style={{ borderRadius: 14, padding: 12 }}>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.8)" }}>
+                {doc.cvText || "Analyzing your profile and this role to generate a tailored CV. This usually takes a few seconds."}
+              </p>
+            </div>
+          </div>
+
+          {/* Cover Letter Section */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <IconSend size={13} color="rgba(255,255,255,0.6)" />
+                <span style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  Cover Letter
+                </span>
+                {doc.cl === "ready" ? (
+                  <span style={{ fontSize: 10, color: green }}>Ready</span>
+                ) : (
+                  <span style={{ fontSize: 10, color: gold }}>Generating…</span>
+                )}
+              </div>
+              <button type="button" aria-label="Edit Cover Letter" className="liquid-glass" style={{
+                width: 30, height: 30, borderRadius: "50%", border: "none", outline: "none",
+                appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }}>
+                <IconPencil size={12} color="rgba(255,255,255,0.6)" />
+              </button>
+            </div>
+            <div className="liquid-glass" style={{ borderRadius: 14, padding: 12 }}>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "rgba(255,255,255,0.8)", whiteSpace: "pre-wrap" }}>
+                {doc.clText || "Analyzing your profile and this role to generate a tailored cover letter. This usually takes a few seconds."}
+              </p>
+            </div>
+          </div>
+
+          {/* Apply Now Button */}
+          <button type="button" onClick={onApply} className="liquid-glass-selected" style={{
+            width: "100%", height: 48, borderRadius: 9999,
+            border: "none", outline: "none", appearance: "none", WebkitAppearance: "none",
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            background: "rgba(134, 220, 150, 0.15)",
+            boxShadow: "inset 0 1px 2px rgba(134, 220, 150, 0.2)"
+          }}>
+            <span style={{ fontSize: 15, fontWeight: 500, color: green }}>
+              Apply Now
+            </span>
+            <IconSend size={16} color={green} />
+          </button>
+        </div>
+      );
+    }
+
+    // ── Saved Job Collapsed Row ──
+
+    function SavedJobCollapsed({ job, onExpand, onApply }) {
+      const doc = DOC_STATUS[job.id] || { cv: "generating", cvText: null, cl: "generating", clText: null };
+      const green = "rgba(134, 220, 150, 0.95)";
+      const gold = "rgba(220,200,80,0.9)";
+      const muted = "rgba(255,255,255,0.5)";
+
+      return (
+        <div className="liquid-glass" style={{
+          borderRadius: 20, padding: 14, marginBottom: 10, flexShrink: 0,
+          cursor: "pointer", transition: "all 0.25s ease"
+        }} onClick={onExpand}>
+          {/* Top row: job info */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+            <div className="liquid-glass" style={{
+              width: 38, height: 38, borderRadius: "50%", display: "flex",
+              alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                {job.initials}
+              </span>
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: "#ffffff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {job.role}
+              </div>
+              <div style={{ marginTop: 2, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                {job.company} · {job.location}
+              </div>
+            </div>
+            <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 500, color: green }}>
+              {job.match}%
+            </span>
+          </div>
+
+          {/* Status rows */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            {doc.cv === "ready" ? (
+              <IconCheck size={13} color={green} />
+            ) : (
+              <span style={{ width: 13, height: 13, borderRadius: "50%", border: `2px solid ${gold}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+            )}
+            <span style={{ fontSize: 11, color: doc.cv === "ready" ? "rgba(255,255,255,0.7)" : muted }}>
+              {doc.cv === "ready" ? "CV tailored for this role" : "Generating tailored CV…"}
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            {doc.cl === "ready" ? (
+              <IconCheck size={13} color={green} />
+            ) : (
+              <span style={{ width: 13, height: 13, borderRadius: "50%", border: `2px solid ${gold}`, borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+            )}
+            <span style={{ fontSize: 11, color: doc.cl === "ready" ? "rgba(255,255,255,0.7)" : muted }}>
+              {doc.cl === "ready" ? "Cover letter ready" : "Generating cover letter…"}
+            </span>
+          </div>
+
+          {/* Apply Now button */}
+          <button type="button" onClick={(e) => { e.stopPropagation(); onApply(job); }}
+            className="liquid-glass-selected" style={{
+              width: "100%", height: 38, borderRadius: 9999,
+              border: "none", outline: "none", appearance: "none", WebkitAppearance: "none",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              background: "rgba(134, 220, 150, 0.12)"
+            }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: green }}>
+              Apply Now
+            </span>
+            <IconSend size={14} color={green} />
+          </button>
+        </div>
+      );
+    }
+
+    // ── Main App ──
+
+    function JobSwipeMockup() {
+      const [deckIndex, setDeckIndex] = useState(0);
+      const [drag, setDrag] = useState({ x: 0, y: 0 });
+      const [dragging, setDragging] = useState(false);
+      const [fly, setFly] = useState(null);
+      const [applied, setApplied] = useState([]);
+      const [saved, setSaved] = useState(() => new Set());
+      const [tab, setTab] = useState("deck");
+
+      // Onboarding
+      const [showOnboarding, setShowOnboarding] = useState(true);
+      const [onboardingStep, setOnboardingStep] = useState(0);
+
+      // Saved tab: expanded job + applying job
+      const [savedExpandedJob, setSavedExpandedJob] = useState(null);
+      const [applyingJob, setApplyingJob] = useState(null);
+      const [applyingConfirming, setApplyingConfirming] = useState(false);
+      const [undoStack, setUndoStack] = useState([]);
+
+      const startRef = useRef({ x: 0, y: 0 });
+
+      // Navigate to saved tab when user taps the saved bookmark or swipes right from empty deck
+      const goToSaved = () => setTab("saved");
+
+      const topJob = JOBS[deckIndex];
+      const visible = JOBS.slice(deckIndex, deckIndex + 3);
+
+      const fx = fly ? fly.x : drag.x;
+      const fy = fly ? fly.y : drag.y;
+      const rot = fly ? fly.rot : drag.x * 0.06;
+      const saveOpacity = clamp01(fx / SWIPE_THRESHOLD);
+      const skipOpacity = clamp01(-fx / SWIPE_THRESHOLD);
+      const nextReveal = fly ? 1 : clamp01(Math.abs(drag.x) / SWIPE_THRESHOLD);
+
+      // Swipe right → save to favorites. Swipe left → skip.
+      const launch = (dir) => {
+        if (fly || !topJob) return;
+        const jobId = topJob.id;
+        const wasSaved = saved.has(jobId);
+        setUndoStack((prev) => [...prev, { jobId, wasSaved, deckIndex }]);
+        if (dir > 0) {
+          // Right swipe → save to favorites
+          setSaved((prev) => new Set([...prev, jobId]));
+          setDragging(false);
+          setFly({ x: dir * 520, y: drag.y, rot: dir * 22 });
+          window.setTimeout(() => {
+            setDeckIndex((i) => i + 1);
+            setDrag({ x: 0, y: 0 });
+            setFly(null);
+          }, 450);
+        } else {
+          // Left swipe → skip
+          setDragging(false);
+          setFly({ x: dir * 520, y: drag.y, rot: dir * 22 });
+          window.setTimeout(() => {
+            setDeckIndex((i) => i + 1);
+            setDrag({ x: 0, y: 0 });
+            setFly(null);
+          }, 450);
+        }
+      };
+
+      // Apply from saved flow
+      const startApplyFromSaved = (job) => {
+        setApplyingJob(job);
+        setApplyingConfirming(false);
+      };
+
+      const confirmSavedApply = () => {
+        if (!applyingJob) return;
+        setApplied((a) => [...a, applyingJob.id]);
+        setSaved((prev) => {
+          const next = new Set(prev);
+          next.delete(applyingJob.id);
+          return next;
+        });
+        setApplyingConfirming(true);
+        window.setTimeout(() => {
+          setApplyingJob(null);
+          setApplyingConfirming(false);
+          setSavedExpandedJob(null);
+          setTab("apps");
+        }, 600);
+      };
+
+      const cancelSavedApply = () => {
+        setApplyingJob(null);
+        setApplyingConfirming(false);
+      };
+
+      const onPointerDown = (e) => {
+        if (fly || !topJob || applyingJob) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        startRef.current = { x: e.clientX - drag.x, y: e.clientY - drag.y };
+        setDragging(true);
+      };
+
+      const onPointerMove = (e) => {
+        if (!dragging || fly) return;
+        setDrag({ x: e.clientX - startRef.current.x, y: e.clientY - startRef.current.y });
+      };
+
+      const onPointerUp = () => {
+        if (!dragging) return;
+        setDragging(false);
+        if (drag.x > SWIPE_THRESHOLD) launch(1);
+        else if (drag.x < -SWIPE_THRESHOLD) launch(-1);
+        else setDrag({ x: 0, y: 0 });
+      };
+
+      const toggleSave = () => {
+        if (!topJob) return;
+        setSaved((prev) => {
+          const next = new Set(prev);
+          if (next.has(topJob.id)) next.delete(topJob.id);
+          else next.add(topJob.id);
+          return next;
+        });
+      };
+
+      const undoLastSwipe = () => {
+        if (undoStack.length === 0) return;
+        const last = undoStack[undoStack.length - 1];
+        setUndoStack((prev) => prev.slice(0, -1));
+        setFly(null);
+        setDrag({ x: 0, y: 0 });
+        setDeckIndex(last.deckIndex);
+        if (last.wasSaved) {
+          setSaved((prev) => new Set([...prev, last.jobId]));
+        } else {
+          setSaved((prev) => {
+            const next = new Set(prev);
+            next.delete(last.jobId);
+            return next;
+          });
+        }
+      };
+
+      const resetDeck = () => {
+        setDeckIndex(0);
+        setApplied([]);
+        setSaved(new Set());
+        setDrag({ x: 0, y: 0 });
+        setFly(null);
+        setSavedExpandedJob(null);
+        setApplyingJob(null);
+        setUndoStack([]);
+      };
+
+      const isSaved = topJob ? saved.has(topJob.id) : false;
+      const green = "rgba(134, 220, 150, 0.95)";
+
+      const savedJobs = JOBS.filter((j) => saved.has(j.id));
+      const appliedJobs = applied.map((id) => JOBS.find((j) => j.id === id)).filter(Boolean);
+
+      return (
+        <div className="vf-root" style={{
+          minHeight: "100vh", width: "100%", background: "#ffffff",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 24px"
+        }}>
+          <div style={{
+            position: "relative", width: 375, height: 780, flexShrink: 0, borderRadius: 52,
+            background: "#8a9aaa", overflow: "hidden",
+            boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.08), 0 0 0 1px rgba(0,0,0,0.6), 0 0 0 10px #1a1a1e, 0 0 0 11px rgba(255,255,255,0.06), 0 0 60px rgba(0,0,0,0.5)"
+          }}>
+            <div style={{
+              position: "absolute", inset: 0,
+              backgroundImage: `url("${BG_URL}")`,
+              backgroundSize: "cover", backgroundPosition: "center",
+              filter: "blur(12px)", transform: "scale(1.1)"
+            }} />
+            <div style={{ position: "absolute", inset: 0, background: "rgba(138, 154, 170, 0.3)" }} />
+
+            <div style={{
+              position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)",
+              width: 120, height: 32, borderRadius: 9999, background: "#000000", zIndex: 50
+            }} />
+
+            {/* ── ONBOARDING ── */}
+            {showOnboarding && (
+              <OnboardingScreen
+                step={onboardingStep}
+                onBack={() => setOnboardingStep((s) => Math.max(0, s - 1))}
+                onNext={() => setOnboardingStep((s) => Math.min(2, s + 1))}
+                onFinish={() => setShowOnboarding(false)}
+              />
+            )}
+
+            {/* ── MAIN APP ── */}
+            {!showOnboarding && (
+              <div style={{
+                position: "relative", zIndex: 10, height: "100%", display: "flex",
+                flexDirection: "column", padding: "56px 24px 24px"
+              }}>
+                {/* Header */}
+                <div className="fade-up" style={{
+                  animationDelay: "0.1s", marginBottom: 18, display: "flex",
+                  alignItems: "center", justifyContent: "space-between"
+                }}>
+                  <div className="liquid-glass" style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "10px 12px", borderRadius: 9999
+                  }}>
+                    <IconBriefcase size={12} color="rgba(255,255,255,0.8)" />
+                    <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>
+                      Job Swipe
+                    </span>
+                  </div>
+                  <button type="button" aria-label="Filters" className="liquid-glass" style={{
+                    width: 36, height: 36, borderRadius: "50%", border: "none", outline: "none",
+                    appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <IconSlidersHorizontal size={14} color="rgba(255,255,255,0.8)" />
+                  </button>
+                </div>
+
+                {/* ── DECK TAB ── */}
+                {tab === "deck" && (
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div className="fade-up" style={{ animationDelay: "0.22s", marginBottom: 20 }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
+                        Ranked by your verified evidence
+                      </p>
+                      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.025em", color: "#ffffff" }}>
+                        Today's Matches
+                      </h1>
+                    </div>
+
+                    <div className="fade-up" style={{ animationDelay: "0.38s", flex: 1, position: "relative", marginBottom: 20 }}>
+                      {visible.length === 0 && (
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div className="liquid-glass" style={{
+                            width: "100%", borderRadius: 32, padding: "28px 24px",
+                            display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center"
+                          }}>
+                            <div className="liquid-glass" style={{
+                              width: 52, height: 52, borderRadius: "50%", display: "flex",
+                              alignItems: "center", justifyContent: "center", marginBottom: 14
+                            }}>
+                              <IconBriefcase size={20} color="rgba(255,255,255,0.8)" />
+                            </div>
+                            <div style={{ fontSize: 18, fontWeight: 500, color: "#ffffff" }}>
+                              No more matches for today
+                            </div>
+                            <div style={{ marginTop: 6, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                              {saved.size} saved · {applied.length} applied
+                            </div>
+                            <button type="button" onClick={resetDeck} className="liquid-glass" style={{
+                              marginTop: 18, display: "inline-flex", alignItems: "center", gap: 6,
+                              padding: "10px 16px", borderRadius: 9999, border: "none", outline: "none",
+                              appearance: "none", WebkitAppearance: "none", cursor: "pointer"
+                            }}>
+                              <IconRotateCcw size={14} color="rgba(255,255,255,0.85)" />
+                              <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>
+                                Reset
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {visible.map((job, pos) => {
+                        const isTop = pos === 0;
+                        const stackTransform = `translateY(${pos * 14}px) scale(${1 - pos * 0.05})`;
+                        const topTransform = `translate(${fx}px, ${fy}px) rotate(${rot}deg)`;
+                        return (
+                          <div key={job.id}
+                            onPointerDown={isTop ? onPointerDown : undefined}
+                            onPointerMove={isTop ? onPointerMove : undefined}
+                            onPointerUp={isTop ? onPointerUp : undefined}
+                            onPointerCancel={isTop ? onPointerUp : undefined}
+                            className={isTop ? "liquid-glass-selected" : "liquid-glass"}
+                            style={{
+                              position: "absolute", inset: 0, borderRadius: 32, zIndex: 20 - pos,
+                              transform: isTop ? topTransform : stackTransform,
+                              opacity: isTop && fly ? 0 : 1,
+                              transition: isTop
+                                ? dragging ? "none" : "transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease"
+                                : "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                              cursor: isTop ? (dragging ? "grabbing" : "grab") : "default",
+                              touchAction: isTop ? "none" : "auto",
+                              pointerEvents: isTop ? "auto" : "none",
+                              userSelect: "none", WebkitUserSelect: "none"
+                            }}
+                          >
+                            <JobCardContent job={job} position={deckIndex + pos + 1} total={JOBS.length}
+                              reveal={pos === 0 ? 1 : pos === 1 ? nextReveal : 0}
+                              animate={!dragging} />
+
+                            {isTop && (
+                              <React.Fragment>
+                                {/* SAVED stamp — swipe right */}
+                                <div style={{
+                                  position: "absolute", top: 22, left: 20, transform: "rotate(-12deg)",
+                                  border: "2.5px solid rgba(134, 220, 150, 0.95)", color: "rgba(134, 220, 150, 0.95)",
+                                  padding: "4px 12px", borderRadius: 10, fontSize: 22, fontWeight: 700,
+                                  letterSpacing: "0.15em", opacity: saveOpacity, pointerEvents: "none"
+                                }}>
+                                  SAVED
+                                </div>
+                                {/* SKIP stamp — swipe left */}
+                                <div style={{
+                                  position: "absolute", top: 22, right: 20, transform: "rotate(12deg)",
+                                  border: "2.5px solid rgba(180, 180, 190, 0.95)", color: "rgba(180, 180, 190, 0.95)",
+                                  padding: "4px 12px", borderRadius: 10, fontSize: 22, fontWeight: 700,
+                                  letterSpacing: "0.15em", opacity: skipOpacity, pointerEvents: "none"
+                                }}>
+                                  SKIP
+                                </div>
+                              </React.Fragment>
+                            )}
+                          </div>
+                        );
+                      }).reverse()}
+                    </div>
+
+                    {topJob && (
+                      <React.Fragment>
+                        <div className="fade-up" style={{
+                          animationDelay: "0.6s", display: "flex", alignItems: "center",
+                          justifyContent: "center", gap: 16
+                        }}>
+                          {/* Left: Skip */}
+                          <button type="button" aria-label="Skip" onClick={() => launch(-1)}
+                            className="liquid-glass" style={{
+                              width: 52, height: 52, borderRadius: "50%", border: "none", outline: "none",
+                              appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center"
+                            }}>
+                            <IconX size={22} color="rgba(255,255,255,0.9)" />
+                          </button>
+
+                          {/* Center: Undo */}
+                          <button type="button" aria-label="Undo last swipe"
+                            onClick={undoLastSwipe}
+                            disabled={undoStack.length === 0}
+                            className="liquid-glass" style={{
+                              width: 40, height: 40, borderRadius: "50%", border: "none", outline: "none",
+                              appearance: "none", WebkitAppearance: "none", cursor: undoStack.length === 0 ? "default" : "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              opacity: undoStack.length === 0 ? 0.35 : 0.85,
+                              transition: "opacity 0.2s ease"
+                            }}>
+                            <IconRotateCcw size={16} color="rgba(255,215,0,0.9)" />
+                          </button>
+
+                          {/* Right: Heart / Save */}
+                          <button type="button" aria-label="Save" aria-pressed={isSaved} onClick={toggleSave}
+                            className="liquid-glass" style={{
+                              width: 56, height: 56, borderRadius: "50%", border: "none", outline: "none",
+                              appearance: "none", WebkitAppearance: "none", cursor: "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "box-shadow 0.25s ease, border-color 0.25s ease",
+                              boxShadow: isSaved ? "0 0 18px 2px rgba(255, 215, 0, 0.5), 0 0 36px 6px rgba(255, 180, 0, 0.25)" : "none"
+                            }}>
+                            <IconHeart size={22}
+                              color={isSaved ? "rgba(255,215,0,0.95)" : "rgba(255,255,255,0.8)"}
+                              fill={isSaved ? "rgba(255,215,0,0.95)" : "none"} />
+                          </button>
+                        </div>
+
+                        <div className="fade-up" style={{
+                          animationDelay: "0.75s", marginTop: 12, textAlign: "center",
+                          fontSize: 11, color: "rgba(255,255,255,0.4)"
+                        }}>
+                          Swipe right to save · swipe left to skip
+                        </div>
+                      </React.Fragment>
+                    )}
+                  </div>
+                )}
+
+                {/* ── SAVED TAB ── */}
+                {tab === "saved" && (
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 16 }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
+                        Tailored applications ready
+                      </p>
+                      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.025em", color: "#ffffff" }}>
+                        Saved
+                      </h1>
+                    </div>
+                    <div className="fade-up" style={{
+                      animationDelay: "0.15s", flex: 1, minHeight: 0, overflowY: "auto",
+                      display: "flex", flexDirection: "column"
+                    }}>
+                      {savedJobs.length === 0 ? (
+                        <EmptyHint title="Nothing saved yet"
+                          sub="Swipe right on a job to save it here. We'll prepare a tailored CV and cover letter for each one." />
+                      ) : (
+                        savedJobs.map((job) => {
+                          const isExpanded = savedExpandedJob === job.id;
+                          if (isExpanded) {
+                            return (
+                              <SavedJobExpanded
+                                key={job.id}
+                                job={job}
+                                onCollapse={() => setSavedExpandedJob(null)}
+                                onApply={() => startApplyFromSaved(job)}
+                              />
+                            );
+                          }
+                          return (
+                            <SavedJobCollapsed
+                              key={job.id}
+                              job={job}
+                              onExpand={() => setSavedExpandedJob(job.id)}
+                              onApply={startApplyFromSaved}
+                            />
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── APPS TAB ── */}
+                {tab === "apps" && (
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 16 }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
+                        Employer signals
+                      </p>
+                      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.025em", color: "#ffffff" }}>
+                        Applications
+                      </h1>
+                    </div>
+                    <div className="fade-up" style={{
+                      animationDelay: "0.15s", flex: 1, minHeight: 0, overflowY: "auto",
+                      display: "flex", flexDirection: "column"
+                    }}>
+                      {appliedJobs.length === 0 ? (
+                        <EmptyHint title="No applications yet"
+                          sub="Save jobs you like, then apply from the Saved tab with a tailored CV and cover letter." />
+                      ) : (
+                        appliedJobs.map((job, i) => {
+                          const status = statusFor(i);
+                          const hot = status !== "Applied";
+                          return (
+                            <JobRow key={job.id} job={job} right={
+                              <span style={{
+                                flexShrink: 0, fontSize: 10, fontWeight: 600, letterSpacing: "0.04em",
+                                textTransform: "uppercase", padding: "4px 8px", borderRadius: 9999,
+                                background: hot ? "rgba(220,200,80,0.18)" : "rgba(255,255,255,0.08)",
+                                border: hot ? "1px solid rgba(220,200,80,0.5)" : "1px solid rgba(255,255,255,0.15)",
+                                color: hot ? "rgba(232,218,130,0.95)" : "rgba(255,255,255,0.7)"
+                              }}>
+                                {status}
+                              </span>
+                            } />
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── PROFILE TAB ── */}
+                {tab === "profile" && (
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div className="fade-up" style={{ animationDelay: "0.05s", marginBottom: 16 }}>
+                      <p style={{ margin: "0 0 8px", fontSize: 14, color: "rgba(255,255,255,0.6)" }}>
+                        Verified account
+                      </p>
+                      <h1 style={{ margin: 0, fontSize: 26, fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.025em", color: "#ffffff" }}>
+                        Profile
+                      </h1>
+                    </div>
+                    <div className="fade-up" style={{
+                      animationDelay: "0.15s", flex: 1, minHeight: 0, overflowY: "auto",
+                      display: "flex", flexDirection: "column"
+                    }}>
+                      <div className="liquid-glass" style={{ borderRadius: 24, padding: 18, marginBottom: 12, flexShrink: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div className="liquid-glass" style={{
+                            width: 52, height: 52, borderRadius: "50%", display: "flex",
+                            alignItems: "center", justifyContent: "center", flexShrink: 0
+                          }}>
+                            <span style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>E</span>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 17, fontWeight: 500, color: "#ffffff" }}>Enes</div>
+                            <div style={{ marginTop: 2, fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
+                              Data Science · Leipzig / UAE
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                          <IconShieldCheck size={14} color="rgba(220,200,80,0.9)" />
+                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+                            12 skills verified · 3 evidence sources
+                          </span>
+                        </div>
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                            <span style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.5)" }}>
+                              Profile strength
+                            </span>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>82%</span>
+                          </div>
+                          <div style={{ marginTop: 6, height: 4, borderRadius: 9999, background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+                            <div style={{ width: "82%", height: "100%", borderRadius: 9999, background: "rgba(255,255,255,0.85)" }} />
+                          </div>
+                        </div>
+                      </div>
+                      {["Verified CV", "Evidence archive", "Job preferences"].map((label) => (
+                        <button key={label} type="button" className="liquid-glass" style={{
+                          width: "100%", borderRadius: 20, padding: "14px 16px", marginBottom: 10,
+                          border: "none", outline: "none", appearance: "none", WebkitAppearance: "none",
+                          cursor: "pointer", display: "flex", alignItems: "center",
+                          justifyContent: "space-between", flexShrink: 0
+                        }}>
+                          <span style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>
+                            {label}
+                          </span>
+                          <IconChevronRight size={16} color="rgba(255,255,255,0.4)" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Bottom Tab Bar ── */}
+                <div className="fade-up liquid-glass" style={{
+                  animationDelay: "0.5s", marginTop: 14, borderRadius: 9999, padding: 6,
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0
+                }}>
+                  {TABS.map((t) => {
+                    const active = tab === t.id;
+                    const Icon = t.icon;
+                    const count = t.id === "saved" ? saved.size : t.id === "apps" ? applied.length : 0;
+                    return (
+                      <button key={t.id} type="button" onClick={() => { setTab(t.id); setSavedExpandedJob(null); setApplyingJob(null); }} aria-pressed={active}
+                        className={active ? "liquid-glass-selected" : ""} style={{
+                          position: "relative", flex: 1, height: 48, borderRadius: 9999,
+                          border: "none", outline: "none", appearance: "none", WebkitAppearance: "none",
+                          cursor: "pointer", background: active ? undefined : "transparent",
+                          display: "flex", flexDirection: "column", alignItems: "center",
+                          justifyContent: "center", gap: 3
+                        }}>
+                        <Icon size={18} color={active ? "#ffffff" : "rgba(255,255,255,0.45)"} />
+                        <span style={{
+                          fontSize: 9, fontWeight: 500, letterSpacing: "0.02em",
+                          color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.45)"
+                        }}>
+                          {t.label}
+                        </span>
+                        {count > 0 && (
+                          <span style={{
+                            position: "absolute", top: 5, left: "calc(50% + 6px)",
+                            minWidth: 14, height: 14, padding: "0 4px", borderRadius: 9999,
+                            background: "rgba(220,200,80,0.9)", color: "#1a1a1e",
+                            fontSize: 9, fontWeight: 700, display: "flex",
+                            alignItems: "center", justifyContent: "center"
+                          }}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── APPLY FROM SAVED MODAL ── */}
+            {applyingJob && (
+              <ApplyFromSavedModal
+                job={applyingJob}
+                onConfirm={confirmSavedApply}
+                onCancel={cancelSavedApply}
+                confirming={applyingConfirming}
+              />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Render ──
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<JobSwipeMockup />);
+  </script>
+  <style>{`
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(0deg); }
+      }
+    }
+  `}</style>
+</body>
+</html>

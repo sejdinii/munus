@@ -116,19 +116,27 @@ export default async function LandingPage() {
           </div>
           <div className="mock-phone" aria-hidden="true">
             <div className="mock-card liquid-glass-selected">
-              <div className="mock-card-top">
-                <span className="source-pill">
-                  <i />
-                  Company careers · verified 18 min ago
+              <div className="mock-company-row">
+                <span className="mock-initials liquid-glass">NS</span>
+                <span>
+                  <span className="job-company">Northstar</span>
+                  <span className="mock-loc">
+                    <Icon name="map-pin" size={11} />
+                    Remote · Europe
+                  </span>
                 </span>
-                <span className="mock-monogram">N</span>
+                <span className="mock-counter">01/24</span>
               </div>
+              <span className="source-pill" style={{ marginTop: 14 }}>
+                <i />
+                Company careers · verified 18 min ago
+              </span>
               <div className="mock-card-body">
-                <p className="job-company">Northstar</p>
                 <h3 className="job-title">Senior Product Designer</h3>
+                <p className="mock-salary">€72–88k · Full-time</p>
                 <div className="mock-meta">
-                  <span className="meta-chip">Remote · Europe</span>
-                  <span className="meta-chip">€72–88k</span>
+                  <span className="meta-chip">Hybrid</span>
+                  <span className="meta-chip">Visa sponsor</span>
                 </div>
                 <div className="fit-mini">
                   <div className="fit-head">
@@ -138,30 +146,19 @@ export default async function LandingPage() {
                   <div className="fit-bar">
                     <span style={{ width: "92%" }} />
                   </div>
-                  <div className="fact-row">
-                    <span className="fact-dot">
-                      <Icon name="check" size={10} />
-                    </span>
-                    <span>Your 6 years in SaaS exceeds the 5-year requirement</span>
-                  </div>
-                  <div className="fact-row">
-                    <span className="fact-dot">
-                      <Icon name="check" size={10} />
-                    </span>
-                    <span>Figma, discovery, and design systems match</span>
-                  </div>
+                  <p className="mock-skills">5 verified skills overlap</p>
                 </div>
               </div>
             </div>
             <div className="mock-actions">
-              <span className="liquid-glass">
-                <Icon name="x" size={16} />
+              <span className="liquid-glass" style={{ width: 48, height: 48 }}>
+                <Icon name="x" size={19} />
               </span>
-              <span className="save liquid-glass-selected">
-                <Icon name="heart" size={16} />
+              <span className="liquid-glass mock-undo">
+                <Icon name="undo" size={15} />
               </span>
-              <span className="liquid-glass">
-                <Icon name="star" size={16} />
+              <span className="save liquid-glass">
+                <Icon name="heart" size={19} />
               </span>
             </div>
           </div>

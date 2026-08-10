@@ -1,7 +1,11 @@
 # CONTRACTS.md — frozen interfaces between orchestrator, implementers, and phases
-# Source of pixel truth: prototypes/munus-liquid-glass-mock.jsx (user-approved
-# 2026-08-08 — LIQUID GLASS world). scout-pink-v2.html is retired as visual
-# authority; it still binds FLOWS and COPY where the mock is silent.
+# Source of pixel truth: prototypes/jobswipe5.html (user-uploaded 2026-08-08,
+# supersedes munus-liquid-glass-mock.jsx — same glass system plus the full app
+# pattern set: brand-pill header, progress dots, X+"Next →" onboarding nav,
+# SAVED/SKIP stamps, doc-status rows, green apply-class actions, bottom-sheet
+# application review, gold count badges). Template semantics MATCH product
+# truth (right = save; apply from Saved behind review). scout-pink-v2.html
+# still binds FLOWS and COPY where the template is silent.
 # Change policy: orchestrator edits this file alone; implementers request changes
 # via their wave report. Deviating from the mock needs a written reason here.
 #

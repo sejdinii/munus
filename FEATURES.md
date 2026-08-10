@@ -112,6 +112,16 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
   overline text-decoration utility — every kicker had a phantom line above it
   since bw0.
 
+- 2026-08-08 · USER UPLOADED JobSwipe5.html → new binding authority
+  (prototypes/jobswipe5.html). Same glass system, richer pattern set; its
+  swipe semantics now MATCH product truth (right = save, apply from Saved
+  behind a review sheet). All screens aligned: onboarding → dots + centered
+  glass card + X/"Next →" nav (6 real steps in template language); sign-in →
+  template-language card (not in template); facts → brand-pill header +
+  shield summary card; landing hero card → exact template card anatomy.
+  Reduced-motion CSS now zeroes animation-delay too (real a11y fix; also
+  makes static screenshots verifiable via --force-prefers-reduced-motion).
+
 ## DECISIONS LOG
 - 2026-08-08 · USER DECIDED (landing page): built as the app's real / route
   (not a prototypes/ mock); primary CTA links into the app (/sign-in), NOT a

@@ -36,9 +36,10 @@ export function Overline({ children }: { children: React.ReactNode }) {
 }
 
 export function Wordmark() {
+  // Template brand pill: briefcase glyph + name in a glass pill.
   return (
     <div className="wordmark liquid-glass">
-      <span className="mark" aria-hidden="true" />
+      <Icon name="briefcase" size={12} />
       Scout
     </div>
   );

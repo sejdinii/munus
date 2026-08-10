@@ -4,7 +4,8 @@ import { store } from "@/lib/store";
 import type { Fact, FactKind } from "@/lib/types";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
-import { Screen, TopBar } from "@/components/ui/screen";
+import Link from "next/link";
+import { Screen, Wordmark } from "@/components/ui/screen";
 import { EmptyState, GroundingNote } from "@/components/ui/states";
 
 // The evidence store, visible. Built from the prototype's detail-screen
@@ -44,7 +45,9 @@ export default async function FactsPage() {
   if (facts.length === 0) {
     return (
       <Screen>
-        <TopBar title="Career profile" backHref="/" />
+        <div className="app-header">
+          <Wordmark />
+        </div>
         <EmptyState
           symbol={<Icon name="spark" size={27} />}
           title="No verified facts yet"
@@ -64,13 +67,31 @@ export default async function FactsPage() {
 
   return (
     <Screen>
-      <TopBar title="Career profile" backHref="/onboarding" />
-      <div className="page-title" style={{ paddingTop: 0 }}>
+      <div className="app-header">
+        <Wordmark />
+        <Link
+          href="/onboarding"
+          className="circle-btn liquid-glass"
+          style={{ width: 36, height: 36 }}
+          aria-label="Edit profile and preferences"
+        >
+          <Icon name="pencil" size={14} />
+        </Link>
+      </div>
+      <div className="page-title">
+        <p className="overline" style={{ margin: "0 0 8px" }}>Verified account</p>
         <h1>Your evidence</h1>
-        <p>
-          {facts.length} facts extracted from your CV — the only source AI is
-          allowed to work from.
-        </p>
+      </div>
+      <div style={{ padding: "0 20px 14px" }}>
+        <div className="profile-card liquid-glass">
+          <div className="shield-line">
+            <Icon name="shield-check" size={14} />
+            <span>
+              {facts.length} facts verified · extracted from your CV — the only
+              source AI may work from
+            </span>
+          </div>
+        </div>
       </div>
       <div className="screen-scroll" style={{ paddingTop: 0 }}>
         <GroundingNote>

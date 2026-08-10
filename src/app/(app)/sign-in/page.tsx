@@ -2,24 +2,25 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { store } from "@/lib/store";
 import { hasSupabase } from "@/lib/env";
-import { Overline, Screen, Wordmark } from "@/components/ui/screen";
+import { Icon } from "@/components/ui/icons";
+import { Screen, Wordmark } from "@/components/ui/screen";
 
-// Unified "Continue" screen. Pattern per BACKLOG.md design intel (2026-08-08):
-// Google first then Apple (PWA — Apple's 4.8 prominence rule doesn't bind),
-// full-width stacked, brand-locked button anatomy (Google white + color G,
-// Apple solid black on light bg), legal copy ABOVE the buttons — the
-// Indeed/Glassdoor placement, which fits Scout's trust-first stance.
+// Auth screen — not in the JobSwipe5 template; composed in its language:
+// centered glass card with icon circle + 24px/400 title + centered sub,
+// pill buttons, uppercase micro-label. Sign-in structure itself follows the
+// researched consensus (BACKLOG 2026-08-08): Google first, Apple second,
+// legal copy above the buttons, brand-locked button fills.
 
 const ERRORS: Record<string, string> = {
   "unknown-provider": "That sign-in method isn't available. Try Google or Apple.",
   "oauth-start": "We couldn't reach the sign-in provider. Check your connection and try again.",
   "oauth-denied": "Sign-in was cancelled. Nothing was shared with us.",
   "oauth-exchange": "Sign-in didn't complete. Please try again.",
-  "no-auth-config": "Sign-in isn't configured on this deployment yet. If you run Scout, set the Supabase environment variables.",
+  "no-auth-config":
+    "Sign-in isn't configured on this deployment yet. If you run Scout, set the Supabase environment variables.",
 };
 
 function GoogleLogo() {
-  // stroke:none blocks the .btn svg icon stroke from outlining the brand mark.
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" style={{ width: 18, height: 18, stroke: "none" }}>
       <path
@@ -60,8 +61,6 @@ export default async function SignInPage({
 }) {
   const user = await getSessionUser();
   if (user) {
-    // A store failure (e.g. schema not applied yet) must not crash the very
-    // first screen — fall back to onboarding and let deeper screens report.
     const cvMeta = await store.getCvMeta(user.id).catch(() => null);
     redirect(cvMeta ? "/profile/facts" : "/onboarding");
   }
@@ -69,70 +68,72 @@ export default async function SignInPage({
   const errorMessage = error ? (ERRORS[error] ?? ERRORS["oauth-exchange"]) : null;
 
   return (
-    <Screen className="welcome">
-      <div className="hero-band" style={{ paddingBottom: 40 }}>
+    <Screen className="onboarding">
+      <div className="app-header" style={{ padding: "6px 0 22px" }}>
         <Wordmark />
-        <div className="ready-art" aria-hidden="true" style={{ marginTop: 26 }}>
-          <div className="ready-card liquid-glass" />
-          <div className="ready-card liquid-glass" />
-          <div className="ready-card liquid-glass-selected">
-            <div>
-              <strong>92</strong>
-              <br />
-              <span>top match · saved to your account</span>
-            </div>
-          </div>
-        </div>
       </div>
-      <div className="hero-sheet liquid-glass">
-        <div>
-          <Overline>One account, everything saved</Overline>
-          <h1 style={{ fontSize: 38, letterSpacing: "-0.055em" }}>
-            Continue to <em>Scout.</em>
-          </h1>
-          <p className="lead">
-            Your profile, favorites, and application receipts stay in one place
-            — on this phone and the next one.
-          </p>
+
+      <div className="onb-card liquid-glass fade-up" style={{ animationDelay: "0.15s" }}>
+        <div className="onb-icon liquid-glass" aria-hidden="true">
+          <Icon name="shield-check" size={26} />
         </div>
-        <div className="sheet-bottom">
+        <h1>
+          Continue to <em style={{ color: "var(--gold-bright)", fontStyle: "normal" }}>Scout.</em>
+        </h1>
+        <p className="onb-sub">
+          Your profile, favorites, and application receipts stay in one place —
+          on this phone and the next one.
+        </p>
+
         {errorMessage ? (
           <p
             role="alert"
             style={{
               margin: "0 0 14px",
-              borderRadius: 12,
+              borderRadius: 16,
               background: "var(--bad-soft)",
-              color: "var(--red)",
+              color: "var(--bad)",
               padding: "11px 13px",
               fontSize: 12,
-              lineHeight: 1.4,
+              lineHeight: 1.45,
             }}
           >
             {errorMessage}
           </p>
         ) : null}
-        <p className="privacy" style={{ textAlign: "left", margin: "0 0 12px" }}>
-          By continuing you agree to Scout&rsquo;s Terms and acknowledge the
-          Privacy Policy. We never contact employers without your review.
-        </p>
-        <div className="button-stack">
-          <a className="btn" style={{ background: "#ffffff", color: "#1f1f1f" }} href="/api/auth/signin?provider=google">
-            <GoogleLogo />
-            Continue with Google
-          </a>
-          <a className="btn" style={{ background: "#ffffff", color: "#111111" }} href="/api/auth/signin?provider=apple">
-            <AppleLogo />
-            Continue with Apple
-          </a>
-        </div>
-        {!hasSupabase ? (
-          <p className="privacy" style={{ marginTop: 12 }}>
-            Dev mode — no auth provider is configured, so either button creates
-            a local dev session.
+
+        <div style={{ marginTop: "auto" }}>
+          <p className="privacy" style={{ textAlign: "left", margin: "0 0 12px" }}>
+            By continuing you agree to Scout&rsquo;s Terms and acknowledge the
+            Privacy Policy. We never contact employers without your review.
           </p>
-        ) : null}
+          <div className="button-stack">
+            <a
+              className="btn"
+              style={{ background: "#ffffff", color: "#1f1f1f" }}
+              href="/api/auth/signin?provider=google"
+            >
+              <GoogleLogo />
+              Continue with Google
+            </a>
+            <a
+              className="btn"
+              style={{ background: "#ffffff", color: "#111111" }}
+              href="/api/auth/signin?provider=apple"
+            >
+              <AppleLogo />
+              Continue with Apple
+            </a>
+          </div>
+          {!hasSupabase ? (
+            <p className="privacy" style={{ marginTop: 12 }}>
+              Dev mode — no auth provider is configured, so either button
+              creates a local dev session.
+            </p>
+          ) : null}
         </div>
+
+        <span className="step-label">One account, everything saved</span>
       </div>
     </Screen>
   );

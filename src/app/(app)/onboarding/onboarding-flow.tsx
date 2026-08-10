@@ -9,8 +9,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icons";
-import { Choice, Progress, TextField } from "@/components/ui/inputs";
-import { Overline, Screen } from "@/components/ui/screen";
+import { Choice, TextField } from "@/components/ui/inputs";
+import { Screen } from "@/components/ui/screen";
 
 type StepKey = "roles" | "location" | "level" | "salary" | "cv" | "alerts";
 
@@ -19,6 +19,7 @@ type Step = {
   title: string;
   help: string;
   options?: string[];
+  icon: "briefcase" | "map-pin" | "star" | "doc" | "upload" | "send";
 };
 
 // Quick picks only — any title can be typed, and several can be selected.
@@ -34,33 +35,39 @@ const MAX_ROLES = 10;
 const STEPS: Step[] = [
   {
     key: "roles",
+    icon: "briefcase",
     title: "What work should we look for?",
     help: "Pick every role you'd take — and type your own if it's not here. We rank by fit, we don't exclude.",
   },
   {
     key: "location",
+    icon: "map-pin",
     title: "Where do you want to work?",
     help: "We use this to rank roles, not to exclude good exceptions.",
     options: ["Remote in Europe", "Berlin · hybrid", "London · hybrid", "Relocation possible"],
   },
   {
     key: "level",
+    icon: "star",
     title: "What level fits you now?",
     help: "This helps avoid junior roles and unrealistic stretches.",
     options: ["Mid-level", "Senior", "Lead", "Open to two levels"],
   },
   {
     key: "salary",
+    icon: "doc",
     title: "Set your salary floor",
     help: "You will not see this number shared with employers.",
   },
   {
     key: "cv",
+    icon: "upload",
     title: "Give AI your real career history",
     help: "Your CV becomes the evidence source for matching and tailoring. Nothing is sent to employers yet.",
   },
   {
     key: "alerts",
+    icon: "send",
     title: "How quickly should we alert you?",
     help: "Fresh company listings often have the smallest applicant pools.",
     options: ["Immediately", "Morning and evening", "Daily digest", "No notifications"],
@@ -216,36 +223,22 @@ export function OnboardingFlow({
 
   return (
     <Screen className="onboarding">
-      <div className="onboard-head">
-        {step > 0 ? (
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Previous question"
-            onClick={() => setStep(step - 1)}
-          >
-            <Icon name="back" />
-          </button>
-        ) : (
-          <Link href="/" className="icon-button" aria-label="Back to welcome">
-            <Icon name="back" />
-          </Link>
-        )}
-        <Progress value={(step + 1) / STEPS.length} />
-        <span />
+      <div className="onb-dots fade-up" style={{ animationDelay: "0.1s" }} aria-hidden="true">
+        {STEPS.map((s, i) => (
+          <i key={s.key} className={i === step ? "on" : "liquid-glass"} />
+        ))}
       </div>
 
-      <div className="question">
-        <Overline>
-          Question {step + 1} of {STEPS.length}
-        </Overline>
-        <h1>{current.title}</h1>
-        <div className="why-note liquid-glass">
-          <span className="why-spark" aria-hidden="true">
-            <Icon name="spark" size={12} />
-          </span>
-          <span>{current.help}</span>
+      <div
+        className="onb-card liquid-glass fade-up"
+        style={{ animationDelay: "0.18s" }}
+        key={current.key}
+      >
+        <div className="onb-icon liquid-glass" aria-hidden="true">
+          <Icon name={current.icon} size={26} />
         </div>
+        <h1>{current.title}</h1>
+        <p className="onb-sub">{current.help}</p>
 
         {current.key === "roles" ? (
           <div>
@@ -417,24 +410,51 @@ export function OnboardingFlow({
             />
           </div>
         ) : null}
+        <span className="step-label">
+          Step {step + 1} of {STEPS.length}
+        </span>
       </div>
 
-      <footer className="onboard-footer">
-        {finishError ? (
-          <p className="field-error" role="alert" style={{ textAlign: "center" }}>
-            {finishError}
-          </p>
-        ) : null}
+      {finishError ? (
+        <p className="field-error" role="alert" style={{ textAlign: "center", marginTop: 12 }}>
+          {finishError}
+        </p>
+      ) : null}
+
+      <div className="onb-nav fade-up" style={{ animationDelay: "0.3s" }}>
+        {step > 0 ? (
+          <button
+            type="button"
+            className="circle-btn liquid-glass"
+            style={{ width: 48, height: 48 }}
+            aria-label="Previous question"
+            onClick={() => setStep(step - 1)}
+          >
+            <Icon name="x" size={20} />
+          </button>
+        ) : (
+          <Link
+            href="/"
+            className="circle-btn liquid-glass"
+            style={{ width: 48, height: 48 }}
+            aria-label="Back to welcome"
+          >
+            <Icon name="x" size={20} />
+          </Link>
+        )}
         <Button
           variant="primary"
           disabled={!stepComplete}
           loading={finishing}
           onClick={() => (isLast ? void finish() : setStep(step + 1))}
         >
-          {isLast ? "Build my matches" : "Continue"}
+          {isLast ? "Build my matches" : "Next"}
+          <Icon name="arrow-right" size={16} />
         </Button>
-        <p className="privacy">Your answers stay private and can be changed from Profile.</p>
-      </footer>
+      </div>
+      <p className="privacy" style={{ marginTop: 12 }}>
+        Your answers stay private and can be changed from Profile.
+      </p>
     </Screen>
   );
 }
