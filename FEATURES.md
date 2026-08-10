@@ -3,7 +3,8 @@
 # Status values: DONE (built + verified running) | PARTIAL (built, missing states/edge cases)
 #                STUB (placeholder/mock only) | MISSING (not started) | BLOCKED (needs user decision)
 # RULE: nothing gets marked DONE without being run/tested in this session.
-# Product: Scout — swipe-based job discovery PWA. Spec: docs/SCOUT_MVP_PLAN.md
+# Product: Munus (renamed from Scout 2026-08-08) — swipe-based job discovery PWA.
+# Spec: docs/SCOUT_MVP_PLAN.md (pre-rename doc; product truths unchanged)
 # Design spec (pixel truth): prototypes/scout-pink-v2.html (pink theme)
 
 ## MVP Definition of Done
@@ -121,6 +122,11 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
   shield summary card; landing hero card → exact template card anatomy.
   Reduced-motion CSS now zeroes animation-delay too (real a11y fix; also
   makes static screenshots verifiable via --force-prefers-reduced-motion).
+
+- 2026-08-08 · USER DECIDED: product name is MUNUS (matches repo + their
+  designs). Swept through code, UI copy, package name, PRODUCT/README; env
+  var is now MUNUS_ALLOW_DEV_AUTH, dev cookie munus_dev_session. Historical
+  docs (SCOUT_MVP_PLAN.md, older decision entries) intentionally unchanged.
 
 ## DECISIONS LOG
 - 2026-08-08 · USER DECIDED (landing page): built as the app's real / route

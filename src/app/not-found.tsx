@@ -13,7 +13,7 @@ export default function NotFound() {
         body="The link may be old, or the screen hasn't shipped yet."
       >
         <ButtonLink variant="primary" href="/">
-          Back to Scout
+          Back to Munus
         </ButtonLink>
       </EmptyState>
       </Screen>

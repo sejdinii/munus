@@ -1,6 +1,6 @@
 # PRODUCT.md — durable product truth (impeccable init)
 
-**Scout** — swipe-based job discovery for people who review everything before
+**Munus** — swipe-based job discovery for people who review everything before
 it's sent. Fresh jobs pulled directly from company ATS feeds (Greenhouse,
 Lever, Ashby…), ranked against a verified career profile extracted from the
 user's real CV. AI may reframe verified experience; it may never invent —

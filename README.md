@@ -1,4 +1,4 @@
-# Scout
+# Munus
 
 Swipe-based job discovery for people who review everything before it's sent.
 Fresh jobs from company ATS feeds, ranked around a verified career profile;

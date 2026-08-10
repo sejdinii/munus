@@ -97,7 +97,7 @@ export default async function FactsPage() {
         <GroundingNote>
           <strong>Evidence-only mode is on.</strong>
           <br />
-          Scout can reframe and emphasize what&rsquo;s here, but can never add
+          Munus can reframe and emphasize what&rsquo;s here, but can never add
           skills or outcomes that aren&rsquo;t. Wrong or missing? Replace your
           CV and we re-extract.
         </GroundingNote>

@@ -22,4 +22,4 @@ export const hasGroq = Boolean(env.groqApiKey);
 export const devAuthAllowed =
   !hasSupabase &&
   (process.env.NODE_ENV !== "production" ||
-    process.env.SCOUT_ALLOW_DEV_AUTH === "1");
+    process.env.MUNUS_ALLOW_DEV_AUTH === "1");

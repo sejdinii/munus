@@ -17,7 +17,7 @@ const ERRORS: Record<string, string> = {
   "oauth-denied": "Sign-in was cancelled. Nothing was shared with us.",
   "oauth-exchange": "Sign-in didn't complete. Please try again.",
   "no-auth-config":
-    "Sign-in isn't configured on this deployment yet. If you run Scout, set the Supabase environment variables.",
+    "Sign-in isn't configured on this deployment yet. If you run Munus, set the Supabase environment variables.",
 };
 
 function GoogleLogo() {
@@ -78,7 +78,7 @@ export default async function SignInPage({
           <Icon name="shield-check" size={26} />
         </div>
         <h1>
-          Continue to <em style={{ color: "var(--gold-bright)", fontStyle: "normal" }}>Scout.</em>
+          Continue to <em style={{ color: "var(--gold-bright)", fontStyle: "normal" }}>Munus.</em>
         </h1>
         <p className="onb-sub">
           Your profile, favorites, and application receipts stay in one place —
@@ -104,7 +104,7 @@ export default async function SignInPage({
 
         <div style={{ marginTop: "auto" }}>
           <p className="privacy" style={{ textAlign: "left", margin: "0 0 12px" }}>
-            By continuing you agree to Scout&rsquo;s Terms and acknowledge the
+            By continuing you agree to Munus&rsquo;s Terms and acknowledge the
             Privacy Policy. We never contact employers without your review.
           </p>
           <div className="button-stack">

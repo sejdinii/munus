@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Scout — find the roles worth your time",
+  title: "Munus — find the roles worth your time",
   description:
     "Fresh jobs from company sites and overlooked boards, ranked around the work you actually want.",
 };

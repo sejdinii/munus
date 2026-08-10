@@ -71,7 +71,7 @@ export default async function LandingPage() {
       ? "/profile/facts"
       : "/onboarding"
     : "/sign-in";
-  const ctaLabel = user ? "Open Scout" : "Start free";
+  const ctaLabel = user ? "Open Munus" : "Start free";
 
   return (
     <main className="landing">
@@ -100,7 +100,7 @@ export default async function LandingPage() {
               Find the roles worth <em>your time.</em>
             </h1>
             <p className="hero-sub">
-              Scout pulls fresh jobs straight from company career sites, ranks
+              Munus pulls fresh jobs straight from company career sites, ranks
               them around the work you actually want, and tailors your
               applications without ever inventing a word.
             </p>
@@ -169,7 +169,7 @@ export default async function LandingPage() {
         <div className="section-inner">
           <h2>Three steps. No spray-and-pray.</h2>
           <p className="section-lead">
-            Scout is built for people who apply deliberately — and are tired of
+            Munus is built for people who apply deliberately — and are tired of
             job boards reselling stale listings.
           </p>
           <div className="step-grid">
@@ -177,7 +177,7 @@ export default async function LandingPage() {
               <span className="step-no">1</span>
               <h3>Your CV becomes evidence</h3>
               <p>
-                Upload once. Scout extracts your verified facts — roles,
+                Upload once. Munus extracts your verified facts — roles,
                 outcomes, skills — and shows you exactly what it found.
               </p>
             </div>
@@ -194,7 +194,7 @@ export default async function LandingPage() {
               <h3>Apply with documents you approved</h3>
               <p>
                 An evidence-checked CV and letter, reviewed by you, submitted
-                via the official listing. Scout keeps the receipt forever.
+                via the official listing. Munus keeps the receipt forever.
               </p>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default async function LandingPage() {
           <div>
             <h2>AI may reframe. It may never invent.</h2>
             <p className="section-lead" style={{ marginBottom: 0 }}>
-              Every suggestion Scout makes maps to a fact from your CV. Claims
+              Every suggestion Munus makes maps to a fact from your CV. Claims
               without evidence are dropped by a blocking verifier — not
               flagged, dropped.
             </p>
@@ -235,7 +235,7 @@ export default async function LandingPage() {
               </div>
             </div>
             <p className="no-bot-line">
-              Scout is not an auto-applier. It never submits a single
+              Munus is not an auto-applier. It never submits a single
               application on your behalf without your review — automation, when
               it ships, stays under the same rule.
             </p>
@@ -244,7 +244,7 @@ export default async function LandingPage() {
             <GroundingNote>
               <strong>Evidence-only mode is on.</strong>
               <br />
-              Scout can sharpen wording and emphasis, but cannot add skills or
+              Munus can sharpen wording and emphasis, but cannot add skills or
               outcomes missing from your career profile.
             </GroundingNote>
             <div className="fact-row">
@@ -327,7 +327,7 @@ export default async function LandingPage() {
       <footer className="landing-footer">
         <Wordmark />
         <span>Your job search, focused. Privacy policy and terms publish with public launch.</span>
-        <span>© 2026 Scout</span>
+        <span>© 2026 Munus</span>
       </footer>
     </main>
   );

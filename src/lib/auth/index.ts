@@ -12,12 +12,12 @@ export type SessionUser = {
   provider: "google" | "apple" | "dev";
 };
 
-export const DEV_SESSION_COOKIE = "scout_dev_session";
+export const DEV_SESSION_COOKIE = "munus_dev_session";
 
 // Fixed dev identity — a stable uuid so dev-store rows behave like real rows.
 export const DEV_USER: SessionUser = {
   id: "00000000-0000-4000-8000-000000000001",
-  email: "dev@scout.local",
+  email: "dev@munus.local",
   name: "Dev User",
   provider: "dev",
 };

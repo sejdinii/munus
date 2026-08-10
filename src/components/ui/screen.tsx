@@ -40,7 +40,7 @@ export function Wordmark() {
   return (
     <div className="wordmark liquid-glass">
       <Icon name="briefcase" size={12} />
-      Scout
+      Munus
     </div>
   );
 }

@@ -116,7 +116,7 @@ adapters must exercise the SAME screens/states as real ones — no dev-only UI
 branches that alter behavior; a short informational label telling the user
 they're on a simulated session is allowed (honesty beats invisibility), but a
 dev path may never fake a success the real adapter wouldn't produce. The dev
-session refuses to mint on production builds unless SCOUT_ALLOW_DEV_AUTH=1.
+session refuses to mint on production builds unless MUNUS_ALLOW_DEV_AUTH=1.
 
 ## 4. Component inventory (src/components/ui — orchestrator-owned)
 
