@@ -22,7 +22,7 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
 | Auth: Google/Apple sign-in | PARTIAL | dev-session flow E2E-verified (guards, sign-in/out, returning-user routing); OAuth wiring typechecked only | needs: migration applied + Google/Apple providers enabled in Supabase dashboard; keyless prod builds refuse dev sessions unless SCOUT_ALLOW_DEV_AUTH=1 |
 | CV upload → parsed facts store (evidence source) | PARTIAL | E2E on prod build: PDF+TXT upload, 422/401 paths, facts render, screenshots | heuristic extractor verified; Groq extractor + Supabase storage adapter unverified (no key / network) |
 | Onboarding (6 questions → profile) | DONE | prod-build E2E + screenshots; salary validation, required CV, prefill on return | prototype screens 02, pixel-faithful |
-| Job ingestion (Greenhouse/Lever pullers, dedupe, freshness) | MISSING | — | phase 1; make-or-break |
+| Job ingestion (Greenhouse/Lever pullers, dedupe, freshness) | PARTIAL | pipeline E2E on fixtures: both adapters, dedupe across re-runs, verified_at refresh, salary/remote normalization, health tracking, /api/ingest + Vercel cron | live pull unverified — container network blocks ATS hosts; 'done means 3-5k live jobs' needs a network-permitted run |
 | Matching (embeddings + rules; reasons + concern) | MISSING | — | phase 2 |
 | Discover deck (swipe/buttons/star/undo/detail, pixel-exact) | MISSING | — | phase 2 |
 | Favorites + readiness chips + still-open checks | MISSING | — | phase 3 |
@@ -127,6 +127,17 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
   designs). Swept through code, UI copy, package name, PRODUCT/README; env
   var is now MUNUS_ALLOW_DEV_AUTH, dev cookie munus_dev_session. Historical
   docs (SCOUT_MVP_PLAN.md, older decision entries) intentionally unchanged.
+
+- 2026-08-10 · Ingestion built fixture-first (ATS hosts blocked from this
+  container — greenhouse/lever both unreachable). Adapters are real; fetcher
+  is a seam (live | fixtures via INGEST_FIXTURES=1 / keyless dev default).
+  Remaining for live: run from network-permitted env, validate seed slugs
+  (all marked unverified; health tracking deactivates after 5 fails), expand
+  seed from ~50 starter to 1-2k via directory scrape + founder research.
+  DEFERRED: embeddings (jobs.embedding stays null; embedder adapter is
+  phase-2 matching work). Supabase-side fail_streak column needs migration
+  0002 (dev store enforces health contract already). Close-vanished logic
+  verified by code path on dev store; re-verify against a live feed churn.
 
 ## DECISIONS LOG
 - 2026-08-08 · USER DECIDED (landing page): built as the app's real / route
