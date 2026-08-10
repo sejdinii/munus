@@ -53,7 +53,7 @@ import { Icon } from "./icons";
 
 export function GroundingNote({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grounding-note">
+    <div className="grounding-note liquid-glass">
       <span aria-hidden="true" style={{ display: "grid", placeItems: "center" }}>
         <Icon name="check" size={13} />
       </span>

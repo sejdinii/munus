@@ -100,6 +100,18 @@ preflight → redirect apply → receipt) runs end-to-end on a phone without a c
   before critiquing, prototype = floor not ceiling, theme-variant trap, dead-
   space/visual-mass bar, input-freedom check.
 
+- 2026-08-08 · USER DECIDED (visual world v2): full redesign to the LIQUID
+  GLASS system from their Claude-design mock (pasted verbatim →
+  prototypes/munus-liquid-glass-mock.jsx). Pink paper world retired. Recorded
+  adaptations: swipe-right stays SAVE (mock's apply-on-swipe violates
+  review-before-send), licensed system Helvetica stack replaces the mock's
+  unlicensed font mirror, CSS atmosphere replaces its third-party CDN photo.
+  OPEN QUESTION for user: mock brands the app "Munus" (= repo name); all code
+  and docs still say "Scout" — rename is a one-command sweep on request.
+  Bonus fix while re-skinning: .overline class collided with Tailwind's
+  overline text-decoration utility — every kicker had a phantom line above it
+  since bw0.
+
 ## DECISIONS LOG
 - 2026-08-08 · USER DECIDED (landing page): built as the app's real / route
   (not a prototypes/ mock); primary CTA links into the app (/sign-in), NOT a

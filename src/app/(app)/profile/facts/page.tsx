@@ -82,7 +82,7 @@ export default async function FactsPage() {
         </GroundingNote>
 
         {cvMeta ? (
-          <div className="file-card">
+          <div className="file-card liquid-glass">
             <span className="file-badge">
               {(cvMeta.fileName.split(".").pop() ?? "cv").toUpperCase().slice(0, 4)}
             </span>

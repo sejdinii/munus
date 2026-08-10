@@ -1,7 +1,27 @@
 # CONTRACTS.md — frozen interfaces between orchestrator, implementers, and phases
-# Source of pixel truth: prototypes/scout-pink-v2.html, PINK theme.
+# Source of pixel truth: prototypes/munus-liquid-glass-mock.jsx (user-approved
+# 2026-08-08 — LIQUID GLASS world). scout-pink-v2.html is retired as visual
+# authority; it still binds FLOWS and COPY where the mock is silent.
 # Change policy: orchestrator edits this file alone; implementers request changes
-# via their wave report. Deviating from the prototype needs a written reason here.
+# via their wave report. Deviating from the mock needs a written reason here.
+#
+# §1 v2 — LIQUID GLASS (implemented in src/app/globals.css):
+# Ground: #8a9aaa with CSS atmosphere (soft radial clouds, fixed attachment).
+# Surfaces: .liquid-glass (white .01 fill, blur 4, inset highlight) and
+# .liquid-glass-selected (white .12, blur 8) with gradient hairline borders
+# via mask-composite. Text: white opacity tiers (.9/.85/.75/.7/.6/.5/.45/.4).
+# Accent: gold rgba(220,200,80,.9) = verification/saving/forward motion
+# (glow on the committing action only). Semantics: ok rgba(134,220,150,.95),
+# bad rgba(255,130,130,.95). Type: Helvetica Neue stack, display w400 with
+# -0.02..-0.03em tracking, 26px phone titles; labels w500-600. Geometry:
+# pills (9999) for controls/chips/tabs, 20 rows, 24-32 cards. Motion: staggered
+# .fade-up (16px rise, .5s cubic-bezier(.22,1,.36,1)), press scale .97.
+# PRODUCT-TRUTH OVERRIDE: the mock's swipe-right-to-apply is design fiction —
+# right = save; applying stays behind preflight review.
+# Legacy v1 token names alias into this world (see globals.css) so older
+# markup re-skins without churn.
+#
+# The v1 PINK section below is RETIRED — kept for history only.
 
 ## 1. Design tokens (resolved PINK theme values)
 

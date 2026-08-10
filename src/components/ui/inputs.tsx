@@ -14,7 +14,9 @@ export function Choice({
   return (
     <button
       type="button"
-      className={selected ? "choice selected" : "choice"}
+      className={
+        selected ? "choice selected liquid-glass-selected" : "choice liquid-glass"
+      }
       aria-pressed={selected}
       onClick={onSelect}
     >

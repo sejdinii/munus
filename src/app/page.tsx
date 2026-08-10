@@ -92,7 +92,7 @@ export default async function LandingPage() {
       <section className="landing-hero">
         <div className="hero-grid">
           <div>
-            <span className="eyebrow-pill">
+            <span className="eyebrow-pill liquid-glass">
               <i aria-hidden="true" />
               Early access · designers first
             </span>
@@ -115,7 +115,7 @@ export default async function LandingPage() {
             </div>
           </div>
           <div className="mock-phone" aria-hidden="true">
-            <div className="mock-card">
+            <div className="mock-card liquid-glass-selected">
               <div className="mock-card-top">
                 <span className="source-pill">
                   <i />
@@ -132,8 +132,11 @@ export default async function LandingPage() {
                 </div>
                 <div className="fit-mini">
                   <div className="fit-head">
-                    <span>Why it fits</span>
-                    <span className="fit-score">92% match</span>
+                    <span>Evidence match</span>
+                    <span className="fit-score">92%</span>
+                  </div>
+                  <div className="fit-bar">
+                    <span style={{ width: "92%" }} />
                   </div>
                   <div className="fact-row">
                     <span className="fact-dot">
@@ -151,13 +154,13 @@ export default async function LandingPage() {
               </div>
             </div>
             <div className="mock-actions">
-              <span>
+              <span className="liquid-glass">
                 <Icon name="x" size={16} />
               </span>
-              <span className="save">
+              <span className="save liquid-glass-selected">
                 <Icon name="heart" size={16} />
               </span>
-              <span>
+              <span className="liquid-glass">
                 <Icon name="star" size={16} />
               </span>
             </div>
@@ -173,7 +176,7 @@ export default async function LandingPage() {
             job boards reselling stale listings.
           </p>
           <div className="step-grid">
-            <div className="step-card">
+            <div className="step-card liquid-glass">
               <span className="step-no">1</span>
               <h3>Your CV becomes evidence</h3>
               <p>
@@ -181,7 +184,7 @@ export default async function LandingPage() {
                 outcomes, skills — and shows you exactly what it found.
               </p>
             </div>
-            <div className="step-card">
+            <div className="step-card liquid-glass">
               <span className="step-no">2</span>
               <h3>Swipe roles that are actually fresh</h3>
               <p>
@@ -189,7 +192,7 @@ export default async function LandingPage() {
                 ago, ranked with reasons you can check — and one honest concern.
               </p>
             </div>
-            <div className="step-card">
+            <div className="step-card liquid-glass">
               <span className="step-no">3</span>
               <h3>Apply with documents you approved</h3>
               <p>
@@ -240,7 +243,7 @@ export default async function LandingPage() {
               it ships, stays under the same rule.
             </p>
           </div>
-          <div className="evidence-mock" aria-hidden="true">
+          <div className="evidence-mock liquid-glass" aria-hidden="true">
             <GroundingNote>
               <strong>Evidence-only mode is on.</strong>
               <br />
@@ -290,7 +293,7 @@ export default async function LandingPage() {
             {PLANS.map((plan) => (
               <div
                 key={plan.name}
-                className={plan.featured ? "plan-card featured" : "plan-card"}
+                className={plan.featured ? "plan-card featured liquid-glass-selected" : "plan-card liquid-glass"}
               >
                 {plan.featured ? <span className="plan-flag">Most popular</span> : null}
                 <div className="plan-head">

@@ -240,7 +240,7 @@ export function OnboardingFlow({
           Question {step + 1} of {STEPS.length}
         </Overline>
         <h1>{current.title}</h1>
-        <div className="why-note">
+        <div className="why-note liquid-glass">
           <span className="why-spark" aria-hidden="true">
             <Icon name="spark" size={12} />
           </span>
@@ -354,7 +354,7 @@ export function OnboardingFlow({
         {current.key === "cv" ? (
           <div
             className={[
-              "upload-box",
+              "upload-box liquid-glass",
               cv.status === "uploaded" && "uploaded",
               cv.status === "error" && "upload-error",
             ]

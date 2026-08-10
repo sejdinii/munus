@@ -6,8 +6,9 @@ type Size = "md" | "sm";
 function classes(variant: Variant, size: Size, extra?: string) {
   return [
     "btn",
-    variant === "primary" && "btn-primary",
-    variant === "dark" && "btn-dark",
+    variant === "primary" && "btn-primary liquid-glass-selected",
+    variant === "dark" && "btn-dark liquid-glass",
+    variant === "outline" && "liquid-glass",
     variant === "plain" && "btn-plain",
     size === "sm" && "btn-small",
     extra,

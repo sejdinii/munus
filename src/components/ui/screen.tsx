@@ -19,7 +19,7 @@ export function TopBar({ title, backHref }: { title: string; backHref?: string }
   return (
     <header className="topbar">
       {backHref ? (
-        <Link href={backHref} className="icon-button" aria-label="Back">
+        <Link href={backHref} className="icon-button liquid-glass" aria-label="Back">
           <Icon name="back" />
         </Link>
       ) : (
@@ -37,7 +37,7 @@ export function Overline({ children }: { children: React.ReactNode }) {
 
 export function Wordmark() {
   return (
-    <div className="wordmark">
+    <div className="wordmark liquid-glass">
       <span className="mark" aria-hidden="true" />
       Scout
     </div>

@@ -73,9 +73,9 @@ export default async function SignInPage({
       <div className="hero-band" style={{ paddingBottom: 40 }}>
         <Wordmark />
         <div className="ready-art" aria-hidden="true" style={{ marginTop: 26 }}>
-          <div className="ready-card" />
-          <div className="ready-card" />
-          <div className="ready-card">
+          <div className="ready-card liquid-glass" />
+          <div className="ready-card liquid-glass" />
+          <div className="ready-card liquid-glass-selected">
             <div>
               <strong>92</strong>
               <br />
@@ -84,7 +84,7 @@ export default async function SignInPage({
           </div>
         </div>
       </div>
-      <div className="hero-sheet">
+      <div className="hero-sheet liquid-glass">
         <div>
           <Overline>One account, everything saved</Overline>
           <h1 style={{ fontSize: 38, letterSpacing: "-0.055em" }}>
@@ -102,7 +102,7 @@ export default async function SignInPage({
             style={{
               margin: "0 0 14px",
               borderRadius: 12,
-              background: "#fdf3f4",
+              background: "var(--bad-soft)",
               color: "var(--red)",
               padding: "11px 13px",
               fontSize: 12,
@@ -117,11 +117,11 @@ export default async function SignInPage({
           Privacy Policy. We never contact employers without your review.
         </p>
         <div className="button-stack">
-          <a className="btn" href="/api/auth/signin?provider=google">
+          <a className="btn" style={{ background: "#ffffff", color: "#1f1f1f" }} href="/api/auth/signin?provider=google">
             <GoogleLogo />
             Continue with Google
           </a>
-          <a className="btn btn-dark" href="/api/auth/signin?provider=apple">
+          <a className="btn" style={{ background: "#ffffff", color: "#111111" }} href="/api/auth/signin?provider=apple">
             <AppleLogo />
             Continue with Apple
           </a>
